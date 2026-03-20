@@ -60,13 +60,12 @@ export function CardGroupModal({ group, onClose }: Props) {
             </button>
           </div>
 
-          <div className="mt-5 min-h-0 overflow-y-auto">
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_360px]">
-            <div className="flex flex-col gap-3">
+          <div className="mt-5 flex-1 min-h-0 grid grid-cols-1 gap-6 lg:grid-cols-[1fr_360px]">
+            <div className="flex min-h-0 flex-col gap-3 overflow-y-auto pr-1">
               <div className="text-xs font-semibold uppercase tracking-wide text-slate-200/60">
                 Экземпляры
               </div>
-              <div className="grid max-h-[360px] grid-cols-1 gap-4 overflow-y-auto pr-1 sm:grid-cols-2">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 {group.cards.map((c) => (
                   <div key={c.id} className="flex flex-col items-center gap-2">
                     <button
@@ -95,7 +94,7 @@ export function CardGroupModal({ group, onClose }: Props) {
               </div>
             </div>
 
-            <div className="flex flex-col items-center gap-3">
+            <div className="sticky top-0 self-start flex flex-col items-center gap-3">
               <div className="text-xs font-semibold uppercase tracking-wide text-slate-200/60">
                 Просмотр
               </div>
@@ -112,7 +111,6 @@ export function CardGroupModal({ group, onClose }: Props) {
                 </div>
               )}
             </div>
-          </div>
           </div>
         </div>
       </div>

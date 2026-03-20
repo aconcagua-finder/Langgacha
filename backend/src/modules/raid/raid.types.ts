@@ -39,13 +39,18 @@ export type NextRaidCard = {
 };
 
 export type RaidAttackResult = {
-  damage: number;
   correct: boolean;
   inspirationApplied: boolean;
+  cardHp: number;
+  cardFinalHp: number;
+  bossHpBefore: number;
   bossCurrentHp: number;
+  totalDamageDealt: number;
+  totalDamageTaken: number;
+  rounds: number;
+  cardSurvived: boolean;
   bossDefeated: boolean;
   dustEarned: number;
   victoryDust?: number;
   victoryBoosters?: number;
 };
-

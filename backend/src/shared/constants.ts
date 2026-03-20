@@ -62,11 +62,12 @@ export const MAX_BOOSTERS = 7;
 export const BOOSTER_RECHARGE_MS = 10 * 60 * 1000;
 export const PITY_THRESHOLD = 10;
 
-export const RAID_BOSS_HP_MULTIPLIER = 15;
-export const RAID_BOSS_ATK_SCALE = 0.3;
+export const RAID_BOSS_HP_MULTIPLIER = 5;
+export const RAID_BOSS_ATK_SCALE = 0.5;
 export const RAID_VICTORY_DUST = 100;
 export const RAID_VICTORY_BOOSTERS = 1;
 export const RAID_PER_ATTACK_DUST = 2;
+export const RAID_MAX_CARDS = 20;
 
 export const DUST_PER_CRAFT: Record<string, number> = {
   C: 30,

@@ -1,14 +1,15 @@
 import { prisma } from "../../db/prisma.js";
 import { computeCondition, improveCondition } from "../../shared/condition.js";
 import {
-  CONDITION_MODIFIERS,
   INSPIRATION_BONUS,
   MAX_BOOSTERS,
+  RAID_MAX_CARDS,
   RAID_PER_ATTACK_DUST,
   RAID_VICTORY_BOOSTERS,
   RAID_VICTORY_DUST,
 } from "../../shared/constants.js";
 import { mapCardToDto } from "../cards/cards.generator.js";
+import { applyConditionModifier, computeDamage, computeHp } from "../battle/battle.combat.js";
 
 import { generateRaidBoss } from "./raid.boss.js";
 import type { NextRaidCard, RaidAttackResult, RaidStatus } from "./raid.types.js";
@@ -23,11 +24,6 @@ const conditionRank: Record<string, number> = {
   Worn: 1,
   Normal: 2,
   Brilliant: 3,
-};
-
-const applyConditionModifier = (value: number, condition: string): number => {
-  const m = CONDITION_MODIFIERS[condition] ?? 1;
-  return Math.round(value * m);
 };
 
 const getOrCreateTodayRaidDay = async () => {
@@ -61,7 +57,7 @@ export const getTodayRaid = async (playerId: string): Promise<RaidStatus> => {
     bossType: raidDay.bossType,
     bossFlavorText: raidDay.bossFlavorText,
     defeated: raidDay.defeated,
-    totalCards,
+    totalCards: Math.min(totalCards, RAID_MAX_CARDS),
     usedCards: usedCardsAgg,
     playerDamage: damageAgg._sum.damage ?? 0,
   };
@@ -69,6 +65,11 @@ export const getTodayRaid = async (playerId: string): Promise<RaidStatus> => {
 
 export const getNextCard = async (playerId: string): Promise<NextRaidCard | null> => {
   const raidDay = await getOrCreateTodayRaidDay();
+
+  const usedCount = await prisma.raidAttack.count({
+    where: { raidDayId: raidDay.id, playerId },
+  });
+  if (usedCount >= RAID_MAX_CARDS) return null;
 
   const used = await prisma.raidAttack.findMany({
     where: { raidDayId: raidDay.id, playerId },
@@ -89,13 +90,16 @@ export const getNextCard = async (playerId: string): Promise<NextRaidCard | null
   const prepared = cards.map((c) => {
     const condition = computeCondition(c);
     const rank = conditionRank[condition] ?? 2;
-    return { card: c, rank, r: Math.random() };
+    return { card: c, rank, mastery: c.masteryProgress, r: Math.random() };
   });
 
-  const bestRank = prepared.reduce((min, c) => Math.min(min, c.rank), prepared[0].rank);
-  const candidates = prepared.filter((c) => c.rank === bestRank);
-  candidates.sort((a, b) => a.r - b.r);
-  const chosen = candidates[0]?.card;
+  prepared.sort((a, b) => {
+    if (a.rank !== b.rank) return a.rank - b.rank;
+    if (a.mastery !== b.mastery) return a.mastery - b.mastery;
+    return a.r - b.r;
+  });
+
+  const chosen = prepared[0]?.card;
   if (!chosen) return null;
 
   const dto = mapCardToDto(chosen);
@@ -121,6 +125,11 @@ export const attackBoss = async (
     if (!raid) throw new Error("Raid not found.");
     if (raid.defeated) throw new Error("Raid is already defeated.");
 
+    const usedCount = await tx.raidAttack.count({
+      where: { raidDayId: raid.id, playerId },
+    });
+    if (usedCount >= RAID_MAX_CARDS) throw new Error("No raid cards left today.");
+
     const existingAttack = await tx.raidAttack.findUnique({
       where: { raidDayId_playerId_cardId: { raidDayId: raid.id, playerId, cardId } },
       select: { id: true },
@@ -138,12 +147,39 @@ export const attackBoss = async (
     const inspirationApplied = quizCorrect;
 
     const effectiveCondition = computeCondition(card);
-    const baseAtk = applyConditionModifier(card.atk, effectiveCondition);
+    const effectiveAtkBase = applyConditionModifier(card.atk, effectiveCondition);
+    const effectiveDef = applyConditionModifier(card.def, effectiveCondition);
     const effectiveAtk = inspirationApplied
-      ? Math.round(baseAtk * (1 + INSPIRATION_BONUS))
-      : baseAtk;
+      ? Math.round(effectiveAtkBase * (1 + INSPIRATION_BONUS))
+      : effectiveAtkBase;
 
-    const damage = Math.max(1, Math.floor(effectiveAtk - raid.bossDef * 0.5));
+    const bossHpBefore = raid.currentHp;
+    let bossHp = bossHpBefore;
+    let cardHp = computeHp(effectiveDef);
+
+    let totalDamageDealt = 0;
+    let totalDamageTaken = 0;
+    let rounds = 0;
+
+    while (cardHp > 0 && bossHp > 0) {
+      const rawCardDamage = computeDamage(effectiveAtk, raid.bossDef);
+      const cardDamage = Math.min(bossHp, rawCardDamage);
+      bossHp -= cardDamage;
+      totalDamageDealt += cardDamage;
+      rounds += 1;
+
+      if (bossHp <= 0) break;
+
+      const rawBossDamage = computeDamage(raid.bossAtk, effectiveDef);
+      const bossDamage = Math.min(cardHp, rawBossDamage);
+      cardHp -= bossDamage;
+      totalDamageTaken += bossDamage;
+    }
+
+    const bossCurrentHp = Math.max(0, bossHp);
+    const cardFinalHp = Math.max(0, cardHp);
+    const cardSurvived = cardFinalHp > 0;
+    const bossDefeated = bossCurrentHp <= 0;
 
     const now = new Date();
 
@@ -170,18 +206,15 @@ export const attackBoss = async (
         raidDayId: raid.id,
         playerId,
         cardId: card.id,
-        damage,
+        damage: totalDamageDealt,
         correct: quizCorrect,
       },
     });
 
-    const nextHp = Math.max(0, raid.currentHp - damage);
-    const bossDefeated = nextHp <= 0;
-
     await tx.raidDay.update({
       where: { id: raid.id },
       data: {
-        currentHp: nextHp,
+        currentHp: bossCurrentHp,
         defeated: bossDefeated ? true : raid.defeated,
       },
     });
@@ -212,10 +245,16 @@ export const attackBoss = async (
     }
 
     const result: RaidAttackResult = {
-      damage,
       correct: quizCorrect,
       inspirationApplied,
-      bossCurrentHp: nextHp,
+      cardHp: computeHp(effectiveDef),
+      cardFinalHp,
+      bossHpBefore,
+      bossCurrentHp,
+      totalDamageDealt,
+      totalDamageTaken,
+      rounds,
+      cardSurvived,
       bossDefeated,
       dustEarned,
       ...(bossDefeated

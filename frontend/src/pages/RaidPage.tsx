@@ -166,7 +166,7 @@ export function RaidPage() {
         {status ? (
           <div className="flex flex-wrap items-center gap-3 text-sm text-slate-200/70">
             <div>
-              Использовано карт: <span className="font-mono">{usedText}</span>
+              Карты на сегодня: <span className="font-mono">{usedText}</span>
             </div>
             <div>
               Ваш урон: <span className="font-mono">{status.playerDamage.toLocaleString()}</span>
@@ -195,8 +195,10 @@ export function RaidPage() {
               <span className="font-mono">1</span> бустер.
             </div>
           ) : status.usedCards >= status.totalCards ? (
-            <div className="rounded-2xl border border-slate-800/60 bg-slate-950/40 p-5 text-sm text-slate-200/70">
-              Все карты использованы. Возвращайтесь завтра!
+            <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-5 text-sm text-amber-50">
+              Босс выстоял! Вы нанесли{" "}
+              <span className="font-mono">{status.playerDamage.toLocaleString()}</span> урона.
+              Завтра будет новый босс.
             </div>
           ) : null}
 
@@ -265,16 +267,41 @@ export function RaidPage() {
 
           <div className="mt-4 grid gap-3 text-sm text-slate-200/80 sm:grid-cols-3">
             <div className="rounded-xl bg-slate-950/40 px-4 py-3">
-              Урон: <span className="font-mono">{result.damage.toLocaleString()}</span>
+              Бой:{" "}
+              <span className="font-mono">
+                {result.cardHp.toLocaleString()} → {result.cardFinalHp.toLocaleString()}
+              </span>
             </div>
             <div className="rounded-xl bg-slate-950/40 px-4 py-3">
               Dust: <span className="font-mono">+{result.dustEarned}</span>
             </div>
             <div className="rounded-xl bg-slate-950/40 px-4 py-3">
-              HP босса:{" "}
+              Босс:{" "}
               <span className="font-mono">
-                {result.bossCurrentHp.toLocaleString()}/{status.bossHp.toLocaleString()}
+                {result.bossHpBefore.toLocaleString()} → {result.bossCurrentHp.toLocaleString()}
               </span>
+            </div>
+          </div>
+
+          <div className="mt-4 grid gap-3 text-sm text-slate-200/80 sm:grid-cols-3">
+            <div className="rounded-xl bg-slate-950/40 px-4 py-3">
+              Нанесено:{" "}
+              <span className="font-mono">{result.totalDamageDealt.toLocaleString()}</span> за{" "}
+              <span className="font-mono">{result.rounds}</span> удар(ов)
+            </div>
+            <div className="rounded-xl bg-slate-950/40 px-4 py-3">
+              Получено:{" "}
+              <span className="font-mono">{result.totalDamageTaken.toLocaleString()}</span>
+            </div>
+            <div
+              className={[
+                "rounded-xl px-4 py-3 font-extrabold",
+                result.cardSurvived
+                  ? "bg-emerald-500/10 text-emerald-50"
+                  : "bg-rose-500/10 text-rose-50",
+              ].join(" ")}
+            >
+              {result.cardSurvived ? "Карта выстояла!" : "Ваша карта погибла!"}
             </div>
           </div>
 
@@ -316,4 +343,3 @@ export function RaidPage() {
     </main>
   );
 }
-

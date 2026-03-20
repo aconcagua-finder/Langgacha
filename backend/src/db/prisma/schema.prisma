@@ -1,0 +1,53 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Word {
+  id            String   @id @default(uuid())
+  language      String
+  word          String
+  translationRu String
+  type          String
+  rarity        String
+  baseFue       Int
+  baseDef       Int
+  colorido      Int
+  flavorText    String
+  hint          String
+  tags          String[]
+  canEvolve     Boolean  @default(false)
+  imagePrompt   String?
+
+  quizCorrect   String
+  quizOptions   String[]
+
+  evolutionData Json?
+
+  createdAt     DateTime @default(now())
+
+  cards         Card[]
+
+  @@unique([language, word], name: "language_word")
+}
+
+model Card {
+  id              String   @id @default(uuid())
+  wordId          String
+  word            Word     @relation(fields: [wordId], references: [id])
+
+  fue             Int
+  def             Int
+
+  masteryProgress Int      @default(0)
+  condition       String   @default("Normal")
+  isEvolved       Boolean  @default(false)
+
+  createdAt       DateTime @default(now())
+  lastUsedAt      DateTime @default(now())
+}
+

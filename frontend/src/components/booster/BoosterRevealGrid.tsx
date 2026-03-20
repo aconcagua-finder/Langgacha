@@ -62,7 +62,7 @@ function RevealSlot({
         className="transition-transform duration-200 ease-in-out"
         style={{ transform: `scaleX(${scaleX})`, willChange: "transform" }}
       >
-        <div className="h-[150px] w-[100px] sm:h-[180px] sm:w-[120px] md:h-[210px] md:w-[140px] lg:h-[240px] lg:w-[160px]">
+        <div className="h-[126px] w-[84px] min-[375px]:h-[135px] min-[375px]:w-[90px] sm:h-[150px] sm:w-[100px] md:h-[180px] md:w-[120px] lg:h-[210px] lg:w-[140px] xl:h-[240px] xl:w-[160px]">
           {showFront ? <CardMini card={card} size="booster" /> : <CardBackCover />}
         </div>
       </div>
@@ -88,7 +88,7 @@ export function BoosterRevealGrid({ cards, onAllRevealed }: Props) {
 
   return (
     <section className="flex flex-col items-center gap-6">
-      <div className="grid grid-cols-3 gap-3 md:grid-cols-5">
+      <div className="grid grid-cols-3 gap-2 sm:gap-3 md:grid-cols-5">
         {cards.map((c, i) => (
           <RevealSlot
             key={c.id}

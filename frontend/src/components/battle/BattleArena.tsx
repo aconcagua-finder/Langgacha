@@ -28,7 +28,7 @@ function CardPanel({
   return (
     <div
       className={[
-        "w-full max-w-sm rounded-2xl border bg-slate-900/50 p-4 backdrop-blur",
+        "w-full max-w-sm rounded-2xl border bg-slate-900/50 p-3 backdrop-blur sm:p-4",
         rarityTheme.glow,
       ].join(" ")}
       style={{ borderColor: rarityTheme.border }}
@@ -36,7 +36,7 @@ function CardPanel({
       <div className="flex items-start justify-between gap-3">
         <div>
           <div className="text-xs text-slate-200/60">{side === "player" ? "Игрок" : "Бот"}</div>
-          <div className="mt-1 text-2xl font-extrabold tracking-tight">{card.word}</div>
+          <div className="mt-1 text-xl font-extrabold tracking-tight sm:text-2xl">{card.word}</div>
           <div className="mt-2 flex items-center gap-2 text-xs text-slate-200/70">
             <span>{typeTheme.emoji}</span>
             <span>{label(TYPE_LABELS, card.type)}</span>
@@ -50,24 +50,24 @@ function CardPanel({
           </div>
         </div>
         {inspiration ? (
-          <div className="rounded-full bg-emerald-400 px-3 py-1 text-xs font-bold text-slate-950">
+          <div className="rounded-full bg-emerald-400 px-3 py-1 text-[11px] font-bold text-slate-950">
             {BATTLE_LABELS.inspiration} +15%
           </div>
         ) : null}
       </div>
 
-      <div className="mt-4 grid grid-cols-2 gap-3">
-        <div className="rounded-xl bg-slate-950/40 p-3">
-          <div className="text-xs text-slate-200/70">ATK</div>
-          <div className="text-lg font-bold">{card.atk}</div>
+      <div className="mt-3 grid grid-cols-2 gap-2 sm:mt-4 sm:gap-3">
+        <div className="rounded-xl bg-slate-950/40 p-2.5 sm:p-3">
+          <div className="text-[11px] text-slate-200/70 sm:text-xs">ATK</div>
+          <div className="text-base font-bold sm:text-lg">{card.atk}</div>
         </div>
-        <div className="rounded-xl bg-slate-950/40 p-3">
-          <div className="text-xs text-slate-200/70">DEF</div>
-          <div className="text-lg font-bold">{card.def}</div>
+        <div className="rounded-xl bg-slate-950/40 p-2.5 sm:p-3">
+          <div className="text-[11px] text-slate-200/70 sm:text-xs">DEF</div>
+          <div className="text-base font-bold sm:text-lg">{card.def}</div>
         </div>
       </div>
 
-      <div className="mt-4">
+      <div className="mt-3 sm:mt-4">
         <div className="flex items-center justify-between text-xs text-slate-200/70">
           <div>HP</div>
           <div className="font-mono">
@@ -82,7 +82,7 @@ function CardPanel({
         </div>
       </div>
 
-      <div className="mt-4 text-xs text-slate-200/70">
+      <div className="mt-3 text-xs text-slate-200/70 sm:mt-4">
         Состояние:{" "}
         <span className="font-mono">{label(CONDITION_LABELS, card.condition)}</span>
       </div>
@@ -106,7 +106,7 @@ export function BattleArena({
   vsLabel?: string;
 }) {
   return (
-    <div className="flex w-full flex-col items-center justify-center gap-6 lg:flex-row">
+    <div className="flex w-full flex-col items-center justify-center gap-4 sm:gap-6 lg:flex-row">
       <CardPanel
         side="player"
         card={playerCard}
@@ -114,7 +114,7 @@ export function BattleArena({
         maxHp={playerCard.hp}
         inspiration={playerInspired}
       />
-      <div className="text-2xl font-extrabold tracking-tight text-slate-200/70">
+      <div className="text-xl font-extrabold tracking-tight text-slate-200/70 sm:text-2xl">
         {vsLabel ?? "VS"}
       </div>
       <CardPanel side="bot" card={botCard} hp={botHp} maxHp={botCard.hp} />

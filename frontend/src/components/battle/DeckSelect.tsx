@@ -183,7 +183,7 @@ export function DeckSelect({ onStart }: Props) {
       ) : null}
 
       <div className="fixed bottom-0 left-0 right-0 z-20 border-t border-slate-800/60 bg-slate-950/80 backdrop-blur">
-        <div className="mx-auto flex max-w-5xl items-center gap-4 px-6 py-3">
+        <div className="mx-auto flex max-w-5xl items-center gap-4 px-3 py-2 sm:px-6 sm:py-3">
           <div className="flex flex-1 items-center gap-2 overflow-x-auto">
             {Array.from({ length: 5 }, (_, i) => {
               const id = selectedIds[i];
@@ -192,7 +192,7 @@ export function DeckSelect({ onStart }: Props) {
                 return (
                   <div
                     key={i}
-                    className="flex h-[90px] w-[64px] shrink-0 items-center justify-center rounded-xl border border-dashed border-slate-700/70 bg-slate-950/10 text-xs font-semibold text-slate-200/60"
+                    className="flex h-[70px] w-[50px] shrink-0 items-center justify-center rounded-xl border border-dashed border-slate-700/70 bg-slate-950/10 text-xs font-semibold text-slate-200/60 sm:h-[90px] sm:w-[64px]"
                   >
                     {i + 1}
                   </div>
@@ -207,7 +207,7 @@ export function DeckSelect({ onStart }: Props) {
                   key={id}
                   type="button"
                   onClick={() => removeAtIndex(i)}
-                  className="flex h-[90px] w-[64px] shrink-0 flex-col justify-between rounded-xl border bg-slate-950/20 p-2 text-left hover:bg-slate-950/30"
+                  className="flex h-[70px] w-[50px] shrink-0 flex-col justify-between rounded-xl border bg-slate-950/20 p-2 text-left hover:bg-slate-950/30 sm:h-[90px] sm:w-[64px]"
                   style={{ borderColor: rarityTheme.border }}
                   aria-label={`Убрать ${card.word} из колоды`}
                 >

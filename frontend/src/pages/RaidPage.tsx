@@ -229,14 +229,14 @@ export function RaidPage() {
           <div className="flex flex-col gap-4">
             <div className="rounded-2xl border border-slate-800/60 bg-slate-950/40 p-5">
               <div className="text-sm font-extrabold text-slate-100">{nextCard.quiz.question}</div>
-              <div className="mt-4 grid gap-2 sm:grid-cols-2">
+              <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
                 {nextCard.quiz.options.map((opt) => (
                   <button
                     key={opt}
                     type="button"
                     disabled={loading}
                     onClick={() => onAnswer(opt)}
-                    className="rounded-xl border border-slate-800/60 bg-slate-950/40 px-4 py-3 text-left text-sm font-semibold text-slate-200/80 hover:bg-slate-900/60 disabled:opacity-60"
+                    className="min-h-[44px] rounded-xl border border-slate-800/60 bg-slate-950/40 px-4 py-3 text-left text-sm font-semibold text-slate-200/80 hover:bg-slate-900/60 disabled:opacity-60"
                   >
                     {opt}
                   </button>

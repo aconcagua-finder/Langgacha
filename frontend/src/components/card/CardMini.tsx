@@ -31,8 +31,8 @@ const sizeClass: Record<Size, { w: string; h?: string; aspect?: string }> = {
   mini: { w: "w-full max-w-[200px]", aspect: "aspect-[200/320]" },
   deck: { w: "w-full max-w-[220px]", aspect: "aspect-[220/350]" },
   booster: {
-    w: "w-[100px] sm:w-[120px] md:w-[140px] lg:w-[160px]",
-    h: "h-[150px] sm:h-[180px] md:h-[210px] lg:h-[240px]",
+    w: "w-full",
+    h: "h-full",
   },
 };
 

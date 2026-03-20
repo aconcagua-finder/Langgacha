@@ -47,7 +47,7 @@ export function CollectionFilters({
                   })
                 }
                 className={[
-                  "flex items-center gap-2 rounded-xl border px-3 py-2 text-sm",
+                  "flex h-11 items-center gap-2 rounded-xl border px-3 text-sm",
                   active
                     ? "border-slate-200/30 bg-slate-950/40 text-slate-50"
                     : "border-slate-800/60 bg-slate-950/20 text-slate-200/80 hover:bg-slate-950/30",
@@ -82,7 +82,7 @@ export function CollectionFilters({
                   })
                 }
                 className={[
-                  "rounded-xl border px-3 py-2 text-sm font-semibold",
+                  "h-11 rounded-xl border px-3 text-sm font-semibold",
                   active
                     ? "bg-slate-950/40 text-slate-50"
                     : "border-slate-800/60 bg-slate-950/20 text-slate-200/80 hover:bg-slate-950/30",
@@ -111,7 +111,7 @@ export function CollectionFilters({
               sort: e.target.value as ListCardsSort,
             })
           }
-          className="rounded-xl border border-slate-800/60 bg-slate-950/30 px-3 py-2 text-sm text-slate-100"
+          className="h-11 rounded-xl border border-slate-800/60 bg-slate-950/30 px-3 text-sm text-slate-100"
         >
           <option value="newest">Новые</option>
           <option value="atk_desc">По силе (ATK)</option>

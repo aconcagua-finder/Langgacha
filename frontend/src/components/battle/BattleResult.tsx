@@ -50,7 +50,7 @@ export function BattleResult({
                 key={r.roundNumber}
                 className="flex flex-wrap items-center gap-2 rounded-xl border border-slate-800/60 bg-slate-950/20 px-3 py-2 text-sm"
               >
-                <div className="w-16 shrink-0 text-xs font-semibold text-slate-200/60">
+                <div className="w-12 shrink-0 text-[11px] font-semibold text-slate-200/60 sm:w-16 sm:text-xs">
                   Раунд {r.roundNumber}
                 </div>
 
@@ -62,7 +62,10 @@ export function BattleResult({
                     {r.playerCard.rarity}
                   </span>
                   <span className="truncate font-semibold text-slate-50">
-                    {r.playerCard.word} <span className="font-mono text-xs text-slate-200/60">ATK {r.playerCard.atk}</span>
+                    {r.playerCard.word}{" "}
+                    <span className="hidden font-mono text-xs text-slate-200/60 sm:inline">
+                      ATK {r.playerCard.atk}
+                    </span>
                   </span>
                   <span className="text-slate-200/40">⚔️</span>
                   <span
@@ -72,24 +75,28 @@ export function BattleResult({
                     {r.botCard.rarity}
                   </span>
                   <span className="truncate font-semibold text-slate-50">
-                    {r.botCard.word} <span className="font-mono text-xs text-slate-200/60">ATK {r.botCard.atk}</span>
+                    {r.botCard.word}{" "}
+                    <span className="hidden font-mono text-xs text-slate-200/60 sm:inline">
+                      ATK {r.botCard.atk}
+                    </span>
                   </span>
                 </div>
 
-                <div
-                  className={[
-                    "shrink-0 text-xs font-extrabold",
-                    playerWon ? "text-emerald-300" : "text-rose-300",
-                  ].join(" ")}
-                >
-                  {playerWon ? "✅ Победа" : "❌ Поражение"}
-                </div>
-
-                {r.inspirationApplied ? (
-                  <div className="shrink-0 rounded-full bg-amber-300/15 px-2 py-0.5 text-[10px] font-extrabold text-amber-200">
-                    Inspiration
+                <div className="flex w-full items-center justify-between gap-2 sm:w-auto sm:justify-start">
+                  <div
+                    className={[
+                      "shrink-0 text-xs font-extrabold",
+                      playerWon ? "text-emerald-300" : "text-rose-300",
+                    ].join(" ")}
+                  >
+                    {playerWon ? "✅ Победа" : "❌ Поражение"}
                   </div>
-                ) : null}
+                  {r.inspirationApplied ? (
+                    <div className="shrink-0 rounded-full bg-amber-300/15 px-2 py-0.5 text-[10px] font-extrabold text-amber-200">
+                      Inspiration
+                    </div>
+                  ) : null}
+                </div>
               </div>
             );
           })}

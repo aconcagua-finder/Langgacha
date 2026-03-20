@@ -139,7 +139,7 @@ export function DeckSelect({ onStart }: Props) {
                     ✓
                   </div>
                 ) : null}
-                <CardMini card={c} />
+                <CardMini card={c} tilt={false} />
               </button>
             ))}
           </div>

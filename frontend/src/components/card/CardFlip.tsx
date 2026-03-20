@@ -13,11 +13,11 @@ export function CardFlip({ front, back }: Props) {
     <button
       type="button"
       onClick={() => setFlipped((v) => !v)}
-      className="card-perspective group block w-[340px] select-none"
+      className="card-perspective group block w-full max-w-[340px] select-none"
       aria-label="Перевернуть карточку"
     >
       <div
-        className="relative h-[480px] w-full transition-transform duration-700 card-preserve-3d"
+        className="relative w-full aspect-[340/480] transition-transform duration-700 card-preserve-3d"
         style={{ transform: flipped ? "rotateY(180deg)" : "rotateY(0deg)" }}
       >
         <div className="absolute inset-0 card-backface-hidden">{front}</div>
@@ -31,4 +31,3 @@ export function CardFlip({ front, back }: Props) {
     </button>
   );
 }
-

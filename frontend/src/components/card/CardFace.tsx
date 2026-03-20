@@ -1,5 +1,6 @@
 import type { GeneratedCard } from "../../types/card";
 import { getRarityTheme, getTypeTheme } from "../../styles/card-themes";
+import { useTiltEffect } from "../../hooks/useTiltEffect";
 import {
   BATTLE_LABELS,
   CONDITION_LABELS,
@@ -24,9 +25,10 @@ const conditionEmoji: Record<string, string> = {
   Deteriorated: "🟥",
 };
 
-export function CardFace({ card }: { card: GeneratedCard }) {
+export function CardFace({ card, tilt = true }: { card: GeneratedCard; tilt?: boolean }) {
   const typeTheme = getTypeTheme(card.type);
   const rarityTheme = getRarityTheme(card.rarity);
+  const tiltFx = useTiltEffect({ enabled: tilt });
   const conditionTooltip =
     card.condition === "Brilliant"
       ? TOOLTIPS.conditionBrilliant
@@ -43,9 +45,24 @@ export function CardFace({ card }: { card: GeneratedCard }) {
         "flex flex-col overflow-hidden",
         rarityTheme.glow,
         rarityTheme.frameFx,
+        tiltFx.isEnabled ? "group" : "",
       ].join(" ")}
-      style={{ borderColor: rarityTheme.border }}
+      style={{ ...tiltFx.style, borderColor: rarityTheme.border }}
+      onMouseEnter={tiltFx.onMouseEnter}
+      onMouseLeave={tiltFx.onMouseLeave}
+      onMouseMove={tiltFx.onMouseMove}
+      ref={tiltFx.ref}
     >
+      {tiltFx.isEnabled ? (
+        <div
+          className="pointer-events-none absolute inset-0 opacity-[var(--tilt-glare)] transition-opacity duration-150"
+          style={{
+            background:
+              "radial-gradient(circle at var(--tilt-x) var(--tilt-y), rgba(255,255,255,0.20), transparent 60%)",
+            mixBlendMode: "screen",
+          }}
+        />
+      ) : null}
       {card.masteryProgress >= 5 ? (
         <div className="pointer-events-none absolute right-4 top-4 z-10 rotate-12 rounded-xl bg-emerald-400/90 px-4 py-2 text-xs font-extrabold tracking-wide text-slate-950 shadow-lg">
           ✓ {BATTLE_LABELS.mastered}

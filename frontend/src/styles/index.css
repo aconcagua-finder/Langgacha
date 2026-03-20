@@ -8,10 +8,12 @@
 
 .card-preserve-3d {
   transform-style: preserve-3d;
+  will-change: transform;
 }
 
 .card-backface-hidden {
   backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
 }
 
 .card-holo {

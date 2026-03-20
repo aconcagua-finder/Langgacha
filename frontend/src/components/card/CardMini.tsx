@@ -1,5 +1,6 @@
 import type { GeneratedCard } from "../../types/card";
 import { getRarityTheme, getTypeTheme } from "../../styles/card-themes";
+import { useTiltEffect } from "../../hooks/useTiltEffect";
 import {
   BATTLE_LABELS,
   CONDITION_LABELS,
@@ -38,9 +39,11 @@ const sizeClass: Record<Size, { w: string; h: string }> = {
 export function CardMini({
   card,
   size = "mini",
+  tilt = true,
 }: {
   card: GeneratedCard;
   size?: Size;
+  tilt?: boolean;
 }) {
   const typeTheme = getTypeTheme(card.type);
   const rarityTheme = getRarityTheme(card.rarity);
@@ -55,6 +58,7 @@ export function CardMini({
           : TOOLTIPS.conditionNormal;
 
   const compact = size === "booster";
+  const tiltFx = useTiltEffect({ enabled: tilt });
   return (
     <div
       className={[
@@ -62,9 +66,24 @@ export function CardMini({
         sz.h,
         "relative overflow-hidden rounded-2xl border bg-slate-900/60 backdrop-blur",
         "flex flex-col",
+        tiltFx.isEnabled ? "group" : "",
       ].join(" ")}
-      style={{ borderColor: rarityTheme.border }}
+      style={{ ...tiltFx.style, borderColor: rarityTheme.border }}
+      onMouseEnter={tiltFx.onMouseEnter}
+      onMouseLeave={tiltFx.onMouseLeave}
+      onMouseMove={tiltFx.onMouseMove}
+      ref={tiltFx.ref}
     >
+      {tiltFx.isEnabled ? (
+        <div
+          className="pointer-events-none absolute inset-0 opacity-[var(--tilt-glare)] transition-opacity duration-150"
+          style={{
+            background:
+              "radial-gradient(circle at var(--tilt-x) var(--tilt-y), rgba(255,255,255,0.20), transparent 60%)",
+            mixBlendMode: "screen",
+          }}
+        />
+      ) : null}
       {card.masteryProgress >= 5 ? (
         <div className="pointer-events-none absolute right-2 top-10 z-10 rounded-lg bg-emerald-400/90 px-2 py-1 text-[10px] font-extrabold tracking-wide text-slate-950 shadow-lg">
           ✓ {BATTLE_LABELS.mastered}

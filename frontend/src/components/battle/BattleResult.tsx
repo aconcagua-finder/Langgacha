@@ -31,7 +31,7 @@ export function BattleResult({
         <div className="flex flex-col items-center gap-3">
           <div className="text-sm font-semibold text-slate-200/80">Бонусная карта</div>
           <CardFlip
-            front={<CardFace card={result.rewards.bonusCard} />}
+            front={<CardFace card={result.rewards.bonusCard} tilt={false} />}
             back={<CardBack card={result.rewards.bonusCard} />}
           />
         </div>

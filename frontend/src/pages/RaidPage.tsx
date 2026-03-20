@@ -223,7 +223,7 @@ export function RaidPage() {
       {phase === "quiz" && nextCard ? (
         <section className="grid gap-6 md:grid-cols-[240px_1fr]">
           <div className="flex justify-center md:justify-start">
-            <CardMini card={nextCard.card} />
+            <CardMini card={nextCard.card} tilt={false} />
           </div>
 
           <div className="flex flex-col gap-4">

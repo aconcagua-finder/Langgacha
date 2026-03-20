@@ -4,8 +4,11 @@ import { Link } from "react-router-dom";
 import { listCards, type ListCardsSort } from "../api/cards";
 import type { GeneratedCard } from "../types/card";
 import { CardModal } from "../components/collection/CardModal";
+import { CardGroupModal } from "../components/collection/CardGroupModal";
 import { CollectionFilters } from "../components/collection/CollectionFilters";
 import { CollectionGrid } from "../components/collection/CollectionGrid";
+import { groupCards } from "../utils/groupCards";
+import type { CardGroup } from "../utils/groupCards";
 
 export function CollectionPage() {
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
@@ -15,6 +18,7 @@ export function CollectionPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [modalCard, setModalCard] = useState<GeneratedCard | null>(null);
+  const [modalGroup, setModalGroup] = useState<CardGroup | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -36,10 +40,18 @@ export function CollectionPage() {
     };
   }, [selectedTypes, selectedRarities, sort]);
 
-  const uniqueWords = useMemo(() => new Set(cards.map((c) => c.word)).size, [cards]);
+  const groups = useMemo(() => groupCards(cards), [cards]);
+  const uniqueWords = groups.length;
+  const canStartBattle = cards.length >= 5;
 
   return (
-    <main className="mx-auto flex min-h-[calc(100vh-64px)] max-w-5xl flex-col gap-6 px-6 py-10">
+    <>
+      <main
+        className={[
+          "mx-auto flex min-h-[calc(100vh-64px)] max-w-5xl flex-col gap-6 px-6 py-10",
+          canStartBattle ? "pb-24" : "",
+        ].join(" ")}
+      >
       <header className="flex items-end justify-between gap-4">
         <div className="flex flex-col gap-2">
           <h1 className="text-3xl font-extrabold tracking-tight">Коллекция</h1>
@@ -77,11 +89,30 @@ export function CollectionPage() {
           </Link>
         </div>
       ) : (
-        <CollectionGrid cards={cards} onSelect={(c) => setModalCard(c)} />
+        <CollectionGrid
+          groups={groups}
+          onOpenCard={(c) => setModalCard(c)}
+          onOpenGroup={(g) => setModalGroup(g)}
+        />
       )}
 
+      </main>
+
+      {canStartBattle ? (
+        <div className="fixed bottom-0 left-0 right-0 z-10 border-t border-slate-800/60 bg-slate-950/80 backdrop-blur">
+          <div className="mx-auto max-w-5xl px-6 py-3">
+            <Link
+              to="/battle"
+              className="block w-full rounded-xl bg-sky-500 px-4 py-3 text-center font-semibold text-slate-950 hover:bg-sky-400"
+            >
+              Начать бой
+            </Link>
+          </div>
+        </div>
+      ) : null}
+
       <CardModal card={modalCard} onClose={() => setModalCard(null)} />
-    </main>
+      <CardGroupModal group={modalGroup} onClose={() => setModalGroup(null)} />
+    </>
   );
 }
-

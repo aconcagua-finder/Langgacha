@@ -19,11 +19,11 @@ export function TopNav() {
           <NavLink to="/" className={linkClassName} end>
             Бустер
           </NavLink>
-          <NavLink to="/collection" className={linkClassName}>
-            Коллекция
-          </NavLink>
           <NavLink to="/battle" className={linkClassName}>
             Бой
+          </NavLink>
+          <NavLink to="/collection" className={linkClassName}>
+            Коллекция
           </NavLink>
         </nav>
       </div>

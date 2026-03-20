@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 
 import { listCards } from "../../api/cards";
 import type { GeneratedCard } from "../../types/card";
-import { CardFace } from "../card/CardFace";
+import { CardMini } from "../card/CardMini";
 
 type Props = {
   onStart: (cardIds: string[]) => void;
@@ -15,6 +15,7 @@ export function DeckSelect({ onStart }: Props) {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   const selectedSet = useMemo(() => new Set(selectedIds), [selectedIds]);
+  const byId = useMemo(() => new Map(cards.map((c) => [c.id, c])), [cards]);
 
   const load = async () => {
     setLoading(true);
@@ -75,34 +76,26 @@ export function DeckSelect({ onStart }: Props) {
           <div className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-200/60">
             Коллекция
           </div>
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+          <div className="grid place-items-center grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
             {cards.map((c) => (
               <button
                 key={c.id}
                 type="button"
                 onClick={() => toggle(c)}
                 className={[
-                  "flex justify-center rounded-2xl border p-1",
+                  "relative rounded-2xl border p-1",
                   selectedSet.has(c.id)
                     ? "border-sky-400/60 bg-sky-500/10"
                     : "border-transparent hover:border-slate-700/70",
                 ].join(" ")}
                 aria-label={`Выбрать карту ${c.word}`}
               >
-                <div style={{ transform: "scale(0.7)" }} className="origin-top">
-                  <div className="w-[340px]">
-                    <div className="h-[480px]">
-                      <div className="relative h-[480px]">
-                        {selectedSet.has(c.id) ? (
-                          <div className="absolute right-3 top-3 z-10 rounded-full bg-sky-400 px-2 py-1 text-xs font-bold text-slate-950">
-                            ✓
-                          </div>
-                        ) : null}
-                        <CardFace card={c} />
-                      </div>
-                    </div>
+                {selectedSet.has(c.id) ? (
+                  <div className="absolute right-3 top-3 z-10 rounded-full bg-sky-400 px-2 py-1 text-xs font-bold text-slate-950">
+                    ✓
                   </div>
-                </div>
+                ) : null}
+                <CardMini card={c} />
               </button>
             ))}
           </div>
@@ -113,27 +106,35 @@ export function DeckSelect({ onStart }: Props) {
         <div className="text-xs font-semibold uppercase tracking-wide text-slate-200/60">
           Колода
         </div>
-        <div className="mt-3 flex flex-wrap gap-2">
+        <div className="mt-3 flex gap-3 overflow-x-auto pb-2">
           {Array.from({ length: 5 }, (_, i) => {
             const id = selectedIds[i];
-            const card = cards.find((c) => c.id === id);
+            const card = id ? byId.get(id) : undefined;
+            if (!card) {
+              return (
+                <div
+                  key={i}
+                  className="flex h-[308px] w-[220px] shrink-0 items-center justify-center rounded-2xl border border-dashed border-slate-700/70 bg-slate-950/10 text-sm text-slate-200/50"
+                >
+                  Слот {i + 1}
+                </div>
+              );
+            }
+
             return (
-              <button
-                key={i}
-                type="button"
-                onClick={() => {
-                  if (!id) return;
-                  setSelectedIds((prev) => prev.filter((x) => x !== id));
-                }}
-                className={[
-                  "rounded-xl border px-3 py-2 text-sm",
-                  id
-                    ? "border-slate-700/70 bg-slate-950/30 text-slate-100 hover:bg-slate-950/40"
-                    : "border-slate-800/60 bg-slate-950/10 text-slate-200/40",
-                ].join(" ")}
-              >
-                {card ? `${i + 1}. ${card.word}` : `${i + 1}. —`}
-              </button>
+              <div key={id} className="relative shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setSelectedIds((prev) => prev.filter((x) => x !== id))}
+                  className="rounded-2xl border border-transparent hover:border-slate-700/70"
+                  aria-label={`Убрать ${card.word} из колоды`}
+                >
+                  <CardMini card={card} size="deck" />
+                </button>
+                <div className="absolute left-3 top-3 rounded-full bg-slate-950/70 px-2 py-1 text-xs font-extrabold text-slate-50">
+                  {i + 1}
+                </div>
+              </div>
             );
           })}
         </div>

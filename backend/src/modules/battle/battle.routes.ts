@@ -1,8 +1,11 @@
 import type { FastifyPluginAsync } from "fastify";
 
+import { getCurrentPlayer } from "../auth/auth.helpers.js";
 import { answerRound, startBattle } from "./battle.service.js";
 
 export const battleRoutes: FastifyPluginAsync = async (app) => {
+  app.addHook("onRequest", app.authenticate);
+
   app.post("/start", async (request, reply) => {
     const body = request.body as { cardIds?: unknown };
     const cardIds = body?.cardIds;
@@ -15,7 +18,8 @@ export const battleRoutes: FastifyPluginAsync = async (app) => {
       });
     }
     try {
-      return await startBattle(cardIds as string[]);
+      const player = await getCurrentPlayer(request);
+      return await startBattle(player.id, cardIds as string[]);
     } catch (e) {
       const message = e instanceof Error ? e.message : "Client Error";
       return reply.code(400).send({ error: "Bad Request", message, statusCode: 400 });
@@ -35,7 +39,8 @@ export const battleRoutes: FastifyPluginAsync = async (app) => {
     }
 
     try {
-      return await answerRound({
+      const player = await getCurrentPlayer(request);
+      return await answerRound(player.id, {
         battleId: params.battleId,
         roundNumber: body.roundNumber,
         answer: body.answer,

@@ -3,7 +3,6 @@ import type { Card, Word } from "@prisma/client";
 import { prisma } from "../../db/prisma.js";
 import { computeCondition } from "../../shared/condition.js";
 import { rollStat, type Rarity } from "../../shared/constants.js";
-import { getOrCreateDefaultPlayer } from "../player/player.service.js";
 import type { CardCondition, GeneratedCardDto } from "./cards.types.js";
 
 type DbClient = Pick<typeof prisma, "word" | "card">;
@@ -55,13 +54,13 @@ const pickRandomWord = async (
 
 export const createCardFromWord = async (
   word: Word,
-  params?: { playerId?: string; db?: DbClient },
+  params: { playerId: string; db?: DbClient },
 ): Promise<GeneratedCardDto> => {
-  const db = params?.db ?? prisma;
+  const db = params.db ?? prisma;
   const rarity = word.rarity as Rarity;
   const atk = rollStat(rarity, word.baseAtk);
   const def = rollStat(rarity, word.baseDef);
-  const playerId = params?.playerId ?? (await getOrCreateDefaultPlayer()).id;
+  const playerId = params.playerId;
 
   const created = await db.card.create({
     data: {
@@ -79,11 +78,11 @@ export const createCardFromWord = async (
   return mapCardToDto(created);
 };
 
-export const generateCardFromPool = async (params?: {
+export const generateCardFromPool = async (params: {
   rarity?: Rarity;
-  playerId?: string;
+  playerId: string;
   db?: DbClient;
 }): Promise<GeneratedCardDto> => {
   const word = await pickRandomWord(params);
-  return createCardFromWord(word, { playerId: params?.playerId, db: params?.db });
+  return createCardFromWord(word, { playerId: params.playerId, db: params.db });
 };

@@ -71,6 +71,7 @@ export type BattleAnswerResponse = {
 
 export type BattleState = {
   id: string;
+  playerId: string;
   playerCards: BattleCard[];
   botCards: BattleCard[];
   playerPos: number;

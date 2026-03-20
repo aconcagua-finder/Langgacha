@@ -1,25 +1,31 @@
 import type { FastifyPluginAsync } from "fastify";
 
+import { getCurrentPlayer } from "../auth/auth.helpers.js";
 import { disintegrateCard, generateCard, listCards } from "./cards.service.js";
 
 export const cardsRoutes: FastifyPluginAsync = async (app) => {
-  app.post("/generate", async () => {
-    return generateCard();
+  app.addHook("onRequest", app.authenticate);
+
+  app.post("/generate", async (request) => {
+    const player = await getCurrentPlayer(request);
+    return generateCard(player.id);
   });
 
   app.get("/", async (request) => {
+    const player = await getCurrentPlayer(request);
     const query = request.query as {
       type?: string | string[];
       rarity?: string | string[];
       sort?: string;
     };
-    return listCards(query);
+    return listCards(player.id, query);
   });
 
   app.post("/:cardId/disintegrate", async (request, reply) => {
+    const player = await getCurrentPlayer(request);
     const params = request.params as { cardId: string };
     try {
-      return await disintegrateCard(params.cardId);
+      return await disintegrateCard(player.id, params.cardId);
     } catch (e) {
       const message = e instanceof Error ? e.message : "Client Error";
       const notFound = message.toLowerCase().includes("not found");

@@ -40,16 +40,16 @@ export const addDust = async (playerId: string, amount: number): Promise<number>
   return updated.dust;
 };
 
-export const getPlayerDto = async (): Promise<PlayerDto> => {
-  const player = await getOrCreateDefaultPlayer();
-  await ensureCardsHavePlayer(player.id);
+export const getPlayerDto = async (playerId: string): Promise<PlayerDto> => {
+  const player = await prisma.player.findUnique({ where: { id: playerId } });
+  if (!player) throw new Error("Player not found.");
 
-  const boosterStatus = await rechargeAndGet(player.id);
+  const boosterStatus = await rechargeAndGet(playerId);
   const boosterInfo = publicBoosterInfo(boosterStatus);
   const craftAvailability = getDailyAvailability(player.lastCraftAt ?? null);
 
   const dominatedCount = await prisma.card.count({
-    where: { playerId: player.id, masteryProgress: { gte: 5 } },
+    where: { playerId, masteryProgress: { gte: 5 } },
   });
 
   const { current, next } = getLevel(dominatedCount);
@@ -59,7 +59,7 @@ export const getPlayerDto = async (): Promise<PlayerDto> => {
   const progressNeeded = next?.minDominated ?? dominatedCount;
 
   return {
-    id: player.id,
+    id: playerId,
     name: player.name,
     dust: player.dust,
     boosterCount: boosterInfo.count,
@@ -75,7 +75,7 @@ export const getPlayerDto = async (): Promise<PlayerDto> => {
   };
 };
 
-export const getUnlockedRaritiesForPlayer = async (): Promise<string[]> => {
-  const dto = await getPlayerDto();
+export const getUnlockedRaritiesForPlayer = async (playerId: string): Promise<string[]> => {
+  const dto = await getPlayerDto(playerId);
   return dto.unlockedRarities;
 };

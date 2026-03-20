@@ -2,6 +2,7 @@ import type { FastifyPluginAsync } from "fastify";
 
 import { prisma } from "../../db/prisma.js";
 import { MAX_BOOSTERS } from "../../shared/constants.js";
+import { getCurrentPlayer } from "../auth/auth.helpers.js";
 import { getOrCreateDefaultPlayer, getPlayerDto } from "../player/player.service.js";
 
 const clampInt = (value: number): number => (Number.isFinite(value) ? Math.floor(value) : 0);
@@ -15,6 +16,18 @@ export const devRoutes: FastifyPluginAsync = async (app) => {
         statusCode: 403,
       });
     }
+
+    const getPlayerForDev = async () => {
+      if (request.headers.authorization) {
+        try {
+          await request.jwtVerify();
+          return await getCurrentPlayer(request);
+        } catch {
+          // ignore invalid tokens for dev endpoint
+        }
+      }
+      return await getOrCreateDefaultPlayer();
+    };
 
     const body = (request.body ?? {}) as {
       boosters?: unknown;
@@ -42,7 +55,7 @@ export const devRoutes: FastifyPluginAsync = async (app) => {
       });
     }
 
-    const player = await getOrCreateDefaultPlayer();
+    const player = await getPlayerForDev();
 
     if (boosters) {
       await prisma.player.update({
@@ -72,6 +85,6 @@ export const devRoutes: FastifyPluginAsync = async (app) => {
       await prisma.player.update({ where: { id: player.id }, data: { dust: next } });
     }
 
-    return getPlayerDto();
+    return getPlayerDto(player.id);
   });
 };

@@ -6,7 +6,7 @@ import { battleStore } from "../../db/redis.js";
 import { prisma } from "../../db/prisma.js";
 import { computeCondition, improveCondition } from "../../shared/condition.js";
 import { generateCardFromPool } from "../cards/cards.generator.js";
-import { addDust, getOrCreateDefaultPlayer } from "../player/player.service.js";
+import { addDust } from "../player/player.service.js";
 import { applyConditionModifier, computeHp, simulateCombat } from "./battle.combat.js";
 import { generateBotDeck } from "./battle.bot.js";
 import { applyAnswerReward, dustForDefeatedBot, shouldDropBonusCard } from "./battle.rewards.js";
@@ -100,7 +100,7 @@ const onCorrectAnswer = async (cardId: string): Promise<void> => {
   });
 };
 
-export const startBattle = async (cardIds: string[]): Promise<BattleStartResponse> => {
+export const startBattle = async (playerId: string, cardIds: string[]): Promise<BattleStartResponse> => {
   if (!Array.isArray(cardIds) || cardIds.length !== 5) {
     throw new Error("cardIds must contain exactly 5 ids.");
   }
@@ -108,7 +108,7 @@ export const startBattle = async (cardIds: string[]): Promise<BattleStartRespons
   if (unique.size !== 5) throw new Error("cardIds must not contain duplicates.");
 
   const cards = await prisma.card.findMany({
-    where: { id: { in: cardIds } },
+    where: { id: { in: cardIds }, playerId },
     include: { word: true },
   });
 
@@ -124,6 +124,7 @@ export const startBattle = async (cardIds: string[]): Promise<BattleStartRespons
   const battleId = randomUUID();
   const state: BattleState = {
     id: battleId,
+    playerId,
     playerCards,
     botCards,
     playerPos: 0,
@@ -159,13 +160,13 @@ export const startBattle = async (cardIds: string[]): Promise<BattleStartRespons
   };
 };
 
-export const answerRound = async (params: {
+export const answerRound = async (playerId: string, params: {
   battleId: string;
   roundNumber: number;
   answer: string;
 }): Promise<BattleAnswerResponse> => {
   const state = await getState(params.battleId);
-  if (!state) throw new Error("Battle not found or expired.");
+  if (!state || state.playerId !== playerId) throw new Error("Battle not found or expired.");
 
   if (params.roundNumber !== state.currentRound) {
     throw new Error(`Invalid roundNumber. Expected ${state.currentRound}.`);
@@ -246,9 +247,8 @@ export const answerRound = async (params: {
       : 0;
 
   let bonusCard: BattleResult["rewards"]["bonusCard"] = null;
-  const player = await getOrCreateDefaultPlayer();
   if (winner === "player" && shouldDropBonusCard()) {
-    bonusCard = await generateCardFromPool({ playerId: player.id });
+    bonusCard = await generateCardFromPool({ playerId });
   }
 
   const battleResult: BattleResult = {
@@ -263,7 +263,7 @@ export const answerRound = async (params: {
     },
   };
 
-  await addDust(player.id, battleResult.rewards.dust);
+  await addDust(playerId, battleResult.rewards.dust);
   await delState(state.id);
   return { round, battleResult };
 };

@@ -7,8 +7,8 @@ import { getPlayerDto } from "../player/player.service.js";
 import { getDailyAvailability, nextUtcMidnightIso } from "./craft.time.js";
 import type { CraftResult } from "./craft.types.js";
 
-export const craftCard = async (rarity: string): Promise<CraftResult> => {
-  const player = await getPlayerDto();
+export const craftCard = async (playerId: string, rarity: string): Promise<CraftResult> => {
+  const player = await getPlayerDto(playerId);
 
   const cost = DUST_PER_CRAFT[rarity] ?? null;
   if (!cost) throw new Error("Invalid rarity");
@@ -17,7 +17,7 @@ export const craftCard = async (rarity: string): Promise<CraftResult> => {
   if (player.dust < cost) throw new Error("Not enough Dust");
 
   const current = await prisma.player.findUnique({
-    where: { id: player.id },
+    where: { id: playerId },
     select: { lastCraftAt: true },
   });
   if (!current) throw new Error("Player not found.");
@@ -30,7 +30,7 @@ export const craftCard = async (rarity: string): Promise<CraftResult> => {
 
   return prisma.$transaction(async (tx) => {
     const updated = await tx.player.update({
-      where: { id: player.id },
+      where: { id: playerId },
       data: {
         dust: { decrement: cost },
         lastCraftAt: now,
@@ -40,7 +40,7 @@ export const craftCard = async (rarity: string): Promise<CraftResult> => {
 
     const card = await generateCardFromPool({
       rarity: rarity as Rarity,
-      playerId: player.id,
+      playerId,
       db: tx,
     });
 
@@ -53,13 +53,13 @@ export const craftCard = async (rarity: string): Promise<CraftResult> => {
   });
 };
 
-export const getCraftStatus = async (): Promise<{
+export const getCraftStatus = async (playerId: string): Promise<{
   available: boolean;
   nextCraftAt: string | null;
 }> => {
-  const player = await getPlayerDto();
+  await getPlayerDto(playerId);
   const current = await prisma.player.findUnique({
-    where: { id: player.id },
+    where: { id: playerId },
     select: { lastCraftAt: true },
   });
   if (!current) throw new Error("Player not found.");

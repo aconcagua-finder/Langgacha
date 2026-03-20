@@ -4,12 +4,10 @@ import { prisma } from "../../db/prisma.js";
 import { DUST_PER_DISINTEGRATE, RARITY_RANK, type Rarity } from "../../shared/constants.js";
 import { generateCardFromPool, mapCardToDto } from "./cards.generator.js";
 import type { GeneratedCardDto } from "./cards.types.js";
-import { addDust, ensureCardsHavePlayer, getOrCreateDefaultPlayer } from "../player/player.service.js";
+import { addDust } from "../player/player.service.js";
 
-export const generateCard = async (): Promise<GeneratedCardDto> => {
-  const player = await getOrCreateDefaultPlayer();
-  await ensureCardsHavePlayer(player.id);
-  return generateCardFromPool({ playerId: player.id });
+export const generateCard = async (playerId: string): Promise<GeneratedCardDto> => {
+  return generateCardFromPool({ playerId });
 };
 
 export type ListCardsParams = {
@@ -25,10 +23,10 @@ const normalizeList = (value?: string[] | string): string[] | undefined => {
   return cleaned.length ? cleaned : undefined;
 };
 
-export const listCards = async (params: ListCardsParams = {}): Promise<GeneratedCardDto[]> => {
-  const player = await getOrCreateDefaultPlayer();
-  await ensureCardsHavePlayer(player.id);
-
+export const listCards = async (
+  playerId: string,
+  params: ListCardsParams = {},
+): Promise<GeneratedCardDto[]> => {
   const types = normalizeList(params.type);
   const rarities = normalizeList(params.rarity);
 
@@ -37,7 +35,7 @@ export const listCards = async (params: ListCardsParams = {}): Promise<Generated
   if (rarities?.length) whereWord.rarity = { in: rarities };
 
   const where: Prisma.CardWhereInput = {
-    playerId: player.id,
+    playerId,
     ...(Object.keys(whereWord).length > 0 ? { word: { is: whereWord } } : {}),
   };
 
@@ -68,17 +66,15 @@ export const listCards = async (params: ListCardsParams = {}): Promise<Generated
 };
 
 export const disintegrateCard = async (
+  playerId: string,
   cardId: string,
 ): Promise<{ dustGained: number; totalDust: number }> => {
-  const player = await getOrCreateDefaultPlayer();
-  await ensureCardsHavePlayer(player.id);
-
   const card = await prisma.card.findUnique({
     where: { id: cardId },
     include: { word: true },
   });
 
-  if (!card || (card.playerId && card.playerId !== player.id)) {
+  if (!card || card.playerId !== playerId) {
     throw new Error("Card not found.");
   }
 
@@ -86,7 +82,7 @@ export const disintegrateCard = async (
   const dustGained = DUST_PER_DISINTEGRATE[rarity] ?? 0;
 
   await prisma.card.delete({ where: { id: cardId } });
-  const totalDust = await addDust(player.id, dustGained);
+  const totalDust = await addDust(playerId, dustGained);
 
   return { dustGained, totalDust };
 };

@@ -21,9 +21,9 @@ const getAvailableRarities = async (): Promise<Rarity[]> => {
   return order.filter((r) => set.has(r));
 };
 
-export const openBooster = async (): Promise<OpenBoosterResponse> => {
-  const player = await getPlayerDto();
-  const boosterStatus = await rechargeAndGet(player.id);
+export const openBooster = async (playerId: string): Promise<OpenBoosterResponse> => {
+  const player = await getPlayerDto(playerId);
+  const boosterStatus = await rechargeAndGet(playerId);
   if (boosterStatus.count === 0) throw new Error("No boosters available");
 
   const available = await getAvailableRarities();
@@ -45,7 +45,7 @@ export const openBooster = async (): Promise<OpenBoosterResponse> => {
   }
 
   const cards = await Promise.all(
-    rolledRarities.map((rarity) => generateCardFromPool({ rarity, playerId: player.id })),
+    rolledRarities.map((rarity) => generateCardFromPool({ rarity, playerId })),
   );
 
   // Safety: if due to missing rarities we still got all C, force-replace last card from UC+
@@ -54,13 +54,13 @@ export const openBooster = async (): Promise<OpenBoosterResponse> => {
     if (allowedUcPlus.length) {
       cards[4] = await generateCardFromPool({
         rarity: rollRarity(allowedUcPlus),
-        playerId: player.id,
+        playerId,
       });
     }
   }
 
   await prisma.player.update({
-    where: { id: player.id },
+    where: { id: playerId },
     data: { boosterCount: { decrement: 1 } },
   });
 

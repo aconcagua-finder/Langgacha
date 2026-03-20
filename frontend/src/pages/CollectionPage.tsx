@@ -46,7 +46,6 @@ export function CollectionPage() {
 
   const groups = useMemo(() => groupCards(cards), [cards]);
   const uniqueWords = groups.length;
-  const canStartBattle = cards.length >= 5;
 
   const onDisintegrate = async (cardId: string) => {
     try {
@@ -72,7 +71,6 @@ export function CollectionPage() {
       <main
         className={[
           "mx-auto flex min-h-[calc(100vh-64px)] max-w-5xl flex-col gap-6 px-6 py-10",
-          canStartBattle ? "pb-24" : "",
         ].join(" ")}
       >
       <header className="flex items-end justify-between gap-4">
@@ -156,19 +154,6 @@ export function CollectionPage() {
       )}
 
       </main>
-
-      {canStartBattle ? (
-        <div className="fixed bottom-0 left-0 right-0 z-10 border-t border-slate-800/60 bg-slate-950/80 backdrop-blur">
-          <div className="mx-auto flex max-w-5xl items-center justify-end px-6 py-2">
-            <Link
-              to="/battle"
-              className="inline-flex items-center justify-center rounded-xl border border-slate-700/70 bg-slate-900/60 px-4 py-2 text-sm font-semibold text-slate-50 hover:bg-slate-900"
-            >
-              ⚔️ Начать бой
-            </Link>
-          </div>
-        </div>
-      ) : null}
 
       <CardModal card={modalCard} onClose={() => setModalCard(null)} onDisintegrate={onDisintegrate} />
       <CardGroupModal

@@ -1,63 +1,107 @@
 import { useEffect, useMemo, useState } from "react";
 
-import { listCards } from "../../api/cards";
+import { listCards, type ListCardsSort } from "../../api/cards";
 import type { GeneratedCard } from "../../types/card";
 import { CardMini } from "../card/CardMini";
+import { CollectionFilters } from "../collection/CollectionFilters";
+import { getRarityTheme, getTypeTheme } from "../../styles/card-themes";
+import { TYPE_LABELS, label } from "../../shared/labels";
 
 type Props = {
   onStart: (cardIds: string[]) => void;
 };
 
 export function DeckSelect({ onStart }: Props) {
+  const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
+  const [selectedRarities, setSelectedRarities] = useState<string[]>([]);
+  const [sort, setSort] = useState<ListCardsSort>("newest");
   const [cards, setCards] = useState<GeneratedCard[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [selectedById, setSelectedById] = useState<Record<string, GeneratedCard>>({});
+  const [refreshKey, setRefreshKey] = useState(0);
 
   const selectedSet = useMemo(() => new Set(selectedIds), [selectedIds]);
   const byId = useMemo(() => new Map(cards.map((c) => [c.id, c])), [cards]);
 
-  const load = async () => {
+  useEffect(() => {
+    let cancelled = false;
     setLoading(true);
     setError(null);
-    try {
-      const data = await listCards({ sort: "newest" });
-      setCards(data);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Unknown error");
-    } finally {
-      setLoading(false);
-    }
-  };
+    listCards({ type: selectedTypes, rarity: selectedRarities, sort })
+      .then((data) => {
+        if (!cancelled) setCards(data);
+      })
+      .catch((e) => {
+        if (!cancelled) setError(e instanceof Error ? e.message : "Unknown error");
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
 
-  useEffect(() => {
-    void load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedTypes, selectedRarities, sort, refreshKey]);
 
   const toggle = (card: GeneratedCard) => {
     setSelectedIds((prev) => {
-      if (prev.includes(card.id)) return prev.filter((id) => id !== card.id);
+      if (prev.includes(card.id)) {
+        setSelectedById((map) => {
+          const next = { ...map };
+          delete next[card.id];
+          return next;
+        });
+        return prev.filter((id) => id !== card.id);
+      }
       if (prev.length >= 5) return prev;
+      setSelectedById((map) => ({ ...map, [card.id]: card }));
       return [...prev, card.id];
     });
   };
 
+  const removeAtIndex = (idx: number) => {
+    setSelectedIds((prev) => {
+      const id = prev[idx];
+      if (id) {
+        setSelectedById((map) => {
+          const next = { ...map };
+          delete next[id];
+          return next;
+        });
+      }
+      return prev.filter((_, i) => i !== idx);
+    });
+  };
+
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex items-center justify-between gap-3">
+    <div className="flex flex-col gap-4 pb-28">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="text-sm text-slate-200/70">
-          Выбери <span className="font-mono">5</span> карт (порядок выбора = порядок боя)
+          Выбери <span className="font-mono">5</span> карт (порядок выбора = порядок боя) ·
+          Выбрано: <span className="font-mono">{selectedIds.length}/5</span>
         </div>
         <button
           type="button"
-          onClick={load}
+          onClick={() => setRefreshKey((v) => v + 1)}
           disabled={loading}
           className="rounded-xl bg-slate-800 px-4 py-3 text-sm font-semibold text-slate-50 hover:bg-slate-700 disabled:opacity-60"
         >
           {loading ? "Загружаю…" : "Обновить"}
         </button>
       </div>
+
+      <CollectionFilters
+        selectedTypes={selectedTypes}
+        selectedRarities={selectedRarities}
+        sort={sort}
+        onChange={(next) => {
+          setSelectedTypes(next.selectedTypes);
+          setSelectedRarities(next.selectedRarities);
+          setSort(next.sort);
+        }}
+      />
 
       {error ? (
         <div className="rounded-xl border border-rose-500/30 bg-rose-500/10 p-4 text-sm text-rose-100">
@@ -102,51 +146,66 @@ export function DeckSelect({ onStart }: Props) {
         </div>
       ) : null}
 
-      <div className="rounded-2xl border border-slate-800/60 bg-slate-900/20 p-4">
-        <div className="text-xs font-semibold uppercase tracking-wide text-slate-200/60">
-          Колода
-        </div>
-        <div className="mt-3 flex gap-3 overflow-x-auto pb-2">
-          {Array.from({ length: 5 }, (_, i) => {
-            const id = selectedIds[i];
-            const card = id ? byId.get(id) : undefined;
-            if (!card) {
-              return (
-                <div
-                  key={i}
-                  className="flex h-[350px] w-[220px] shrink-0 items-center justify-center rounded-2xl border border-dashed border-slate-700/70 bg-slate-950/10 text-sm text-slate-200/50"
-                >
-                  Слот {i + 1}
-                </div>
-              );
-            }
+      <div className="fixed bottom-0 left-0 right-0 z-20 border-t border-slate-800/60 bg-slate-950/80 backdrop-blur">
+        <div className="mx-auto flex max-w-5xl items-center gap-4 px-6 py-3">
+          <div className="flex flex-1 items-center gap-2 overflow-x-auto">
+            {Array.from({ length: 5 }, (_, i) => {
+              const id = selectedIds[i];
+              const card = id ? selectedById[id] ?? byId.get(id) : undefined;
+              if (!card) {
+                return (
+                  <div
+                    key={i}
+                    className="flex h-[90px] w-[64px] shrink-0 items-center justify-center rounded-xl border border-dashed border-slate-700/70 bg-slate-950/10 text-xs font-semibold text-slate-200/60"
+                  >
+                    {i + 1}
+                  </div>
+                );
+              }
 
-            return (
-              <div key={id} className="relative shrink-0">
+              const rarityTheme = getRarityTheme(card.rarity);
+              const typeTheme = getTypeTheme(card.type);
+
+              return (
                 <button
+                  key={id}
                   type="button"
-                  onClick={() => setSelectedIds((prev) => prev.filter((x) => x !== id))}
-                  className="rounded-2xl border border-transparent hover:border-slate-700/70"
+                  onClick={() => removeAtIndex(i)}
+                  className="flex h-[90px] w-[64px] shrink-0 flex-col justify-between rounded-xl border bg-slate-950/20 p-2 text-left hover:bg-slate-950/30"
+                  style={{ borderColor: rarityTheme.badge }}
                   aria-label={`Убрать ${card.word} из колоды`}
                 >
-                  <CardMini card={card} size="deck" />
+                  <div className="flex items-center justify-between gap-1">
+                    <span className="text-lg">{typeTheme.emoji}</span>
+                    <span
+                      className="rounded-full px-2 py-0.5 text-[10px] font-extrabold text-slate-950"
+                      style={{ backgroundColor: rarityTheme.badge }}
+                    >
+                      {card.rarity}
+                    </span>
+                  </div>
+                  <div className="min-w-0">
+                    <div className="truncate text-[11px] font-extrabold leading-tight text-slate-50">
+                      {card.word}
+                    </div>
+                    <div className="truncate text-[10px] text-slate-200/60">
+                      {label(TYPE_LABELS, card.type)}
+                    </div>
+                  </div>
                 </button>
-                <div className="absolute left-3 top-3 rounded-full bg-slate-950/70 px-2 py-1 text-xs font-extrabold text-slate-50">
-                  {i + 1}
-                </div>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
 
-        <button
-          type="button"
-          onClick={() => onStart(selectedIds)}
-          disabled={selectedIds.length !== 5}
-          className="mt-4 w-full rounded-xl bg-sky-500 px-4 py-3 font-semibold text-slate-950 hover:bg-sky-400 disabled:opacity-60 disabled:hover:bg-sky-500"
-        >
-          Начать бой
-        </button>
+          <button
+            type="button"
+            onClick={() => onStart(selectedIds)}
+            disabled={selectedIds.length !== 5}
+            className="shrink-0 rounded-xl bg-sky-500 px-4 py-3 text-sm font-semibold text-slate-950 hover:bg-sky-400 disabled:opacity-60 disabled:hover:bg-sky-500"
+          >
+            Начать бой
+          </button>
+        </div>
       </div>
     </div>
   );

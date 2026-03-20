@@ -11,7 +11,7 @@ const linkClassName = ({ isActive }: { isActive: boolean }) =>
 export function TopNav() {
   const { player } = usePlayer();
   return (
-    <header className="sticky top-0 z-10 border-b border-slate-800/60 bg-slate-950/80 backdrop-blur">
+    <header className="sticky top-0 z-30 border-b border-slate-800/60 bg-slate-950/80 backdrop-blur">
       <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-3">
         <div className="flex items-center gap-3">
           <div className="text-lg font-extrabold tracking-tight">LangGacha</div>

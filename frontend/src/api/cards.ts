@@ -1,6 +1,7 @@
 import type { GeneratedCard } from "../types/card";
 
 import { API_URL } from "./config";
+import { apiFetch } from "./fetcher";
 
 export type ListCardsSort = "newest" | "atk_desc" | "def_desc" | "rarity_desc";
 
@@ -11,7 +12,7 @@ export type ListCardsParams = {
 };
 
 export const generateCard = async (): Promise<GeneratedCard> => {
-  const res = await fetch(`${API_URL}/api/cards/generate`, { method: "POST" });
+  const res = await apiFetch(`${API_URL}/api/cards/generate`, { method: "POST" });
   if (!res.ok) throw new Error(`Failed to generate card: ${res.status}`);
   return (await res.json()) as GeneratedCard;
 };
@@ -25,7 +26,7 @@ export const listCards = async (params: ListCardsParams = {}): Promise<Generated
   const qs = search.toString();
   const url = `${API_URL}/api/cards${qs ? `?${qs}` : ""}`;
 
-  const res = await fetch(url);
+  const res = await apiFetch(url);
   if (!res.ok) throw new Error(`Failed to list cards: ${res.status}`);
   return (await res.json()) as GeneratedCard[];
 };
@@ -33,7 +34,7 @@ export const listCards = async (params: ListCardsParams = {}): Promise<Generated
 export const disintegrateCard = async (
   cardId: string,
 ): Promise<{ dustGained: number; totalDust: number }> => {
-  const res = await fetch(`${API_URL}/api/cards/${cardId}/disintegrate`, { method: "POST" });
+  const res = await apiFetch(`${API_URL}/api/cards/${cardId}/disintegrate`, { method: "POST" });
   if (!res.ok) throw new Error(`Failed to disintegrate card: ${res.status}`);
   return (await res.json()) as { dustGained: number; totalDust: number };
 };

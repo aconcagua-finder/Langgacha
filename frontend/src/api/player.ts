@@ -1,4 +1,5 @@
 import { API_URL } from "./config";
+import { apiFetch } from "./fetcher";
 
 export type PlayerDto = {
   id: string;
@@ -17,7 +18,7 @@ export type PlayerDto = {
 };
 
 export const getPlayer = async (): Promise<PlayerDto> => {
-  const res = await fetch(`${API_URL}/api/player`);
+  const res = await apiFetch(`${API_URL}/api/player`);
   if (!res.ok) throw new Error(`Failed to fetch player: ${res.status}`);
   return (await res.json()) as PlayerDto;
 };

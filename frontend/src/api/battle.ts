@@ -1,5 +1,6 @@
 import { API_URL } from "./config";
 import type { GeneratedCard } from "../types/card";
+import { apiFetch } from "./fetcher";
 
 export type BattleCardPublic = {
   id: string;
@@ -64,7 +65,7 @@ export type BattleAnswerResponse = {
 };
 
 export const startBattle = async (cardIds: string[]): Promise<BattleStartResponse> => {
-  const res = await fetch(`${API_URL}/api/battle/start`, {
+  const res = await apiFetch(`${API_URL}/api/battle/start`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ cardIds }),
@@ -78,7 +79,7 @@ export const answerBattle = async (params: {
   roundNumber: number;
   answer: string;
 }): Promise<BattleAnswerResponse> => {
-  const res = await fetch(`${API_URL}/api/battle/${params.battleId}/answer`, {
+  const res = await apiFetch(`${API_URL}/api/battle/${params.battleId}/answer`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ roundNumber: params.roundNumber, answer: params.answer }),

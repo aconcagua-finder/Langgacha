@@ -1,6 +1,7 @@
 type Props = {
   onOpen: () => void;
   disabled?: boolean;
+  disabledLabel?: string;
   packName: string;
   level: string;
 };
@@ -36,7 +37,7 @@ const LEVEL_THEMES: Record<
   },
 };
 
-export function BoosterPack({ onOpen, disabled, packName, level }: Props) {
+export function BoosterPack({ onOpen, disabled, disabledLabel, packName, level }: Props) {
   const theme = LEVEL_THEMES[level] ?? {
     gradient: "from-sky-500/20 via-fuchsia-500/10 to-slate-950",
     accent: "bg-sky-300",
@@ -72,7 +73,7 @@ export function BoosterPack({ onOpen, disabled, packName, level }: Props) {
           "disabled:opacity-60 disabled:hover:bg-sky-500",
         ].join(" ")}
       >
-        {disabled ? "Открываю…" : "Открыть бустер"}
+        {disabled ? disabledLabel ?? "Открываю…" : "Открыть бустер"}
       </button>
     </div>
   );

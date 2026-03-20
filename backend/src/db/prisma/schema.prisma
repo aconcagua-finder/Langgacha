@@ -58,6 +58,8 @@ model Player {
   id        String   @id @default(uuid())
   name      String   @default("Player")
   dust      Int      @default(0) @map("polvo")
+  boosterCount  Int      @default(7)
+  lastBoosterAt DateTime @default(now())
   createdAt DateTime @default(now())
   cards     Card[]
 }

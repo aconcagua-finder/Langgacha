@@ -1,7 +1,8 @@
 import { prisma } from "../../db/prisma.js";
-import { rollRarity, type Rarity } from "../../shared/constants.js";
+import { BOOSTER_RECHARGE_MS, rollRarity, type Rarity } from "../../shared/constants.js";
 import { generateCardFromPool } from "../cards/cards.generator.js";
 import { getPlayerDto } from "../player/player.service.js";
+import { publicBoosterInfo, rechargeAndGet } from "./boosters.recharge.js";
 import type { OpenBoosterResponse } from "./boosters.types.js";
 
 const UC_PLUS: Rarity[] = ["UC", "R", "SR", "SSR"];
@@ -22,6 +23,9 @@ const getAvailableRarities = async (): Promise<Rarity[]> => {
 
 export const openBooster = async (): Promise<OpenBoosterResponse> => {
   const player = await getPlayerDto();
+  const boosterStatus = await rechargeAndGet(player.id);
+  if (boosterStatus.count === 0) throw new Error("No boosters available");
+
   const available = await getAvailableRarities();
   if (available.length === 0) throw new Error("Word pool is empty. Run seed first.");
 
@@ -55,5 +59,23 @@ export const openBooster = async (): Promise<OpenBoosterResponse> => {
     }
   }
 
-  return cards;
+  await prisma.player.update({
+    where: { id: player.id },
+    data: { boosterCount: { decrement: 1 } },
+  });
+
+  const nextCount = Math.max(0, boosterStatus.count - 1);
+  const nextRechargeAt =
+    nextCount >= boosterStatus.maxBoosters
+      ? null
+      : new Date(boosterStatus.lastBoosterAt.getTime() + BOOSTER_RECHARGE_MS).toISOString();
+
+  return {
+    cards,
+    boosterInfo: publicBoosterInfo({
+      ...boosterStatus,
+      count: nextCount,
+      nextRechargeAt,
+    }),
+  };
 };

@@ -4,6 +4,8 @@ export type PlayerDto = {
   id: string;
   name: string;
   dust: number;
+  boosterCount: number;
+  nextBoosterAt: string | null;
   dominatedCount: number;
   level: string;
   nextLevel: string | null;

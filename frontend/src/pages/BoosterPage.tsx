@@ -1,7 +1,7 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { API_URL } from "../api/config";
-import { openBooster } from "../api/boosters";
+import { getBoosterStatus, openBooster, type BoosterInfo } from "../api/boosters";
 import type { GeneratedCard } from "../types/card";
 import { BoosterPack } from "../components/booster/BoosterPack";
 import { BoosterCardReveal } from "../components/booster/BoosterCardReveal";
@@ -19,12 +19,85 @@ export function BoosterPage() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [revealedFlags, setRevealedFlags] = useState<boolean[]>([]);
   const [loading, setLoading] = useState(false);
+  const [boosterInfo, setBoosterInfo] = useState<BoosterInfo | null>(null);
+  const [secondsLeft, setSecondsLeft] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const currentCard = cards[currentIndex];
   const currentRevealed = revealedFlags[currentIndex] ?? false;
 
   const dots = useMemo(() => Array.from({ length: 5 }, (_, i) => i), []);
+
+  useEffect(() => {
+    let cancelled = false;
+    getBoosterStatus()
+      .then((info) => {
+        if (!cancelled) setBoosterInfo(info);
+      })
+      .catch(() => {
+        // ignore status errors, page can still render
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!boosterInfo?.nextRechargeAt || boosterInfo.count >= boosterInfo.maxBoosters) {
+      setSecondsLeft(null);
+      return;
+    }
+
+    const nextAtMs = new Date(boosterInfo.nextRechargeAt).getTime();
+    if (!Number.isFinite(nextAtMs)) {
+      setSecondsLeft(null);
+      return;
+    }
+
+    let handledZero = false;
+    const tick = () => {
+      const diffMs = nextAtMs - Date.now();
+      const left = Math.max(0, Math.ceil(diffMs / 1000));
+      setSecondsLeft(left);
+      if (left === 0 && !handledZero) {
+        handledZero = true;
+        setBoosterInfo((prev) =>
+          prev
+            ? { ...prev, count: Math.min(prev.maxBoosters, prev.count + 1) }
+            : prev,
+        );
+        void getBoosterStatus()
+          .then((info) => setBoosterInfo(info))
+          .catch(() => {
+            // ignore
+          });
+      }
+    };
+
+    tick();
+    const id = window.setInterval(tick, 1000);
+    return () => window.clearInterval(id);
+  }, [boosterInfo?.count, boosterInfo?.maxBoosters, boosterInfo?.nextRechargeAt]);
+
+  const boosterDots = useMemo(() => {
+    if (!boosterInfo) return null;
+    return Array.from({ length: boosterInfo.maxBoosters }, (_, i) => {
+      const filled = i < boosterInfo.count;
+      return (
+        <span key={i} className={filled ? "text-sky-400" : "text-slate-800"}>
+          ●
+        </span>
+      );
+    });
+  }, [boosterInfo]);
+
+  const timerText = useMemo(() => {
+    if (secondsLeft == null) return null;
+    const mm = Math.floor(secondsLeft / 60);
+    const ss = secondsLeft % 60;
+    return `${String(mm).padStart(2, "0")}:${String(ss).padStart(2, "0")}`;
+  }, [secondsLeft]);
 
   const onOpen = async () => {
     setLoading(true);
@@ -35,8 +108,9 @@ export function BoosterPage() {
     setRevealedFlags([false, false, false, false, false]);
 
     try {
-      const next = await openBooster();
-      setCards(next);
+      const res = await openBooster();
+      setCards(res.cards);
+      setBoosterInfo(res.boosterInfo);
       setPhase("revealing");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Unknown error");
@@ -77,6 +151,22 @@ export function BoosterPage() {
             </span>
           </div>
         ) : null}
+        {boosterInfo ? (
+          <div className="flex flex-wrap items-center gap-3 text-sm text-slate-200/70">
+            <div className="flex items-center gap-2">
+              <span>Бустеры:</span>
+              <span className="font-mono tracking-wide">{boosterDots}</span>
+              <span className="font-mono">
+                {boosterInfo.count}/{boosterInfo.maxBoosters}
+              </span>
+            </div>
+            {timerText && boosterInfo.count < boosterInfo.maxBoosters ? (
+              <div>
+                Следующий: <span className="font-mono">{timerText}</span>
+              </div>
+            ) : null}
+          </div>
+        ) : null}
         {showDebug ? (
           <p className="text-sm text-slate-200/70">
             API: <span className="font-mono">{API_URL}</span>
@@ -93,12 +183,13 @@ export function BoosterPage() {
       {phase === "pack" ? (
         <BoosterPack
           onOpen={onOpen}
-          disabled={loading}
+          disabled={loading || boosterInfo?.count === 0}
+          disabledLabel={loading ? "Открываю…" : "Нет бустеров"}
           level={player?.level ?? "Beginner"}
           packName={
             player?.level === "Elementary"
               ? "Пак Повседневного"
-              : player?.level === "Intermediate"
+            : player?.level === "Intermediate"
                 ? "Пак Уличного"
                 : player?.level === "Advanced"
                   ? "Пак Литературного"
@@ -147,13 +238,19 @@ export function BoosterPage() {
       {phase === "summary" ? (
         <section className="flex flex-col items-center gap-6">
           <BoosterSummary cards={cards} />
-          <button
-            type="button"
-            onClick={onOpen}
-            className="rounded-xl bg-slate-800 px-4 py-3 text-sm font-semibold text-slate-50 hover:bg-slate-700"
-          >
-            Открыть ещё
-          </button>
+      <button
+        type="button"
+        onClick={onOpen}
+        disabled={boosterInfo?.count === 0}
+        className="rounded-xl bg-slate-800 px-4 py-3 text-sm font-semibold text-slate-50 hover:bg-slate-700 disabled:opacity-60 disabled:hover:bg-slate-800"
+      >
+        {boosterInfo?.count === 0 ? "Нет бустеров" : "Открыть ещё"}
+      </button>
+          {boosterInfo?.count === 0 && timerText ? (
+            <div className="text-sm text-slate-200/70">
+              Следующий: <span className="font-mono">{timerText}</span>
+            </div>
+          ) : null}
         </section>
       ) : null}
     </main>

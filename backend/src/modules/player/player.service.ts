@@ -1,5 +1,6 @@
 import { prisma } from "../../db/prisma.js";
 import { PROGRESSION_LEVELS } from "../../shared/constants.js";
+import { publicBoosterInfo, rechargeAndGet } from "../boosters/boosters.recharge.js";
 
 import type { PlayerDto, PlayerLevelName } from "./player.types.js";
 
@@ -42,6 +43,9 @@ export const getPlayerDto = async (): Promise<PlayerDto> => {
   const player = await getOrCreateDefaultPlayer();
   await ensureCardsHavePlayer(player.id);
 
+  const boosterStatus = await rechargeAndGet(player.id);
+  const boosterInfo = publicBoosterInfo(boosterStatus);
+
   const dominatedCount = await prisma.card.count({
     where: { playerId: player.id, masteryProgress: { gte: 5 } },
   });
@@ -56,6 +60,8 @@ export const getPlayerDto = async (): Promise<PlayerDto> => {
     id: player.id,
     name: player.name,
     dust: player.dust,
+    boosterCount: boosterInfo.count,
+    nextBoosterAt: boosterInfo.nextRechargeAt,
     dominatedCount,
     level,
     nextLevel,

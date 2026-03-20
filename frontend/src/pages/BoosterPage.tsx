@@ -1,15 +1,14 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { API_URL } from "../api/config";
 import { getBoosterStatus, openBooster, type BoosterInfo } from "../api/boosters";
 import type { GeneratedCard } from "../types/card";
 import { BoosterPack } from "../components/booster/BoosterPack";
-import { BoosterCardReveal } from "../components/booster/BoosterCardReveal";
-import { BoosterSummary } from "../components/booster/BoosterSummary";
+import { BoosterRevealGrid } from "../components/booster/BoosterRevealGrid";
 import { usePlayer } from "../contexts/PlayerContext";
 import { LEVEL_LABELS, label } from "../shared/labels";
 
-type Phase = "pack" | "revealing" | "summary";
+type Phase = "pack" | "revealing";
 
 const PITY_THRESHOLD = 10;
 
@@ -18,17 +17,13 @@ export function BoosterPage() {
   const { player } = usePlayer();
   const [phase, setPhase] = useState<Phase>("pack");
   const [cards, setCards] = useState<GeneratedCard[]>([]);
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [revealedFlags, setRevealedFlags] = useState<boolean[]>([]);
+  const [allRevealed, setAllRevealed] = useState(false);
   const [loading, setLoading] = useState(false);
   const [boosterInfo, setBoosterInfo] = useState<BoosterInfo | null>(null);
   const [secondsLeft, setSecondsLeft] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const currentCard = cards[currentIndex];
-  const currentRevealed = revealedFlags[currentIndex] ?? false;
-
-  const dots = useMemo(() => Array.from({ length: 5 }, (_, i) => i), []);
+  const hasPack = cards.length === 5;
 
   useEffect(() => {
     let cancelled = false;
@@ -65,9 +60,7 @@ export function BoosterPage() {
       if (left === 0 && !handledZero) {
         handledZero = true;
         setBoosterInfo((prev) =>
-          prev
-            ? { ...prev, count: Math.min(prev.maxBoosters, prev.count + 1) }
-            : prev,
+          prev ? { ...prev, count: Math.min(prev.maxBoosters, prev.count + 1) } : prev,
         );
         void getBoosterStatus()
           .then((info) => setBoosterInfo(info))
@@ -101,13 +94,11 @@ export function BoosterPage() {
     return `${String(mm).padStart(2, "0")}:${String(ss).padStart(2, "0")}`;
   }, [secondsLeft]);
 
-  const onOpen = async () => {
+  const onOpen = useCallback(async () => {
+    if (hasPack && !allRevealed) return;
     setLoading(true);
     setError(null);
-    setPhase("pack");
-    setCards([]);
-    setCurrentIndex(0);
-    setRevealedFlags([false, false, false, false, false]);
+    setAllRevealed(false);
 
     try {
       const res = await openBooster();
@@ -120,24 +111,12 @@ export function BoosterPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [allRevealed, hasPack]);
 
-  const onReveal = () => {
-    setRevealedFlags((prev) => {
-      if (prev[currentIndex]) return prev;
-      const next = prev.length ? [...prev] : [false, false, false, false, false];
-      next[currentIndex] = true;
-      return next;
-    });
-  };
-
-  const onNext = () => {
-    if (!currentRevealed) return;
-    if (currentIndex >= cards.length - 1) {
-      setPhase("summary");
-      return;
-    }
-    setCurrentIndex((i) => Math.min(cards.length - 1, i + 1));
+  const onDone = () => {
+    setCards([]);
+    setAllRevealed(false);
+    setPhase("pack");
   };
 
   return (
@@ -199,7 +178,7 @@ export function BoosterPage() {
           packName={
             player?.level === "Elementary"
               ? "Пак Повседневного"
-            : player?.level === "Intermediate"
+              : player?.level === "Intermediate"
                 ? "Пак Уличного"
                 : player?.level === "Advanced"
                   ? "Пак Литературного"
@@ -210,59 +189,46 @@ export function BoosterPage() {
         />
       ) : null}
 
-      {phase === "revealing" && currentCard ? (
+      {phase === "revealing" && cards.length ? (
         <section className="flex flex-col items-center gap-6">
-          <BoosterCardReveal card={currentCard} revealed={currentRevealed} onReveal={onReveal} />
+          <BoosterRevealGrid cards={cards} onAllRevealed={() => setAllRevealed(true)} />
 
-          <div className="flex flex-col items-center gap-3">
-            <div className="text-sm font-semibold text-slate-200/80">
-              Карта{" "}
-              <span className="font-mono">
-                {currentIndex + 1}/{cards.length}
-              </span>
-            </div>
-            <div className="flex items-center gap-2">
-              {dots.map((i) => (
-                <span
-                  key={i}
-                  className={[
-                    "h-2.5 w-2.5 rounded-full transition-colors",
-                    i === currentIndex ? "bg-sky-400" : "bg-slate-800/70",
-                  ].join(" ")}
-                />
-              ))}
-            </div>
+          <div className="flex flex-wrap items-center justify-center gap-3">
+            <button
+              type="button"
+              onClick={onOpen}
+              disabled={!allRevealed || loading || boosterInfo?.count === 0}
+              className={[
+                "rounded-xl px-5 py-3 text-sm font-extrabold transition-colors",
+                allRevealed && !loading && (boosterInfo?.count ?? 0) > 0
+                  ? "bg-sky-500 text-slate-950 hover:bg-sky-400"
+                  : "bg-slate-800 text-slate-400",
+              ].join(" ")}
+            >
+              {loading
+                ? "Открываю…"
+                : (boosterInfo?.count ?? 0) > 0
+                  ? "Открыть ещё"
+                  : "Нет бустеров"}
+            </button>
+
+            <button
+              type="button"
+              onClick={onDone}
+              className="rounded-xl border border-slate-800/60 bg-slate-950/40 px-5 py-3 text-sm font-extrabold text-slate-200/80 hover:bg-slate-900/60"
+            >
+              Готово
+            </button>
+
+            {allRevealed && (boosterInfo?.count ?? 0) === 0 && timerText ? (
+              <div className="text-sm text-slate-200/70">
+                Следующий: <span className="font-mono">{timerText}</span>
+              </div>
+            ) : null}
           </div>
-
-          <button
-            type="button"
-            onClick={onNext}
-            disabled={!currentRevealed}
-            className="rounded-xl bg-slate-800 px-5 py-3 text-sm font-semibold text-slate-50 hover:bg-slate-700 disabled:opacity-60 disabled:hover:bg-slate-800"
-          >
-            {currentIndex >= cards.length - 1 ? "Готово" : "Следующая →"}
-          </button>
-        </section>
-      ) : null}
-
-      {phase === "summary" ? (
-        <section className="flex flex-col items-center gap-6">
-          <BoosterSummary cards={cards} />
-      <button
-        type="button"
-        onClick={onOpen}
-        disabled={boosterInfo?.count === 0}
-        className="rounded-xl bg-slate-800 px-4 py-3 text-sm font-semibold text-slate-50 hover:bg-slate-700 disabled:opacity-60 disabled:hover:bg-slate-800"
-      >
-        {boosterInfo?.count === 0 ? "Нет бустеров" : "Открыть ещё"}
-      </button>
-          {boosterInfo?.count === 0 && timerText ? (
-            <div className="text-sm text-slate-200/70">
-              Следующий: <span className="font-mono">{timerText}</span>
-            </div>
-          ) : null}
         </section>
       ) : null}
     </main>
   );
 }
+

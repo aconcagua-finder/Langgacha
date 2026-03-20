@@ -24,11 +24,15 @@ const conditionEmoji: Record<string, string> = {
   Deteriorated: "🟥",
 };
 
-type Size = "mini" | "deck";
+type Size = "mini" | "deck" | "booster";
 
 const sizeClass: Record<Size, { w: string; h: string }> = {
   mini: { w: "w-[200px]", h: "h-[320px]" },
   deck: { w: "w-[220px]", h: "h-[350px]" },
+  booster: {
+    w: "w-[100px] sm:w-[120px] md:w-[140px] lg:w-[160px]",
+    h: "h-[150px] sm:h-[180px] md:h-[210px] lg:h-[240px]",
+  },
 };
 
 export function CardMini({
@@ -50,6 +54,7 @@ export function CardMini({
           ? TOOLTIPS.conditionDeteriorated
           : TOOLTIPS.conditionNormal;
 
+  const compact = size === "booster";
   return (
     <div
       className={[
@@ -67,11 +72,11 @@ export function CardMini({
       ) : null}
       <div className="h-2 w-full" style={{ backgroundColor: rarityTheme.badge }} />
 
-      <div className="flex flex-1 flex-col gap-3 p-4">
-        <div className="flex items-center justify-between gap-3">
+      <div className={["flex flex-1 flex-col", compact ? "gap-2 p-2 sm:gap-2.5 sm:p-3" : "gap-3 p-4"].join(" ")}>
+        <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-1 rounded-full border border-white/10 bg-slate-950/35 px-2 py-1 text-[11px] font-semibold text-slate-100/90">
             <span>{typeTheme.emoji}</span>
-            <span>{label(TYPE_LABELS, card.type)}</span>
+            {compact ? null : <span>{label(TYPE_LABELS, card.type)}</span>}
           </div>
           <Tooltip text={label(RARITY_LABELS, card.rarity)}>
             <div className="text-xs font-semibold text-slate-200/50">{card.rarity}</div>
@@ -83,19 +88,40 @@ export function CardMini({
             "relative flex items-center justify-center overflow-hidden rounded-2xl border",
             "bg-gradient-to-br",
             rarityTheme.gradient,
+            compact ? "h-[56px] sm:h-[64px] md:h-[72px] lg:h-[80px]" : "h-[110px]",
           ].join(" ")}
-          style={{ height: 110, borderColor: "rgba(255,255,255,0.08)" }}
+          style={{ borderColor: "rgba(255,255,255,0.08)" }}
         >
-          <div className="text-5xl drop-shadow">{typeTheme.emoji}</div>
+          <div className={["drop-shadow", compact ? "text-3xl" : "text-5xl"].join(" ")}>
+            {typeTheme.emoji}
+          </div>
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(255,255,255,0.18),transparent_55%)]" />
         </div>
 
         <div>
-          <div className="text-xl font-extrabold tracking-tight leading-tight">{card.word}</div>
-          <div className="mt-1 text-xs text-slate-200/75">{card.translationRu}</div>
+          <div
+            className={[
+              "font-extrabold tracking-tight leading-tight",
+              compact ? "text-sm sm:text-base md:text-lg" : "text-xl",
+            ].join(" ")}
+          >
+            {card.word}
+          </div>
+          {compact ? (
+            <div className="mt-0.5 hidden text-[10px] text-slate-200/75 md:block">
+              {card.translationRu}
+            </div>
+          ) : (
+            <div className="mt-1 text-xs text-slate-200/75">{card.translationRu}</div>
+          )}
         </div>
 
-        <div className="mt-auto rounded-xl bg-slate-950/40 px-3 py-2 text-xs text-slate-200/80">
+        <div
+          className={[
+            "mt-auto rounded-xl bg-slate-950/40 text-slate-200/80",
+            compact ? "px-2 py-1.5 text-[10px]" : "px-3 py-2 text-xs",
+          ].join(" ")}
+        >
           <div className="flex items-center justify-between font-mono">
             <Tooltip text={TOOLTIPS.atk}>
               <span>ATK {card.atk}</span>
@@ -104,7 +130,7 @@ export function CardMini({
               <span>DEF {card.def}</span>
             </Tooltip>
           </div>
-          <div className="mt-2 flex items-center justify-between">
+          <div className={["flex items-center justify-between", compact ? "mt-1.5" : "mt-2"].join(" ")}>
             <Tooltip text={conditionTooltip}>
               <div className="flex items-center gap-2">
                 <span>{conditionEmoji[card.condition] ?? "🟦"}</span>
@@ -113,9 +139,11 @@ export function CardMini({
                 </span>
               </div>
             </Tooltip>
-            <Tooltip text={TOOLTIPS.mastery(card.masteryProgress)}>
-              <div className="font-mono">{masteryDots(card.masteryProgress)}</div>
-            </Tooltip>
+            {compact ? null : (
+              <Tooltip text={TOOLTIPS.mastery(card.masteryProgress)}>
+                <div className="font-mono">{masteryDots(card.masteryProgress)}</div>
+              </Tooltip>
+            )}
           </div>
         </div>
       </div>

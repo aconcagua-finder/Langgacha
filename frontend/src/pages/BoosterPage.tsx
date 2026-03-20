@@ -9,6 +9,7 @@ import { BoosterReveal } from "../components/booster/BoosterReveal";
 type Phase = "pack" | "revealing" | "done";
 
 export function BoosterPage() {
+  const showDebug = import.meta.env.DEV;
   const [phase, setPhase] = useState<Phase>("pack");
   const [cards, setCards] = useState<GeneratedCard[]>([]);
   const [visibleCount, setVisibleCount] = useState(0);
@@ -57,9 +58,11 @@ export function BoosterPage() {
     <main className="mx-auto flex min-h-[calc(100vh-64px)] max-w-5xl flex-col gap-8 px-6 py-10">
       <header className="flex flex-col gap-2">
         <h1 className="text-3xl font-extrabold tracking-tight">Бустер</h1>
-        <p className="text-sm text-slate-200/70">
-          API: <span className="font-mono">{API_URL}</span>
-        </p>
+        {showDebug ? (
+          <p className="text-sm text-slate-200/70">
+            API: <span className="font-mono">{API_URL}</span>
+          </p>
+        ) : null}
       </header>
 
       {error ? (
@@ -87,4 +90,3 @@ export function BoosterPage() {
     </main>
   );
 }
-

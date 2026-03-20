@@ -6,6 +6,8 @@ export type PlayerDto = {
   dust: number;
   boosterCount: number;
   nextBoosterAt: string | null;
+  craftAvailable: boolean;
+  nextCraftAt: string | null;
   dominatedCount: number;
   level: string;
   nextLevel: string | null;

@@ -61,6 +61,14 @@ export const DUST_PER_DISINTEGRATE: Record<string, number> = {
 export const MAX_BOOSTERS = 7;
 export const BOOSTER_RECHARGE_MS = 10 * 60 * 1000;
 
+export const DUST_PER_CRAFT: Record<string, number> = {
+  C: 30,
+  UC: 60,
+  R: 150,
+  SR: 400,
+  SSR: 1500,
+};
+
 export const PROGRESSION_LEVELS = [
   { name: "Beginner", minDominated: 0, rarities: ["C"] },
   { name: "Elementary", minDominated: 30, rarities: ["C", "UC"] },

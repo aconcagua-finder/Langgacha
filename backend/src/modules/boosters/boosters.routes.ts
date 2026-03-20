@@ -21,8 +21,7 @@ export const boostersRoutes: FastifyPluginAsync = async (app) => {
       return await openBooster();
     } catch (e) {
       const message = e instanceof Error ? e.message : "Client Error";
-      const noBoosters = message.toLowerCase().includes("no boosters");
-      return reply.code(noBoosters ? 400 : 400).send({
+      return reply.code(400).send({
         error: "Bad Request",
         message,
         statusCode: 400,

@@ -27,6 +27,9 @@ export function TopNav() {
           <NavLink to="/battle" className={linkClassName}>
             Бой
           </NavLink>
+          <NavLink to="/craft" className={linkClassName}>
+            Крафт
+          </NavLink>
           <NavLink to="/collection" className={linkClassName}>
             Коллекция
           </NavLink>

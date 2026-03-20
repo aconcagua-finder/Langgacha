@@ -11,6 +11,8 @@ export type PlayerDto = {
   dust: number;
   boosterCount: number;
   nextBoosterAt: string | null;
+  craftAvailable: boolean;
+  nextCraftAt: string | null;
   dominatedCount: number;
   level: PlayerLevelName;
   nextLevel: PlayerLevelName | null;

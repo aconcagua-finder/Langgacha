@@ -13,7 +13,7 @@ export function CardFlip({ front, back }: Props) {
     <button
       type="button"
       onClick={() => setFlipped((v) => !v)}
-      className="card-perspective group block w-full max-w-[340px] select-none"
+      className="card-perspective group block w-[340px] max-w-full select-none"
       aria-label="Перевернуть карточку"
     >
       <div

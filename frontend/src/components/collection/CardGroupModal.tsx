@@ -120,7 +120,7 @@ export function CardGroupModal({ group, onClose, onDisintegrate }: Props) {
               {selected ? (
                 <div className="rounded-2xl bg-slate-950 p-1">
                   <CardFlip
-                    front={<CardFace card={selected} />}
+                    front={<CardFace card={selected} tilt={false} />}
                     back={<CardBack card={selected} />}
                   />
                 </div>

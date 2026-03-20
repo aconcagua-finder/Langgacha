@@ -41,9 +41,9 @@ export function CardModal({ card, onClose, onDisintegrate }: Props) {
       role="dialog"
       aria-modal="true"
     >
-      <div className="flex flex-col items-center gap-4">
-        <div className={["rounded-2xl bg-slate-950 p-1", disintegrating ? "disintegrating" : ""].join(" ")}>
-          <CardFlip front={<CardFace card={card} />} back={<CardBack card={card} />} />
+        <div className="flex flex-col items-center gap-4">
+          <div className={["rounded-2xl bg-slate-950 p-1", disintegrating ? "disintegrating" : ""].join(" ")}>
+          <CardFlip front={<CardFace card={card} tilt={false} />} back={<CardBack card={card} />} />
         </div>
         <div className="flex flex-wrap items-center justify-center gap-3">
           <button

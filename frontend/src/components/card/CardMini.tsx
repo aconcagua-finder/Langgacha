@@ -61,7 +61,7 @@ export function CardMini({
       style={{ borderColor: typeTheme.color }}
     >
       {card.masteryProgress >= 5 ? (
-        <div className="pointer-events-none absolute -right-12 top-6 z-10 rotate-12 rounded-xl bg-emerald-400/90 px-10 py-2 text-xs font-extrabold tracking-wide text-slate-950 shadow-lg">
+        <div className="pointer-events-none absolute right-2 top-10 z-10 rounded-lg bg-emerald-400/90 px-2 py-1 text-[10px] font-extrabold tracking-wide text-slate-950 shadow-lg">
           ✓ {BATTLE_LABELS.mastered}
         </div>
       ) : null}

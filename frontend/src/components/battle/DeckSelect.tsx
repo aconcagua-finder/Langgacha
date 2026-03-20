@@ -114,7 +114,7 @@ export function DeckSelect({ onStart }: Props) {
               return (
                 <div
                   key={i}
-                  className="flex h-[308px] w-[220px] shrink-0 items-center justify-center rounded-2xl border border-dashed border-slate-700/70 bg-slate-950/10 text-sm text-slate-200/50"
+                  className="flex h-[350px] w-[220px] shrink-0 items-center justify-center rounded-2xl border border-dashed border-slate-700/70 bg-slate-950/10 text-sm text-slate-200/50"
                 >
                   Слот {i + 1}
                 </div>

@@ -35,7 +35,7 @@ export function CollectionGrid({ groups, onOpenCard, onOpenGroup }: Props) {
                       className="absolute left-1 top-1 rounded-2xl border border-slate-800/60 bg-slate-900/20"
                       style={{
                         width: 200,
-                        height: 280,
+                        height: 320,
                         transform: `translate(${offset}px, ${offset}px)`,
                       }}
                     />

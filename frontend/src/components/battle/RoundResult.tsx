@@ -1,4 +1,5 @@
 import type { RoundResult as RoundResultType } from "../../api/battle";
+import { BATTLE_LABELS } from "../../shared/labels";
 
 export function RoundResult({
   round,
@@ -25,7 +26,7 @@ export function RoundResult({
           </span>
           {round.inspirationApplied ? (
             <span className="ml-2 rounded-full bg-emerald-400 px-2 py-1 text-xs font-bold text-slate-950">
-              Inspiration
+              {BATTLE_LABELS.inspiration}
             </span>
           ) : null}
         </div>

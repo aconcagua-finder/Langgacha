@@ -1,5 +1,6 @@
 import type { GeneratedCard } from "../../types/card";
 import { getRarityTheme, getTypeTheme } from "../../styles/card-themes";
+import { BATTLE_LABELS, CONDITION_LABELS, TYPE_LABELS, label } from "../../shared/labels";
 
 const masteryDots = (progress: number) => {
   const total = 5;
@@ -31,7 +32,7 @@ export function CardFace({ card }: { card: GeneratedCard }) {
     >
       {card.masteryProgress >= 5 ? (
         <div className="pointer-events-none absolute right-4 top-4 z-10 rotate-12 rounded-xl bg-emerald-400/90 px-4 py-2 text-xs font-extrabold tracking-wide text-slate-950 shadow-lg">
-          ✓ Mastered
+          ✓ {BATTLE_LABELS.mastered}
         </div>
       ) : null}
       <div
@@ -53,7 +54,7 @@ export function CardFace({ card }: { card: GeneratedCard }) {
           >
             {card.rarity}
           </span>
-          <span className="text-xs text-slate-200/90">{card.type}</span>
+          <span className="text-xs text-slate-200/90">{label(TYPE_LABELS, card.type)}</span>
         </div>
       </div>
 
@@ -77,7 +78,7 @@ export function CardFace({ card }: { card: GeneratedCard }) {
         <div className="mt-auto flex items-center justify-between rounded-xl bg-slate-950/40 px-3 py-2 text-xs text-slate-200/80">
           <div className="flex items-center gap-2">
             <span>{conditionEmoji[card.condition] ?? "🟦"}</span>
-            <span>{card.condition}</span>
+            <span>{label(CONDITION_LABELS, card.condition)}</span>
           </div>
           <div className="font-mono">{masteryDots(card.masteryProgress)}</div>
         </div>

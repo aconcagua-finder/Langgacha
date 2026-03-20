@@ -1,5 +1,6 @@
 import { getRarityTheme, getTypeTheme } from "../../styles/card-themes";
 import type { ListCardsSort } from "../../api/cards";
+import { TYPE_LABELS, label } from "../../shared/labels";
 
 const TYPES = ["Person", "Place", "Action", "Object", "Emotion", "Expression"] as const;
 const RARITIES = ["C", "UC", "R", "SR", "SSR"] as const;
@@ -54,7 +55,7 @@ export function CollectionFilters({
                 style={active ? { borderColor: theme.color } : undefined}
               >
                 <span>{theme.emoji}</span>
-                <span>{t}</span>
+                <span>{label(TYPE_LABELS, t)}</span>
               </button>
             );
           })}

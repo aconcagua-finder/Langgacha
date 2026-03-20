@@ -10,6 +10,7 @@ import { CollectionGrid } from "../components/collection/CollectionGrid";
 import { groupCards } from "../utils/groupCards";
 import type { CardGroup } from "../utils/groupCards";
 import { usePlayer } from "../contexts/PlayerContext";
+import { LEVEL_LABELS, label } from "../shared/labels";
 
 export function CollectionPage() {
   const { player, refresh: refreshPlayer } = usePlayer();
@@ -94,11 +95,12 @@ export function CollectionPage() {
         <div className="rounded-2xl border border-slate-800/60 bg-slate-900/20 p-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="text-sm text-slate-200/80">
-              Уровень: <span className="font-mono">{player.level}</span>
+              Уровень: <span className="font-mono">{label(LEVEL_LABELS, player.level)}</span>
               {player.nextLevel ? (
                 <>
                   {" "}
-                  → <span className="font-mono">{player.nextLevel}</span>
+                  →{" "}
+                  <span className="font-mono">{label(LEVEL_LABELS, player.nextLevel)}</span>
                 </>
               ) : null}
             </div>

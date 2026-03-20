@@ -1,5 +1,6 @@
 import type { BattleCardPublic } from "../../api/battle";
 import { getRarityTheme, getTypeTheme } from "../../styles/card-themes";
+import { BATTLE_LABELS, CONDITION_LABELS, TYPE_LABELS, label } from "../../shared/labels";
 
 const hpColor = (hp: number, maxHp: number) => {
   const pct = maxHp > 0 ? hp / maxHp : 0;
@@ -13,13 +14,13 @@ function CardPanel({
   card,
   hp,
   maxHp,
-  inspiracion,
+  inspiration,
 }: {
   side: "player" | "bot";
   card: BattleCardPublic;
   hp: number;
   maxHp: number;
-  inspiracion?: boolean;
+  inspiration?: boolean;
 }) {
   const typeTheme = getTypeTheme(card.type);
   const rarityTheme = getRarityTheme(card.rarity);
@@ -38,7 +39,7 @@ function CardPanel({
           <div className="mt-1 text-2xl font-extrabold tracking-tight">{card.word}</div>
           <div className="mt-2 flex items-center gap-2 text-xs text-slate-200/70">
             <span>{typeTheme.emoji}</span>
-            <span>{card.type}</span>
+            <span>{label(TYPE_LABELS, card.type)}</span>
             <span className="opacity-60">·</span>
             <span
               className="rounded-full px-2 py-1 font-semibold text-slate-950"
@@ -48,9 +49,9 @@ function CardPanel({
             </span>
           </div>
         </div>
-        {inspiracion ? (
+        {inspiration ? (
           <div className="rounded-full bg-emerald-400 px-3 py-1 text-xs font-bold text-slate-950">
-            Inspiration +15%
+            {BATTLE_LABELS.inspiration} +15%
           </div>
         ) : null}
       </div>
@@ -82,7 +83,8 @@ function CardPanel({
       </div>
 
       <div className="mt-4 text-xs text-slate-200/70">
-        Состояние: <span className="font-mono">{card.condition}</span>
+        Состояние:{" "}
+        <span className="font-mono">{label(CONDITION_LABELS, card.condition)}</span>
       </div>
     </div>
   );
@@ -110,7 +112,7 @@ export function BattleArena({
         card={playerCard}
         hp={playerHp}
         maxHp={playerCard.hp}
-        inspiracion={playerInspired}
+        inspiration={playerInspired}
       />
       <div className="text-2xl font-extrabold tracking-tight text-slate-200/70">
         {vsLabel ?? "VS"}

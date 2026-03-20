@@ -10,7 +10,7 @@ type Props = {
 
 export function CollectionGrid({ groups, onOpenCard, onOpenGroup }: Props) {
   return (
-    <div className="grid place-items-center grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+    <div className="grid place-items-center grid-cols-2 gap-2 sm:gap-4 sm:grid-cols-3 lg:grid-cols-4">
       {groups.map((g) => {
         const count = g.cards.length;
         const isStack = count >= 2;

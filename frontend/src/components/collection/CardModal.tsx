@@ -34,7 +34,7 @@ export function CardModal({ card, onClose, onDisintegrate }: Props) {
 
   return (
     <div
-      className="fixed inset-0 z-20 flex items-center justify-center bg-black/90 p-6"
+      className="fixed inset-0 z-20 flex items-center justify-center bg-black/90 p-3 sm:p-6"
       onMouseDown={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}

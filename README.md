@@ -16,4 +16,9 @@
 
 - `POST http://localhost:3000/api/cards/generate`
 - `GET  http://localhost:3000/api/cards`
+- `POST http://localhost:3000/api/boosters/open`
 
+## Страницы
+
+- `/` — бустер (открытие пака из 5 карт)
+- `/collection` — коллекция (сетка, фильтры, модалка)

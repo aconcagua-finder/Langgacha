@@ -1,84 +1,60 @@
+import type { Prisma } from "@prisma/client";
+
 import { prisma } from "../../db/prisma.js";
-import { rollStat, type Rarity } from "../../shared/constants.js";
-import type { CardCondition, GeneratedCardDto } from "./cards.types.js";
-
-const rollCondition = (): CardCondition => {
-  const r = Math.random();
-  if (r < 0.05) return "Brillante";
-  return "Normal";
-};
-
-const mapCard = (card: {
-  id: string;
-  fue: number;
-  def: number;
-  condition: string;
-  masteryProgress: number;
-  word: {
-    word: string;
-    translationRu: string;
-    type: string;
-    rarity: string;
-    colorido: number;
-    flavorText: string;
-    hint: string;
-    tags: string[];
-    canEvolve: boolean;
-  };
-}): GeneratedCardDto => ({
-  id: card.id,
-  word: card.word.word,
-  translationRu: card.word.translationRu,
-  type: card.word.type,
-  rarity: card.word.rarity,
-  fue: card.fue,
-  def: card.def,
-  colorido: card.word.colorido,
-  flavorText: card.word.flavorText,
-  hint: card.word.hint,
-  tags: card.word.tags,
-  condition: card.condition as CardCondition,
-  masteryProgress: card.masteryProgress,
-  canEvolve: card.word.canEvolve,
-});
+import { RARITY_RANK, type Rarity } from "../../shared/constants.js";
+import { generateCardFromPool, mapCardToDto } from "./cards.generator.js";
+import type { GeneratedCardDto } from "./cards.types.js";
 
 export const generateCard = async (): Promise<GeneratedCardDto> => {
-  const count = await prisma.word.count();
-  if (count === 0) throw new Error("Word pool is empty. Run seed first.");
-
-  const skip = Math.floor(Math.random() * count);
-  const word = await prisma.word.findFirst({
-    skip,
-    orderBy: { id: "asc" },
-  });
-
-  if (!word) throw new Error("Failed to pick a random word.");
-
-  const rarity = word.rarity as Rarity;
-  const fue = rollStat(rarity, word.baseFue);
-  const def = rollStat(rarity, word.baseDef);
-
-  const created = await prisma.card.create({
-    data: {
-      wordId: word.id,
-      fue,
-      def,
-      condition: rollCondition(),
-      masteryProgress: 0,
-      isEvolved: false,
-    },
-    include: { word: true },
-  });
-
-  return mapCard(created);
+  return generateCardFromPool();
 };
 
-export const listCards = async (): Promise<GeneratedCardDto[]> => {
+export type ListCardsParams = {
+  type?: string[] | string;
+  rarity?: string[] | string;
+  sort?: "newest" | "fue_desc" | "def_desc" | "rarity_desc" | string;
+};
+
+const normalizeList = (value?: string[] | string): string[] | undefined => {
+  if (!value) return undefined;
+  const arr = Array.isArray(value) ? value : value.split(",");
+  const cleaned = arr.map((v) => v.trim()).filter(Boolean);
+  return cleaned.length ? cleaned : undefined;
+};
+
+export const listCards = async (params: ListCardsParams = {}): Promise<GeneratedCardDto[]> => {
+  const types = normalizeList(params.type);
+  const rarities = normalizeList(params.rarity);
+
+  const whereWord: Prisma.WordWhereInput = {};
+  if (types?.length) whereWord.type = { in: types };
+  if (rarities?.length) whereWord.rarity = { in: rarities };
+
+  const where: Prisma.CardWhereInput =
+    Object.keys(whereWord).length > 0 ? { word: { is: whereWord } } : {};
+
+  const sort = params.sort ?? "newest";
+  const orderBy: Prisma.CardOrderByWithRelationInput =
+    sort === "fue_desc"
+      ? { fue: "desc" }
+      : sort === "def_desc"
+        ? { def: "desc" }
+        : { createdAt: "desc" };
+
   const cards = await prisma.card.findMany({
-    orderBy: { createdAt: "desc" },
+    where,
+    orderBy,
     include: { word: true },
   });
 
-  return cards.map(mapCard);
-};
+  if (sort === "rarity_desc") {
+    cards.sort((a, b) => {
+      const ra = RARITY_RANK[(a.word.rarity as Rarity) ?? "C"] ?? 1;
+      const rb = RARITY_RANK[(b.word.rarity as Rarity) ?? "C"] ?? 1;
+      if (ra !== rb) return rb - ra;
+      return b.createdAt.getTime() - a.createdAt.getTime();
+    });
+  }
 
+  return cards.map(mapCardToDto);
+};

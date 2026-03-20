@@ -7,8 +7,13 @@ export const cardsRoutes: FastifyPluginAsync = async (app) => {
     return generateCard();
   });
 
-  app.get("/", async () => {
-    return listCards();
+  app.get("/", async (request) => {
+    const query = request.query as {
+      type?: string | string[];
+      rarity?: string | string[];
+      sort?: string;
+    };
+    return listCards(query);
   });
 };
 

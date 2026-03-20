@@ -1,6 +1,19 @@
-import { HomePage } from "./pages/HomePage";
+import { Navigate, Route, Routes } from "react-router-dom";
+
+import { TopNav } from "./components/layout/TopNav";
+import { BoosterPage } from "./pages/BoosterPage";
+import { CollectionPage } from "./pages/CollectionPage";
 
 export default function App() {
-  return <HomePage />;
+  return (
+    <div>
+      <TopNav />
+      <Routes>
+        <Route path="/" element={<BoosterPage />} />
+        <Route path="/collection" element={<CollectionPage />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </div>
+  );
 }
 

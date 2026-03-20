@@ -178,9 +178,9 @@ export const answerRound = async (params: {
   const quizCorrect =
     normalizeAnswer(params.answer) === normalizeAnswer(playerCard.quizCorrect);
 
-  let inspiracionApplied = false;
+  let inspirationApplied = false;
   if (quizCorrect) {
-    inspiracionApplied = true;
+    inspirationApplied = true;
     state.totalCorrect += 1;
     state.correctStreak += 1;
     state.maxStreak = Math.max(state.maxStreak, state.correctStreak);
@@ -195,7 +195,7 @@ export const answerRound = async (params: {
     bot: botCard,
     playerHp: state.playerHpLeft,
     botHp: state.botHpLeft,
-    inspiracionApplied,
+    inspirationApplied,
   });
 
   const round: RoundResult = {
@@ -203,7 +203,7 @@ export const answerRound = async (params: {
     playerCard: stripQuizCorrect(playerCard),
     botCard: stripQuizCorrect(botCard),
     quizCorrect,
-    inspiracionApplied,
+    inspirationApplied,
     combatLog: combat.log,
     winner: combat.winner,
     survivorHpLeft: combat.survivorHpLeft,

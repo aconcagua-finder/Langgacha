@@ -38,7 +38,7 @@ export type RoundResult = {
   playerCard: BattleCardRound;
   botCard: BattleCardRound;
   quizCorrect: boolean;
-  inspiracionApplied: boolean;
+  inspirationApplied: boolean;
   combatLog: CombatTick[];
   winner: "player" | "bot";
   survivorHpLeft: number;

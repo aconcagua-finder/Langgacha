@@ -1,9 +1,9 @@
 export type PlayerLevelName =
-  | "Principiante"
-  | "Elemental"
-  | "Intermedio"
-  | "Avanzado"
-  | "Maestro";
+  | "Beginner"
+  | "Elementary"
+  | "Intermediate"
+  | "Advanced"
+  | "Master";
 
 export type PlayerDto = {
   id: string;
@@ -16,4 +16,3 @@ export type PlayerDto = {
   progressNeeded: number;
   unlockedRarities: string[];
 };
-

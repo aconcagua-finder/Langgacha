@@ -85,15 +85,15 @@ export function BoosterPage() {
         <BoosterPack
           onOpen={onOpen}
           disabled={loading}
-          level={player?.level ?? "Principiante"}
+          level={player?.level ?? "Beginner"}
           packName={
-            player?.level === "Elemental"
+            player?.level === "Elementary"
               ? "Пак Повседневного"
-              : player?.level === "Intermedio"
+              : player?.level === "Intermediate"
                 ? "Пак Уличного"
-                : player?.level === "Avanzado"
+                : player?.level === "Advanced"
                   ? "Пак Литературного"
-                  : player?.level === "Maestro"
+                  : player?.level === "Master"
                     ? "Пак Легендарного"
                     : "Пак Новичка"
           }

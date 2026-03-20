@@ -29,13 +29,13 @@ export const RARITY_RANK: Record<Rarity, number> = {
 } as const;
 
 export const CONDITION_MODIFIERS: Record<string, number> = {
-  Brillante: 1.1,
+  Brilliant: 1.1,
   Normal: 1.0,
-  Gastada: 0.9,
-  Deteriorada: 0.75,
+  Worn: 0.9,
+  Deteriorated: 0.75,
 };
 
-export const INSPIRACION_BONUS = 0.15;
+export const INSPIRATION_BONUS = 0.15;
 
 export const POLVO_PER_RARITY_BATTLE: Record<string, number> = {
   C: 2,
@@ -59,11 +59,11 @@ export const POLVO_PER_DISINTEGRATE: Record<string, number> = {
 };
 
 export const PROGRESSION_LEVELS = [
-  { name: "Principiante", minDominated: 0, rarities: ["C"] },
-  { name: "Elemental", minDominated: 30, rarities: ["C", "UC"] },
-  { name: "Intermedio", minDominated: 80, rarities: ["C", "UC", "R"] },
-  { name: "Avanzado", minDominated: 150, rarities: ["C", "UC", "R", "SR"] },
-  { name: "Maestro", minDominated: 250, rarities: ["C", "UC", "R", "SR", "SSR"] },
+  { name: "Beginner", minDominated: 0, rarities: ["C"] },
+  { name: "Elementary", minDominated: 30, rarities: ["C", "UC"] },
+  { name: "Intermediate", minDominated: 80, rarities: ["C", "UC", "R"] },
+  { name: "Advanced", minDominated: 150, rarities: ["C", "UC", "R", "SR"] },
+  { name: "Master", minDominated: 250, rarities: ["C", "UC", "R", "SR", "SSR"] },
 ] as const;
 
 export const clamp = (value: number, min: number, max: number): number =>

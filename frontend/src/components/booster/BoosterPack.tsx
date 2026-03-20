@@ -9,27 +9,27 @@ const LEVEL_THEMES: Record<
   string,
   { gradient: string; accent: string; icon: string }
 > = {
-  Principiante: {
+  Beginner: {
     gradient: "from-slate-500/20 via-slate-400/10 to-slate-950",
     accent: "bg-slate-300",
     icon: "🌱",
   },
-  Elemental: {
+  Elementary: {
     gradient: "from-emerald-500/20 via-emerald-400/10 to-slate-950",
     accent: "bg-emerald-300",
     icon: "🪴",
   },
-  Intermedio: {
+  Intermediate: {
     gradient: "from-sky-500/20 via-sky-400/10 to-slate-950",
     accent: "bg-sky-300",
     icon: "🔥",
   },
-  Avanzado: {
+  Advanced: {
     gradient: "from-amber-500/20 via-amber-400/10 to-slate-950",
     accent: "bg-amber-300",
     icon: "⚔️",
   },
-  Maestro: {
+  Master: {
     gradient: "from-fuchsia-500/20 via-fuchsia-400/10 to-slate-950",
     accent: "bg-fuchsia-300",
     icon: "👑",

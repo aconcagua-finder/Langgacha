@@ -8,7 +8,7 @@ import type { CardCondition, GeneratedCardDto } from "./cards.types.js";
 
 export const rollCondition = (): CardCondition => {
   const r = Math.random();
-  if (r < 0.05) return "Brillante";
+  if (r < 0.05) return "Brilliant";
   return "Normal";
 };
 

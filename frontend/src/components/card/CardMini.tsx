@@ -9,10 +9,10 @@ const masteryDots = (progress: number) => {
 };
 
 const conditionEmoji: Record<string, string> = {
-  Brillante: "✨",
+  Brilliant: "✨",
   Normal: "🟦",
-  Gastada: "🟨",
-  Deteriorada: "🟥",
+  Worn: "🟨",
+  Deteriorated: "🟥",
 };
 
 type Size = "mini" | "deck";
@@ -45,7 +45,7 @@ export function CardMini({
     >
       {card.masteryProgress >= 5 ? (
         <div className="pointer-events-none absolute -right-12 top-6 z-10 rotate-12 rounded-xl bg-emerald-400/90 px-10 py-2 text-xs font-extrabold tracking-wide text-slate-950 shadow-lg">
-          ✓ Dominada
+          ✓ Mastered
         </div>
       ) : null}
       <div className="h-2 w-full" style={{ backgroundColor: rarityTheme.badge }} />

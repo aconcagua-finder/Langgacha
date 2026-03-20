@@ -50,7 +50,7 @@ function CardPanel({
         </div>
         {inspiracion ? (
           <div className="rounded-full bg-emerald-400 px-3 py-1 text-xs font-bold text-slate-950">
-            Inspiración +15%
+            Inspiration +15%
           </div>
         ) : null}
       </div>
@@ -119,4 +119,3 @@ export function BattleArena({
     </div>
   );
 }
-

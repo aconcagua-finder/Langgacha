@@ -1,7 +1,7 @@
 import { getRarityTheme, getTypeTheme } from "../../styles/card-themes";
 import type { ListCardsSort } from "../../api/cards";
 
-const TYPES = ["Persona", "Lugar", "Acción", "Objeto", "Emoción", "Expresión"] as const;
+const TYPES = ["Person", "Place", "Action", "Object", "Emotion", "Expression"] as const;
 const RARITIES = ["C", "UC", "R", "SR", "SSR"] as const;
 
 type Props = {
@@ -121,4 +121,3 @@ export function CollectionFilters({
     </div>
   );
 }
-

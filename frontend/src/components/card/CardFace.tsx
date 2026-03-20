@@ -9,10 +9,10 @@ const masteryDots = (progress: number) => {
 };
 
 const conditionEmoji: Record<string, string> = {
-  Brillante: "✨",
+  Brilliant: "✨",
   Normal: "🟦",
-  Gastada: "🟨",
-  Deteriorada: "🟥",
+  Worn: "🟨",
+  Deteriorated: "🟥",
 };
 
 export function CardFace({ card }: { card: GeneratedCard }) {
@@ -31,7 +31,7 @@ export function CardFace({ card }: { card: GeneratedCard }) {
     >
       {card.masteryProgress >= 5 ? (
         <div className="pointer-events-none absolute right-4 top-4 z-10 rotate-12 rounded-xl bg-emerald-400/90 px-4 py-2 text-xs font-extrabold tracking-wide text-slate-950 shadow-lg">
-          ✓ Dominada
+          ✓ Mastered
         </div>
       ) : null}
       <div

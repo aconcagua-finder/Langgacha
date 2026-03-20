@@ -9,7 +9,7 @@ type Props = {
   botCard: BattleCardPublic;
   initialPlayerHp: number;
   initialBotHp: number;
-  inspiracionApplied: boolean;
+  inspirationApplied: boolean;
   combatLog: CombatTick[];
   onDone: (final: { playerHp: number; botHp: number }) => void;
 };
@@ -19,7 +19,7 @@ export function CombatPhase({
   botCard,
   initialPlayerHp,
   initialBotHp,
-  inspiracionApplied,
+  inspirationApplied,
   combatLog,
   onDone,
 }: Props) {
@@ -66,7 +66,7 @@ export function CombatPhase({
           botCard={botCard}
           playerHp={playerHp}
           botHp={botHp}
-          playerInspired={inspiracionApplied}
+          playerInspired={inspirationApplied}
           vsLabel="Бой"
         />
         {floating ? (
@@ -95,4 +95,3 @@ export function CombatPhase({
     </div>
   );
 }
-

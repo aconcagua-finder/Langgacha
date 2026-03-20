@@ -23,9 +23,9 @@ export function RoundResult({
           <span className={round.quizCorrect ? "text-emerald-300" : "text-rose-300"}>
             {round.quizCorrect ? "верно" : "неверно"}
           </span>
-          {round.inspiracionApplied ? (
+          {round.inspirationApplied ? (
             <span className="ml-2 rounded-full bg-emerald-400 px-2 py-1 text-xs font-bold text-slate-950">
-              Inspiración
+              Inspiration
             </span>
           ) : null}
         </div>
@@ -45,4 +45,3 @@ export function RoundResult({
     </div>
   );
 }
-

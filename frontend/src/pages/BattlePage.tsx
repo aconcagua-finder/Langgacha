@@ -183,7 +183,7 @@ export function BattlePage() {
               botCard={botCard}
               initialPlayerHp={playerHp}
               initialBotHp={botHp}
-              inspiracionApplied={lastAnswer.round.inspiracionApplied}
+              inspirationApplied={lastAnswer.round.inspirationApplied}
               combatLog={lastAnswer.round.combatLog}
               onDone={onCombatDone}
             />

@@ -1,4 +1,4 @@
-import { CONDITION_MODIFIERS, INSPIRACION_BONUS } from "../../shared/constants.js";
+import { CONDITION_MODIFIERS, INSPIRATION_BONUS } from "../../shared/constants.js";
 import type { BattleCard, CombatTick } from "./battle.types.js";
 
 export const applyConditionModifier = (value: number, condition: string): number => {
@@ -18,15 +18,15 @@ export const simulateCombat = (params: {
   bot: Pick<BattleCard, "fue" | "def">;
   playerHp: number;
   botHp: number;
-  inspiracionApplied: boolean;
+  inspirationApplied: boolean;
 }): { log: CombatTick[]; winner: "player" | "bot"; survivorHpLeft: number } => {
   const log: CombatTick[] = [];
 
   let playerHp = params.playerHp;
   let botHp = params.botHp;
 
-  const playerFue = params.inspiracionApplied
-    ? Math.round(params.player.fue * (1 + INSPIRACION_BONUS))
+  const playerFue = params.inspirationApplied
+    ? Math.round(params.player.fue * (1 + INSPIRATION_BONUS))
     : params.player.fue;
 
   let attacker: "player" | "bot" = "player";
@@ -48,4 +48,3 @@ export const simulateCombat = (params: {
   const survivorHpLeft = Math.max(0, winner === "player" ? playerHp : botHp);
   return { log, winner, survivorHpLeft };
 };
-

@@ -1,4 +1,4 @@
-export type CardCondition = "Brillante" | "Normal" | "Gastada" | "Deteriorada";
+export type CardCondition = "Brilliant" | "Normal" | "Worn" | "Deteriorated";
 
 export type GeneratedCard = {
   id: string;
@@ -16,4 +16,3 @@ export type GeneratedCard = {
   masteryProgress: number;
   canEvolve: boolean;
 };
-

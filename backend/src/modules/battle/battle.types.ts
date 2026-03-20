@@ -27,7 +27,7 @@ export type RoundResult = {
   playerCard: Omit<BattleCard, "quizCorrect">;
   botCard: Omit<BattleCard, "quizCorrect">;
   quizCorrect: boolean;
-  inspiracionApplied: boolean;
+  inspirationApplied: boolean;
   combatLog: CombatTick[];
   winner: "player" | "bot";
   survivorHpLeft: number;
@@ -85,4 +85,3 @@ export type BattleState = {
   polvoFromAnswers: number;
   defeatedBotRarities: string[];
 };
-

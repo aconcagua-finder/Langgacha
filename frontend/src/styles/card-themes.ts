@@ -2,32 +2,32 @@ export const TYPE_THEMES: Record<
   string,
   { color: string; emoji: string; gradient: string }
 > = {
-  Persona: {
+  Person: {
     color: "#E57373",
     emoji: "👤",
     gradient: "from-rose-500/30 via-rose-400/10 to-slate-950",
   },
-  Lugar: {
+  Place: {
     color: "#4DB6AC",
     emoji: "📍",
     gradient: "from-teal-500/30 via-teal-400/10 to-slate-950",
   },
-  "Acción": {
+  Action: {
     color: "#FFB74D",
     emoji: "⚡",
     gradient: "from-amber-500/30 via-amber-400/10 to-slate-950",
   },
-  Objeto: {
+  Object: {
     color: "#90A4AE",
     emoji: "🔧",
     gradient: "from-slate-400/30 via-slate-300/10 to-slate-950",
   },
-  "Emoción": {
+  Emotion: {
     color: "#BA68C8",
     emoji: "💫",
     gradient: "from-fuchsia-500/30 via-fuchsia-400/10 to-slate-950",
   },
-  "Expresión": {
+  Expression: {
     color: "#4FC3F7",
     emoji: "🗣️",
     gradient: "from-sky-500/30 via-sky-400/10 to-slate-950",
@@ -62,4 +62,3 @@ export const getTypeTheme = (type: string) =>
 
 export const getRarityTheme = (rarity: string) =>
   RARITY_THEMES[rarity] ?? RARITY_THEMES.C;
-

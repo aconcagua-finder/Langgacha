@@ -3,8 +3,10 @@ import { PROGRESSION_LEVELS } from "../../shared/constants.js";
 
 import type { PlayerDto, PlayerLevelName } from "./player.types.js";
 
+type ProgressionLevel = (typeof PROGRESSION_LEVELS)[number];
+
 const getLevel = (dominatedCount: number) => {
-  let current = PROGRESSION_LEVELS[0];
+  let current: ProgressionLevel = PROGRESSION_LEVELS[0];
   for (const level of PROGRESSION_LEVELS) {
     if (dominatedCount >= level.minDominated) current = level;
   }
@@ -18,7 +20,7 @@ const getLevel = (dominatedCount: number) => {
 export const getOrCreateDefaultPlayer = async () => {
   const existing = await prisma.player.findFirst({ orderBy: { createdAt: "asc" } });
   if (existing) return existing;
-  return prisma.player.create({ data: { name: "Player", polvo: 0 } });
+  return prisma.player.create({ data: { name: "Player", dust: 0 } });
 };
 
 export const ensureCardsHavePlayer = async (playerId: string): Promise<void> => {
@@ -28,12 +30,12 @@ export const ensureCardsHavePlayer = async (playerId: string): Promise<void> => 
   });
 };
 
-export const addPolvo = async (playerId: string, amount: number): Promise<number> => {
+export const addDust = async (playerId: string, amount: number): Promise<number> => {
   const updated = await prisma.player.update({
     where: { id: playerId },
-    data: { polvo: { increment: amount } },
+    data: { dust: { increment: amount } },
   });
-  return updated.polvo;
+  return updated.dust;
 };
 
 export const getPlayerDto = async (): Promise<PlayerDto> => {
@@ -53,7 +55,7 @@ export const getPlayerDto = async (): Promise<PlayerDto> => {
   return {
     id: player.id,
     name: player.name,
-    polvo: player.polvo,
+    dust: player.dust,
     dominatedCount,
     level,
     nextLevel,

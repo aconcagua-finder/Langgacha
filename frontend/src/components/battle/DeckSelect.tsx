@@ -172,7 +172,7 @@ export function DeckSelect({ onStart }: Props) {
                   type="button"
                   onClick={() => removeAtIndex(i)}
                   className="flex h-[90px] w-[64px] shrink-0 flex-col justify-between rounded-xl border bg-slate-950/20 p-2 text-left hover:bg-slate-950/30"
-                  style={{ borderColor: rarityTheme.badge }}
+                  style={{ borderColor: rarityTheme.border }}
                   aria-label={`Убрать ${card.word} из колоды`}
                 >
                   <div className="flex items-center justify-between gap-1">

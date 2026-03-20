@@ -6,7 +6,7 @@ export type BattleCardPublic = {
   word: string;
   type: string;
   rarity: string;
-  fue: number;
+  atk: number;
   def: number;
   hp: number;
   condition: string;
@@ -45,7 +45,7 @@ export type RoundResult = {
 };
 
 export type BattleRewards = {
-  polvo: number;
+  dust: number;
   bonusCard: GeneratedCard | null;
   correctAnswers: number;
   streak: number;

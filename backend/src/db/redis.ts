@@ -1,4 +1,4 @@
-import IORedis from "ioredis";
+import { Redis } from "ioredis";
 
 type StoredValue = {
   value: string;
@@ -8,11 +8,11 @@ type StoredValue = {
 const TTL_SECONDS = 60 * 30;
 const inMemory = new Map<string, StoredValue>();
 
-const getRedis = (): IORedis | null => {
+const getRedis = (): Redis | null => {
   const url = process.env.REDIS_URL;
   if (!url) return null;
   try {
-    return new IORedis(url, {
+    return new Redis(url, {
       maxRetriesPerRequest: 1,
       enableReadyCheck: true,
       lazyConnect: false,

@@ -8,7 +8,7 @@ export type PlayerLevelName =
 export type PlayerDto = {
   id: string;
   name: string;
-  polvo: number;
+  dust: number;
   dominatedCount: number;
   level: PlayerLevelName;
   nextLevel: PlayerLevelName | null;

@@ -1,10 +1,10 @@
 import type { Prisma } from "@prisma/client";
 
 import { prisma } from "../../db/prisma.js";
-import { POLVO_PER_DISINTEGRATE, RARITY_RANK, type Rarity } from "../../shared/constants.js";
+import { DUST_PER_DISINTEGRATE, RARITY_RANK, type Rarity } from "../../shared/constants.js";
 import { generateCardFromPool, mapCardToDto } from "./cards.generator.js";
 import type { GeneratedCardDto } from "./cards.types.js";
-import { addPolvo, ensureCardsHavePlayer, getOrCreateDefaultPlayer } from "../player/player.service.js";
+import { addDust, ensureCardsHavePlayer, getOrCreateDefaultPlayer } from "../player/player.service.js";
 
 export const generateCard = async (): Promise<GeneratedCardDto> => {
   const player = await getOrCreateDefaultPlayer();
@@ -15,7 +15,7 @@ export const generateCard = async (): Promise<GeneratedCardDto> => {
 export type ListCardsParams = {
   type?: string[] | string;
   rarity?: string[] | string;
-  sort?: "newest" | "fue_desc" | "def_desc" | "rarity_desc" | string;
+  sort?: "newest" | "atk_desc" | "def_desc" | "rarity_desc" | string;
 };
 
 const normalizeList = (value?: string[] | string): string[] | undefined => {
@@ -43,8 +43,8 @@ export const listCards = async (params: ListCardsParams = {}): Promise<Generated
 
   const sort = params.sort ?? "newest";
   const orderBy: Prisma.CardOrderByWithRelationInput =
-    sort === "fue_desc"
-      ? { fue: "desc" }
+    sort === "atk_desc"
+      ? { atk: "desc" }
       : sort === "def_desc"
         ? { def: "desc" }
         : { createdAt: "desc" };
@@ -69,7 +69,7 @@ export const listCards = async (params: ListCardsParams = {}): Promise<Generated
 
 export const disintegrateCard = async (
   cardId: string,
-): Promise<{ polvoGained: number; totalPolvo: number }> => {
+): Promise<{ dustGained: number; totalDust: number }> => {
   const player = await getOrCreateDefaultPlayer();
   await ensureCardsHavePlayer(player.id);
 
@@ -83,10 +83,10 @@ export const disintegrateCard = async (
   }
 
   const rarity = card.word.rarity;
-  const polvoGained = POLVO_PER_DISINTEGRATE[rarity] ?? 0;
+  const dustGained = DUST_PER_DISINTEGRATE[rarity] ?? 0;
 
   await prisma.card.delete({ where: { id: cardId } });
-  const totalPolvo = await addPolvo(player.id, polvoGained);
+  const totalDust = await addDust(player.id, dustGained);
 
-  return { polvoGained, totalPolvo };
+  return { dustGained, totalDust };
 };

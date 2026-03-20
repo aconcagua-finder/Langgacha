@@ -8,14 +8,14 @@ export const applyConditionModifier = (value: number, condition: string): number
 
 export const computeHp = (effectiveDef: number): number => Math.round(effectiveDef * 1.5);
 
-export const computeDamage = (attackerFue: number, defenderDef: number): number => {
-  const dmg = attackerFue - defenderDef * 0.5;
+export const computeDamage = (attackerAtk: number, defenderDef: number): number => {
+  const dmg = attackerAtk - defenderDef * 0.5;
   return Math.max(1, Math.round(dmg));
 };
 
 export const simulateCombat = (params: {
-  player: Pick<BattleCard, "fue" | "def">;
-  bot: Pick<BattleCard, "fue" | "def">;
+  player: Pick<BattleCard, "atk" | "def">;
+  bot: Pick<BattleCard, "atk" | "def">;
   playerHp: number;
   botHp: number;
   inspirationApplied: boolean;
@@ -25,19 +25,19 @@ export const simulateCombat = (params: {
   let playerHp = params.playerHp;
   let botHp = params.botHp;
 
-  const playerFue = params.inspirationApplied
-    ? Math.round(params.player.fue * (1 + INSPIRATION_BONUS))
-    : params.player.fue;
+  const playerAtk = params.inspirationApplied
+    ? Math.round(params.player.atk * (1 + INSPIRATION_BONUS))
+    : params.player.atk;
 
   let attacker: "player" | "bot" = "player";
   while (playerHp > 0 && botHp > 0) {
     if (attacker === "player") {
-      const damage = computeDamage(playerFue, params.bot.def);
+      const damage = computeDamage(playerAtk, params.bot.def);
       botHp = Math.round(botHp - damage);
       log.push({ attacker: "player", damage, targetHpAfter: Math.max(0, botHp) });
       attacker = "bot";
     } else {
-      const damage = computeDamage(params.bot.fue, params.player.def);
+      const damage = computeDamage(params.bot.atk, params.player.def);
       playerHp = Math.round(playerHp - damage);
       log.push({ attacker: "bot", damage, targetHpAfter: Math.max(0, playerHp) });
       attacker = "player";

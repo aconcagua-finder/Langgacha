@@ -31,7 +31,7 @@ function CardPanel({
         "w-full max-w-sm rounded-2xl border bg-slate-900/50 p-4 backdrop-blur",
         rarityTheme.glow,
       ].join(" ")}
-      style={{ borderColor: typeTheme.color }}
+      style={{ borderColor: rarityTheme.border }}
     >
       <div className="flex items-start justify-between gap-3">
         <div>
@@ -58,8 +58,8 @@ function CardPanel({
 
       <div className="mt-4 grid grid-cols-2 gap-3">
         <div className="rounded-xl bg-slate-950/40 p-3">
-          <div className="text-xs text-slate-200/70">FUE</div>
-          <div className="text-lg font-bold">{card.fue}</div>
+          <div className="text-xs text-slate-200/70">ATK</div>
+          <div className="text-lg font-bold">{card.atk}</div>
         </div>
         <div className="rounded-xl bg-slate-950/40 p-3">
           <div className="text-xs text-slate-200/70">DEF</div>

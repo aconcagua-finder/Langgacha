@@ -6,10 +6,10 @@ import { battleStore } from "../../db/redis.js";
 import { prisma } from "../../db/prisma.js";
 import { computeCondition, improveCondition } from "../../shared/condition.js";
 import { generateCardFromPool } from "../cards/cards.generator.js";
-import { addPolvo, getOrCreateDefaultPlayer } from "../player/player.service.js";
+import { addDust, getOrCreateDefaultPlayer } from "../player/player.service.js";
 import { applyConditionModifier, computeHp, simulateCombat } from "./battle.combat.js";
 import { generateBotDeck } from "./battle.bot.js";
-import { applyAnswerReward, polvoForDefeatedBot, shouldDropBonusCard } from "./battle.rewards.js";
+import { applyAnswerReward, dustForDefeatedBot, shouldDropBonusCard } from "./battle.rewards.js";
 import type {
   BattleAnswerResponse,
   BattleCard,
@@ -52,7 +52,7 @@ const delState = async (battleId: string): Promise<void> => {
 
 const buildPlayerBattleCard = (card: Card & { word: Word }): BattleCard => {
   const condition = computeCondition(card);
-  const fue = applyConditionModifier(card.fue, condition);
+  const atk = applyConditionModifier(card.atk, condition);
   const def = applyConditionModifier(card.def, condition);
   return {
     id: card.id,
@@ -60,7 +60,7 @@ const buildPlayerBattleCard = (card: Card & { word: Word }): BattleCard => {
     translationRu: card.word.translationRu,
     type: card.word.type,
     rarity: card.word.rarity,
-    fue,
+    atk,
     def,
     hp: computeHp(def),
     condition,
@@ -135,7 +135,7 @@ export const startBattle = async (cardIds: string[]): Promise<BattleStartRespons
     correctStreak: 0,
     maxStreak: 0,
     totalCorrect: 0,
-    polvoFromAnswers: 0,
+    dustFromAnswers: 0,
     defeatedBotRarities: [],
   };
 
@@ -184,7 +184,7 @@ export const answerRound = async (params: {
     state.totalCorrect += 1;
     state.correctStreak += 1;
     state.maxStreak = Math.max(state.maxStreak, state.correctStreak);
-    state.polvoFromAnswers += applyAnswerReward({ correctStreak: state.correctStreak });
+    state.dustFromAnswers += applyAnswerReward({ correctStreak: state.correctStreak });
     await onCorrectAnswer(playerCard.id);
   } else {
     state.correctStreak = 0;
@@ -240,9 +240,9 @@ export const answerRound = async (params: {
 
   const winner: "player" | "bot" = state.botPos >= state.botCards.length ? "player" : "bot";
 
-  const polvoFromBots =
+  const dustFromBots =
     winner === "player"
-      ? state.defeatedBotRarities.reduce((sum, r) => sum + polvoForDefeatedBot(r), 0)
+      ? state.defeatedBotRarities.reduce((sum, r) => sum + dustForDefeatedBot(r), 0)
       : 0;
 
   let bonusCard: BattleResult["rewards"]["bonusCard"] = null;
@@ -256,14 +256,14 @@ export const answerRound = async (params: {
     rounds: state.rounds,
     winner,
     rewards: {
-      polvo: state.polvoFromAnswers + polvoFromBots,
+      dust: state.dustFromAnswers + dustFromBots,
       bonusCard,
       correctAnswers: state.totalCorrect,
       streak: state.maxStreak,
     },
   };
 
-  await addPolvo(player.id, battleResult.rewards.polvo);
+  await addDust(player.id, battleResult.rewards.dust);
   await delState(state.id);
   return { round, battleResult };
 };

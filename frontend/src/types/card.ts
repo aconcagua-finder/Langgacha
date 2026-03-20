@@ -6,7 +6,7 @@ export type GeneratedCard = {
   translationRu: string;
   type: string;
   rarity: string;
-  fue: number;
+  atk: number;
   def: number;
   colorido: number;
   flavorText: string;

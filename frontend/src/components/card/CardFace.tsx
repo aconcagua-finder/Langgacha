@@ -44,7 +44,7 @@ export function CardFace({ card }: { card: GeneratedCard }) {
         rarityTheme.glow,
         rarityTheme.frameFx,
       ].join(" ")}
-      style={{ borderColor: typeTheme.color }}
+      style={{ borderColor: rarityTheme.border }}
     >
       {card.masteryProgress >= 5 ? (
         <div className="pointer-events-none absolute right-4 top-4 z-10 rotate-12 rounded-xl bg-emerald-400/90 px-4 py-2 text-xs font-extrabold tracking-wide text-slate-950 shadow-lg">
@@ -55,7 +55,7 @@ export function CardFace({ card }: { card: GeneratedCard }) {
         className={[
           "relative h-44 w-full",
           "bg-gradient-to-br",
-          typeTheme.gradient,
+          rarityTheme.gradient,
           "border-b",
         ].join(" ")}
         style={{ borderBottomColor: "rgba(255,255,255,0.08)" }}
@@ -72,7 +72,10 @@ export function CardFace({ card }: { card: GeneratedCard }) {
               {card.rarity}
             </span>
           </Tooltip>
-          <span className="text-xs text-slate-200/90">{label(TYPE_LABELS, card.type)}</span>
+          <span className="flex items-center gap-1 rounded-full border border-white/10 bg-slate-950/35 px-2 py-1 text-xs text-slate-100/90">
+            <span>{typeTheme.emoji}</span>
+            <span>{label(TYPE_LABELS, card.type)}</span>
+          </span>
         </div>
       </div>
 
@@ -83,10 +86,10 @@ export function CardFace({ card }: { card: GeneratedCard }) {
         </div>
 
         <div className="grid grid-cols-2 gap-3">
-          <Tooltip text={TOOLTIPS.fue}>
+          <Tooltip text={TOOLTIPS.atk}>
             <div className="rounded-xl bg-slate-950/40 p-3">
-              <div className="text-xs text-slate-200/70">FUE</div>
-              <div className="text-lg font-bold">{card.fue}</div>
+              <div className="text-xs text-slate-200/70">ATK</div>
+              <div className="text-lg font-bold">{card.atk}</div>
             </div>
           </Tooltip>
           <Tooltip text={TOOLTIPS.def}>

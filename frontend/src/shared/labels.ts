@@ -38,7 +38,7 @@ export const BATTLE_LABELS = {
 export const label = (map: Record<string, string>, key: string): string => map[key] ?? key;
 
 export const TOOLTIPS = {
-  fue: "Сила атаки карты",
+  atk: "Сила атаки карты",
   def: "Защита карты",
   conditionBrilliant: "Свежая карта, бонус к статам",
   conditionNormal: "Стандартное состояние",
@@ -46,11 +46,11 @@ export const TOOLTIPS = {
   conditionDeteriorated: "Сильно изношена, большой штраф к статам",
   mastery: (progress: number) =>
     `Прогресс освоения: ${progress}/5. Ответь правильно в бою для прокачки`,
-  polvo: "Валюта для крафта карт. Получай из боёв и распыления",
+  dust: "Валюта для крафта карт. Получай из боёв и распыления",
   levelProgress: "Осваивай карты в боях для повышения уровня и открытия новых рарностей",
 };
 
-export const POLVO_PER_DISINTEGRATE: Record<string, number> = {
+export const DUST_PER_DISINTEGRATE: Record<string, number> = {
   C: 5,
   UC: 15,
   R: 50,
@@ -62,7 +62,7 @@ export const DISINTEGRATE_COPY = {
   title: "Распылить карту?",
   confirm: "Распылить",
   cancel: "Отмена",
-  common: (polvo: number) => `Вы получите ${polvo} Polvo. Действие необратимо.`,
-  rare: (polvo: number) =>
-    `Это редкая карта! Уверен?\nВы получите ${polvo} Polvo. Действие необратимо.`,
+  common: (dust: number) => `Вы получите ${dust} Dust. Действие необратимо.`,
+  rare: (dust: number) =>
+    `Это редкая карта! Уверен?\nВы получите ${dust} Dust. Действие необратимо.`,
 };

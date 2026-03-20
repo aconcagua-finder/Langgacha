@@ -7,7 +7,7 @@ import { CardBack } from "../card/CardBack";
 import { CardFace } from "../card/CardFace";
 import { CardFlip } from "../card/CardFlip";
 import { ConfirmDialog } from "../ui/ConfirmDialog";
-import { DISINTEGRATE_COPY, POLVO_PER_DISINTEGRATE } from "../../shared/labels";
+import { DISINTEGRATE_COPY, DUST_PER_DISINTEGRATE } from "../../shared/labels";
 
 type Props = {
   group: CardGroup | null;
@@ -40,9 +40,9 @@ export function CardGroupModal({ group, onClose, onDisintegrate }: Props) {
 
   if (!group) return null;
 
-  const polvo = confirmCard ? (POLVO_PER_DISINTEGRATE[confirmCard.rarity] ?? 0) : 0;
+  const dust = confirmCard ? (DUST_PER_DISINTEGRATE[confirmCard.rarity] ?? 0) : 0;
   const danger = confirmCard ? ["R", "SR", "SSR"].includes(confirmCard.rarity) : false;
-  const description = danger ? DISINTEGRATE_COPY.rare(polvo) : DISINTEGRATE_COPY.common(polvo);
+  const description = danger ? DISINTEGRATE_COPY.rare(dust) : DISINTEGRATE_COPY.common(dust);
 
   return (
     <div

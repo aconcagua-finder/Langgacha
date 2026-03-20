@@ -52,7 +52,7 @@ export function CollectionPage() {
     try {
       const res = await disintegrateCard(cardId);
       setCards((prev) => prev.filter((c) => c.id !== cardId));
-      setToast(`+${res.polvoGained} Polvo`);
+      setToast(`+${res.dustGained} Dust`);
       window.setTimeout(() => setToast(null), 1800);
       await refreshPlayer();
     } catch (e) {

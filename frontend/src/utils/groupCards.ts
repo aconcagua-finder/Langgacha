@@ -6,7 +6,7 @@ export type CardGroup = {
   bestCard: GeneratedCard;
 };
 
-const power = (c: GeneratedCard) => c.fue + c.def;
+const power = (c: GeneratedCard) => c.atk + c.def;
 
 export const groupCards = (cards: GeneratedCard[]): CardGroup[] => {
   const byWord = new Map<string, GeneratedCard[]>();
@@ -32,4 +32,3 @@ export const groupCards = (cards: GeneratedCard[]): CardGroup[] => {
     return { word, cards: groupCards, bestCard: best };
   });
 };
-

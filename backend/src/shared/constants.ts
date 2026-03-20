@@ -37,7 +37,7 @@ export const CONDITION_MODIFIERS: Record<string, number> = {
 
 export const INSPIRATION_BONUS = 0.15;
 
-export const POLVO_PER_RARITY_BATTLE: Record<string, number> = {
+export const DUST_PER_RARITY_BATTLE: Record<string, number> = {
   C: 2,
   UC: 5,
   R: 10,
@@ -45,12 +45,12 @@ export const POLVO_PER_RARITY_BATTLE: Record<string, number> = {
   SSR: 200,
 };
 
-export const CORRECT_ANSWER_POLVO = 5;
+export const CORRECT_ANSWER_DUST = 5;
 export const STREAK_THRESHOLD = 3;
 export const STREAK_MULTIPLIER = 1.5;
 export const BONUS_CARD_CHANCE = 0.2;
 
-export const POLVO_PER_DISINTEGRATE: Record<string, number> = {
+export const DUST_PER_DISINTEGRATE: Record<string, number> = {
   C: 5,
   UC: 15,
   R: 50,

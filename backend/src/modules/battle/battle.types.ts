@@ -6,7 +6,7 @@ export type BattleCard = {
   translationRu: string;
   type: string;
   rarity: string;
-  fue: number;
+  atk: number;
   def: number;
   hp: number;
   condition: string;
@@ -34,7 +34,7 @@ export type RoundResult = {
 };
 
 export type BattleRewards = {
-  polvo: number;
+  dust: number;
   bonusCard: GeneratedCardDto | null;
   correctAnswers: number;
   streak: number;
@@ -82,6 +82,6 @@ export type BattleState = {
   correctStreak: number;
   maxStreak: number;
   totalCorrect: number;
-  polvoFromAnswers: number;
+  dustFromAnswers: number;
   defeatedBotRarities: string[];
 };

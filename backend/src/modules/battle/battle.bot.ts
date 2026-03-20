@@ -20,10 +20,10 @@ const rarityToRank: Record<string, number> = {
 
 const buildBotCard = (word: Word): BattleCard => {
   const rarity = word.rarity as Rarity;
-  const rawFue = rollStat(rarity, word.baseFue);
+  const rawAtk = rollStat(rarity, word.baseAtk);
   const rawDef = rollStat(rarity, word.baseDef);
   const condition = rollCondition();
-  const fue = applyConditionModifier(rawFue, condition);
+  const atk = applyConditionModifier(rawAtk, condition);
   const def = applyConditionModifier(rawDef, condition);
   return {
     id: `bot:${randomUUID()}`,
@@ -31,7 +31,7 @@ const buildBotCard = (word: Word): BattleCard => {
     translationRu: word.translationRu,
     type: word.type,
     rarity: word.rarity,
-    fue,
+    atk,
     def,
     hp: computeHp(def),
     condition,
@@ -41,7 +41,7 @@ const buildBotCard = (word: Word): BattleCard => {
 };
 
 export const generateBotDeck = async (playerCards: BattleCard[]): Promise<BattleCard[]> => {
-  const totalPlayerPower = playerCards.reduce((sum, c) => sum + (c.fue + c.def), 0);
+  const totalPlayerPower = playerCards.reduce((sum, c) => sum + (c.atk + c.def), 0);
   const target = totalPlayerPower * (0.8 + Math.random() * 0.4);
 
   const pool = await prisma.word.findMany();
@@ -97,12 +97,12 @@ export const generateBotDeck = async (playerCards: BattleCard[]): Promise<Battle
     return buildBotCard(pickWordForRarity(rarity));
   });
 
-  const currentTotal = botCards.reduce((sum, c) => sum + (c.fue + c.def), 0);
+  const currentTotal = botCards.reduce((sum, c) => sum + (c.atk + c.def), 0);
   const scale = currentTotal > 0 ? target / currentTotal : 1;
 
   return botCards.map((c) => {
-    const fue = Math.max(1, Math.round(c.fue * scale));
+    const atk = Math.max(1, Math.round(c.atk * scale));
     const def = Math.max(1, Math.round(c.def * scale));
-    return { ...c, fue, def, hp: computeHp(def) };
+    return { ...c, atk, def, hp: computeHp(def) };
   });
 };

@@ -1,5 +1,6 @@
 import type { GeneratedCard } from "../../types/card";
 import { getRarityTheme, getTypeTheme } from "../../styles/card-themes";
+import { TYPE_LABELS, label } from "../../shared/labels";
 
 export function CardBack({ card }: { card: GeneratedCard }) {
   const typeTheme = getTypeTheme(card.type);
@@ -13,17 +14,28 @@ export function CardBack({ card }: { card: GeneratedCard }) {
         rarityTheme.glow,
         rarityTheme.frameFx,
       ].join(" ")}
-      style={{ borderColor: typeTheme.color }}
+      style={{ borderColor: rarityTheme.border }}
     >
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <div className="text-2xl font-extrabold tracking-tight">{card.word}</div>
-          <div className="text-sm text-slate-200/80">{card.translationRu}</div>
+      <div
+        className={["rounded-xl border border-white/10 bg-gradient-to-br p-4", rarityTheme.gradient].join(
+          " ",
+        )}
+      >
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <div className="text-2xl font-extrabold tracking-tight">{card.word}</div>
+            <div className="text-sm text-slate-200/80">{card.translationRu}</div>
+          </div>
+          <div className="flex flex-col items-end gap-2">
+            <div className="text-3xl drop-shadow">{typeTheme.emoji}</div>
+            <div className="rounded-full bg-slate-950/35 px-2 py-1 text-xs text-slate-100/90">
+              {label(TYPE_LABELS, card.type)}
+            </div>
+          </div>
         </div>
-        <div className="text-3xl">{typeTheme.emoji}</div>
       </div>
 
-      <div className="mt-4 rounded-xl bg-slate-950/40 p-4">
+      <div className="mt-3 rounded-xl bg-slate-950/40 p-4">
         <div className="text-xs text-slate-200/70">Флейвор</div>
         <div className="mt-2 text-sm italic text-slate-100/90">
           “{card.flavorText}”
@@ -54,4 +66,3 @@ export function CardBack({ card }: { card: GeneratedCard }) {
     </div>
   );
 }
-

@@ -114,7 +114,7 @@ export function CollectionFilters({
           className="rounded-xl border border-slate-800/60 bg-slate-950/30 px-3 py-2 text-sm text-slate-100"
         >
           <option value="newest">Новые</option>
-          <option value="fue_desc">По силе (FUE)</option>
+          <option value="atk_desc">По силе (ATK)</option>
           <option value="def_desc">По защите (DEF)</option>
           <option value="rarity_desc">По рарности</option>
         </select>

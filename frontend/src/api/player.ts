@@ -3,7 +3,7 @@ import { API_URL } from "./config";
 export type PlayerDto = {
   id: string;
   name: string;
-  polvo: number;
+  dust: number;
   dominatedCount: number;
   level: string;
   nextLevel: string | null;
@@ -17,4 +17,3 @@ export const getPlayer = async (): Promise<PlayerDto> => {
   if (!res.ok) throw new Error(`Failed to fetch player: ${res.status}`);
   return (await res.json()) as PlayerDto;
 };
-

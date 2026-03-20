@@ -18,7 +18,7 @@ export const mapCardToDto = (card: Card & { word: Word }): GeneratedCardDto => (
   translationRu: card.word.translationRu,
   type: card.word.type,
   rarity: card.word.rarity,
-  fue: card.fue,
+  atk: card.atk,
   def: card.def,
   colorido: card.word.colorido,
   flavorText: card.word.flavorText,
@@ -53,14 +53,14 @@ export const createCardFromWord = async (
   params?: { playerId?: string },
 ): Promise<GeneratedCardDto> => {
   const rarity = word.rarity as Rarity;
-  const fue = rollStat(rarity, word.baseFue);
+  const atk = rollStat(rarity, word.baseAtk);
   const def = rollStat(rarity, word.baseDef);
   const playerId = params?.playerId ?? (await getOrCreateDefaultPlayer()).id;
 
   const created = await prisma.card.create({
     data: {
       wordId: word.id,
-      fue,
+      atk,
       def,
       condition: rollCondition(),
       masteryProgress: 0,

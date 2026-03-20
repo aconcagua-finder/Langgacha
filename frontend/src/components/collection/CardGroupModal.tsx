@@ -91,14 +91,14 @@ export function CardGroupModal({ group, onClose, onDisintegrate }: Props) {
                       onClick={() => setSelected(c)}
                       disabled={disintegratingId === c.id}
                       className={[
-                        "rounded-2xl border p-1",
+                        "rounded-2xl p-1",
                         selected?.id === c.id
-                          ? "border-sky-400/60 bg-sky-500/10"
-                          : "border-transparent hover:border-slate-700/70",
+                          ? "bg-sky-500/10"
+                          : "hover:bg-slate-950/10",
                       ].join(" ")}
                       aria-label={`Выбрать ${c.word}`}
                     >
-                      <CardMini card={c} />
+                      <CardMini card={c} selected={selected?.id === c.id} />
                     </button>
                     <button
                       type="button"

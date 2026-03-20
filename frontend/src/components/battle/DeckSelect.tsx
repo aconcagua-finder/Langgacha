@@ -127,10 +127,10 @@ export function DeckSelect({ onStart }: Props) {
                 type="button"
                 onClick={() => toggle(c)}
                 className={[
-                  "relative rounded-2xl border p-1",
+                  "relative rounded-2xl p-1",
                   selectedSet.has(c.id)
-                    ? "border-sky-400/60 bg-sky-500/10"
-                    : "border-transparent hover:border-slate-700/70",
+                    ? "bg-sky-500/10"
+                    : "hover:bg-slate-950/10",
                 ].join(" ")}
                 aria-label={`Выбрать карту ${c.word}`}
               >
@@ -139,7 +139,7 @@ export function DeckSelect({ onStart }: Props) {
                     ✓
                   </div>
                 ) : null}
-                <CardMini card={c} />
+                <CardMini card={c} selected={selectedSet.has(c.id)} />
               </button>
             ))}
           </div>

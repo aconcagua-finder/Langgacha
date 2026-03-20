@@ -22,7 +22,7 @@ export function CollectionGrid({ groups, onOpenCard, onOpenGroup }: Props) {
             key={`${g.word}:${g.bestCard.id}`}
             type="button"
             onClick={onClick}
-            className="relative rounded-2xl border border-transparent p-1 hover:border-slate-700/70"
+            className="relative rounded-2xl p-1"
             aria-label={isStack ? `Открыть стопку ${g.word}` : `Открыть карточку ${g.word}`}
           >
             {isStack ? (

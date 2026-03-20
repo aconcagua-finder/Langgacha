@@ -40,10 +40,12 @@ export function CardMini({
   card,
   size = "mini",
   tilt = true,
+  selected = false,
 }: {
   card: GeneratedCard;
   size?: Size;
   tilt?: boolean;
+  selected?: boolean;
 }) {
   const typeTheme = getTypeTheme(card.type);
   const rarityTheme = getRarityTheme(card.rarity);
@@ -66,7 +68,9 @@ export function CardMini({
         sz.h,
         "relative overflow-hidden rounded-2xl border bg-slate-900/60 backdrop-blur",
         "flex flex-col",
+        "transition-shadow duration-150",
         tiltFx.isEnabled ? "group" : "",
+        selected ? "ring-2 ring-sky-400/60" : "hover:ring-1 hover:ring-slate-700/70",
       ].join(" ")}
       style={{ ...tiltFx.style, borderColor: rarityTheme.border }}
       onMouseEnter={tiltFx.onMouseEnter}

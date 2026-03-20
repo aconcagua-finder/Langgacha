@@ -100,12 +100,12 @@ export function CollectionPage() {
 
       {canStartBattle ? (
         <div className="fixed bottom-0 left-0 right-0 z-10 border-t border-slate-800/60 bg-slate-950/80 backdrop-blur">
-          <div className="mx-auto max-w-5xl px-6 py-3">
+          <div className="mx-auto flex max-w-5xl items-center justify-end px-6 py-2">
             <Link
               to="/battle"
-              className="block w-full rounded-xl bg-sky-500 px-4 py-3 text-center font-semibold text-slate-950 hover:bg-sky-400"
+              className="inline-flex items-center justify-center rounded-xl border border-slate-700/70 bg-slate-900/60 px-4 py-2 text-sm font-semibold text-slate-50 hover:bg-slate-900"
             >
-              Начать бой
+              ⚔️ Начать бой
             </Link>
           </div>
         </div>

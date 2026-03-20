@@ -35,7 +35,7 @@ export function CardGroupModal({ group, onClose }: Props) {
 
   return (
     <div
-      className="fixed inset-0 z-20 flex items-center justify-center bg-black/70 p-6"
+      className="fixed inset-0 z-20 flex items-center justify-center bg-black/90 p-6"
       onMouseDown={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
@@ -43,7 +43,7 @@ export function CardGroupModal({ group, onClose }: Props) {
       aria-modal="true"
     >
       <div className="w-full max-w-5xl">
-        <div className="rounded-2xl border border-slate-800/60 bg-slate-950/80 p-5 backdrop-blur">
+        <div className="flex max-h-[calc(100vh-3rem)] flex-col overflow-hidden rounded-2xl border border-slate-800/60 bg-slate-950 p-5">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <div className="text-xs text-slate-200/60">Стопка</div>
@@ -60,14 +60,15 @@ export function CardGroupModal({ group, onClose }: Props) {
             </button>
           </div>
 
-          <div className="mt-5 grid grid-cols-1 gap-6 lg:grid-cols-[1fr_360px]">
+          <div className="mt-5 min-h-0 overflow-y-auto">
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_360px]">
             <div className="flex flex-col gap-3">
               <div className="text-xs font-semibold uppercase tracking-wide text-slate-200/60">
                 Экземпляры
               </div>
-              <div className="flex gap-4 overflow-x-auto pb-2">
+              <div className="grid max-h-[360px] grid-cols-1 gap-4 overflow-y-auto pr-1 sm:grid-cols-2">
                 {group.cards.map((c) => (
-                  <div key={c.id} className="flex shrink-0 flex-col items-center gap-2">
+                  <div key={c.id} className="flex flex-col items-center gap-2">
                     <button
                       type="button"
                       onClick={() => setSelected(c)}
@@ -99,7 +100,12 @@ export function CardGroupModal({ group, onClose }: Props) {
                 Просмотр
               </div>
               {selected ? (
-                <CardFlip front={<CardFace card={selected} />} back={<CardBack card={selected} />} />
+                <div className="rounded-2xl bg-slate-950 p-1">
+                  <CardFlip
+                    front={<CardFace card={selected} />}
+                    back={<CardBack card={selected} />}
+                  />
+                </div>
               ) : (
                 <div className="rounded-2xl border border-dashed border-slate-700/70 bg-slate-900/20 p-10 text-sm text-slate-200/70">
                   Выбери карту слева.
@@ -107,9 +113,9 @@ export function CardGroupModal({ group, onClose }: Props) {
               )}
             </div>
           </div>
+          </div>
         </div>
       </div>
     </div>
   );
 }
-

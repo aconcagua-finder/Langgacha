@@ -24,7 +24,7 @@ export function CardModal({ card, onClose }: Props) {
 
   return (
     <div
-      className="fixed inset-0 z-20 flex items-center justify-center bg-black/70 p-6"
+      className="fixed inset-0 z-20 flex items-center justify-center bg-black/90 p-6"
       onMouseDown={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
@@ -32,7 +32,9 @@ export function CardModal({ card, onClose }: Props) {
       aria-modal="true"
     >
       <div className="flex flex-col items-center gap-4">
-        <CardFlip front={<CardFace card={card} />} back={<CardBack card={card} />} />
+        <div className="rounded-2xl bg-slate-950 p-1">
+          <CardFlip front={<CardFace card={card} />} back={<CardBack card={card} />} />
+        </div>
         <button
           type="button"
           onClick={onClose}
@@ -44,4 +46,3 @@ export function CardModal({ card, onClose }: Props) {
     </div>
   );
 }
-

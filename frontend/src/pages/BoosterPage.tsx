@@ -11,6 +11,8 @@ import { LEVEL_LABELS, label } from "../shared/labels";
 
 type Phase = "pack" | "revealing" | "summary";
 
+const PITY_THRESHOLD = 10;
+
 export function BoosterPage() {
   const showDebug = import.meta.env.DEV;
   const { player } = usePlayer();
@@ -160,6 +162,14 @@ export function BoosterPage() {
                 {boosterInfo.count}/{boosterInfo.maxBoosters}
               </span>
             </div>
+            {player ? (
+              <div className="text-xs text-slate-200/50">
+                До гарантии SR+:{" "}
+                <span className="font-mono">
+                  {Math.min(PITY_THRESHOLD, player.pityCounter)}/{PITY_THRESHOLD}
+                </span>
+              </div>
+            ) : null}
             {timerText && boosterInfo.count < boosterInfo.maxBoosters ? (
               <div>
                 Следующий: <span className="font-mono">{timerText}</span>

@@ -13,6 +13,7 @@ export type PlayerDto = {
   nextBoosterAt: string | null;
   craftAvailable: boolean;
   nextCraftAt: string | null;
+  pityCounter: number;
   dominatedCount: number;
   level: PlayerLevelName;
   nextLevel: PlayerLevelName | null;

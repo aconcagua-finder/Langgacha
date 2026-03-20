@@ -66,6 +66,7 @@ export const getPlayerDto = async (playerId: string): Promise<PlayerDto> => {
     nextBoosterAt: boosterInfo.nextRechargeAt,
     craftAvailable: craftAvailability.available,
     nextCraftAt: craftAvailability.nextAt,
+    pityCounter: player.pityCounter ?? 0,
     dominatedCount,
     level,
     nextLevel,

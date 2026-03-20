@@ -34,6 +34,7 @@ export const devRoutes: FastifyPluginAsync = async (app) => {
       craft?: unknown;
       dust?: unknown;
       addDust?: unknown;
+      pityCounter?: unknown;
     };
 
     const boosters = body.boosters === true;
@@ -46,11 +47,17 @@ export const devRoutes: FastifyPluginAsync = async (app) => {
         : body.addDust == null
           ? null
           : NaN;
+    const pityCounter =
+      typeof body.pityCounter === "number"
+        ? clampInt(body.pityCounter)
+        : body.pityCounter == null
+          ? null
+          : NaN;
 
-    if (Number.isNaN(dust) || Number.isNaN(addDust)) {
+    if (Number.isNaN(dust) || Number.isNaN(addDust) || Number.isNaN(pityCounter)) {
       return reply.code(400).send({
         error: "Bad Request",
-        message: "dust/addDust must be numbers if provided",
+        message: "dust/addDust/pityCounter must be numbers if provided",
         statusCode: 400,
       });
     }
@@ -83,6 +90,13 @@ export const devRoutes: FastifyPluginAsync = async (app) => {
       });
       const next = Math.max(0, (current?.dust ?? 0) + addDust);
       await prisma.player.update({ where: { id: player.id }, data: { dust: next } });
+    }
+
+    if (pityCounter !== null) {
+      await prisma.player.update({
+        where: { id: player.id },
+        data: { pityCounter: Math.max(0, pityCounter) },
+      });
     }
 
     return getPlayerDto(player.id);

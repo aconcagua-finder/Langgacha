@@ -61,6 +61,7 @@ model Player {
   boosterCount  Int      @default(7)
   lastBoosterAt DateTime @default(now())
   lastCraftAt   DateTime?
+  pityCounter   Int      @default(0)
   userId        String?  @unique
   user          User?    @relation(fields: [userId], references: [id])
   createdAt DateTime @default(now())

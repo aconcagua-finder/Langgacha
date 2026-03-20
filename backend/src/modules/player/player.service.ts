@@ -1,5 +1,5 @@
 import { prisma } from "../../db/prisma.js";
-import { PROGRESSION_LEVELS } from "../../shared/constants.js";
+import { PROGRESSION_LEVELS, STARTING_DUST } from "../../shared/constants.js";
 import { publicBoosterInfo, rechargeAndGet } from "../boosters/boosters.recharge.js";
 import { getDailyAvailability } from "../craft/craft.time.js";
 
@@ -22,7 +22,7 @@ const getLevel = (dominatedCount: number) => {
 export const getOrCreateDefaultPlayer = async () => {
   const existing = await prisma.player.findFirst({ orderBy: { createdAt: "asc" } });
   if (existing) return existing;
-  return prisma.player.create({ data: { name: "Player", dust: 0 } });
+  return prisma.player.create({ data: { name: "Player", dust: STARTING_DUST } });
 };
 
 export const ensureCardsHavePlayer = async (playerId: string): Promise<void> => {

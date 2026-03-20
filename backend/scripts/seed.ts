@@ -1,4 +1,5 @@
 import { prisma } from "../src/db/prisma.js";
+import { STARTING_DUST } from "../src/shared/constants.js";
 
 type SeedWord = {
   language: "es";
@@ -519,7 +520,7 @@ const WORDS: SeedWord[] = [
 const main = async (): Promise<void> => {
   const player =
     (await prisma.player.findFirst({ orderBy: { createdAt: "asc" } })) ??
-    (await prisma.player.create({ data: { name: "Player", dust: 0 } }));
+    (await prisma.player.create({ data: { name: "Player", dust: STARTING_DUST } }));
 
   for (const w of WORDS) {
     await prisma.word.upsert({

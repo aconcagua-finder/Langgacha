@@ -69,6 +69,8 @@ export const DUST_PER_CRAFT: Record<string, number> = {
   SSR: 1500,
 };
 
+export const STARTING_DUST = 100;
+
 export const PROGRESSION_LEVELS = [
   { name: "Beginner", minDominated: 0, rarities: ["C"] },
   { name: "Elementary", minDominated: 30, rarities: ["C", "UC"] },

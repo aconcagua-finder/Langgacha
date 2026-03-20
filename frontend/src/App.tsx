@@ -6,6 +6,7 @@ import { useAuth } from "./contexts/AuthContext";
 import { AuthPage } from "./pages/AuthPage";
 import { BoosterPage } from "./pages/BoosterPage";
 import { BattlePage } from "./pages/BattlePage";
+import { RaidPage } from "./pages/RaidPage";
 import { CollectionPage } from "./pages/CollectionPage";
 import { CraftPage } from "./pages/CraftPage";
 
@@ -37,6 +38,7 @@ export default function App() {
           <Route path="/" element={<BoosterPage />} />
           <Route path="/collection" element={<CollectionPage />} />
           <Route path="/battle" element={<BattlePage />} />
+          <Route path="/raid" element={<RaidPage />} />
           <Route path="/craft" element={<CraftPage />} />
           <Route path="/login" element={<Navigate to="/" replace />} />
           <Route path="*" element={<Navigate to="/" replace />} />

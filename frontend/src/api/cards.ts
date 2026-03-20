@@ -1,6 +1,6 @@
 import type { GeneratedCard } from "../types/card";
 
-const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:3000";
+import { API_URL } from "./config";
 
 export const generateCard = async (): Promise<GeneratedCard> => {
   const res = await fetch(`${API_URL}/api/cards/generate`, { method: "POST" });
@@ -13,4 +13,3 @@ export const listCards = async (): Promise<GeneratedCard[]> => {
   if (!res.ok) throw new Error(`Failed to list cards: ${res.status}`);
   return (await res.json()) as GeneratedCard[];
 };
-

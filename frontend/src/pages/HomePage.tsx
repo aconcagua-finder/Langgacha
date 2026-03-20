@@ -1,13 +1,13 @@
 import { useState } from "react";
 
 import { generateCard } from "../api/cards";
+import { API_URL } from "../api/config";
 import type { GeneratedCard } from "../types/card";
 import { CardBack } from "../components/card/CardBack";
 import { CardFace } from "../components/card/CardFace";
 import { CardFlip } from "../components/card/CardFlip";
 
 export function HomePage() {
-  const apiUrl = import.meta.env.VITE_API_URL ?? "http://localhost:3000";
   const [card, setCard] = useState<GeneratedCard | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -49,7 +49,7 @@ export function HomePage() {
             {loading ? "Генерирую…" : "Сгенерировать карточку"}
           </button>
           <div className="text-sm text-slate-200/70">
-            API: <span className="font-mono">{apiUrl}</span>
+            API: <span className="font-mono">{API_URL}</span>
           </div>
         </div>
 

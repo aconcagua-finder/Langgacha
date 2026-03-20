@@ -15,7 +15,3 @@ build
 
 # Vite
 frontend/dist
-
-# Prisma
-backend/prisma/migrations
-

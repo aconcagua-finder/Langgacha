@@ -25,6 +25,32 @@ export function DeckSelect({ onStart }: Props) {
   const selectedSet = useMemo(() => new Set(selectedIds), [selectedIds]);
   const byId = useMemo(() => new Map(cards.map((c) => [c.id, c])), [cards]);
 
+  const autoSelect = () => {
+    const condRank: Record<string, number> = {
+      Brilliant: 3,
+      Normal: 2,
+      Worn: 1,
+      Deteriorated: 0,
+    };
+
+    const sorted = cards
+      .map((card) => ({ card, r: Math.random() }))
+      .sort((a, b) => {
+        const ca = condRank[a.card.condition] ?? 2;
+        const cb = condRank[b.card.condition] ?? 2;
+        if (cb !== ca) return cb - ca;
+        const pa = a.card.atk + a.card.def;
+        const pb = b.card.atk + b.card.def;
+        if (pb !== pa) return pb - pa;
+        return b.r - a.r;
+      })
+      .map((x) => x.card);
+
+    const top = sorted.slice(0, 5);
+    setSelectedIds(top.map((c) => c.id));
+    setSelectedById(Object.fromEntries(top.map((c) => [c.id, c])));
+  };
+
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
@@ -82,14 +108,24 @@ export function DeckSelect({ onStart }: Props) {
           Выбери <span className="font-mono">5</span> карт (порядок выбора = порядок боя) ·
           Выбрано: <span className="font-mono">{selectedIds.length}/5</span>
         </div>
-        <button
-          type="button"
-          onClick={() => setRefreshKey((v) => v + 1)}
-          disabled={loading}
-          className="rounded-xl bg-slate-800 px-4 py-3 text-sm font-semibold text-slate-50 hover:bg-slate-700 disabled:opacity-60"
-        >
-          {loading ? "Загружаю…" : "Обновить"}
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={autoSelect}
+            disabled={loading || cards.length === 0}
+            className="rounded-xl bg-slate-800 px-4 py-3 text-sm font-semibold text-slate-50 hover:bg-slate-700 disabled:opacity-60"
+          >
+            Авто
+          </button>
+          <button
+            type="button"
+            onClick={() => setRefreshKey((v) => v + 1)}
+            disabled={loading}
+            className="rounded-xl bg-slate-800 px-4 py-3 text-sm font-semibold text-slate-50 hover:bg-slate-700 disabled:opacity-60"
+          >
+            {loading ? "Загружаю…" : "Обновить"}
+          </button>
+        </div>
       </div>
 
       <CollectionFilters

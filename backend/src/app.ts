@@ -5,6 +5,7 @@ import { config } from "./config/index.js";
 import { battleRoutes } from "./modules/battle/battle.routes.js";
 import { cardsRoutes } from "./modules/cards/cards.routes.js";
 import { boostersRoutes } from "./modules/boosters/boosters.routes.js";
+import { playerRoutes } from "./modules/player/player.routes.js";
 
 export const buildApp = async (): Promise<FastifyInstance> => {
   const app = Fastify({ logger: true });
@@ -17,6 +18,7 @@ export const buildApp = async (): Promise<FastifyInstance> => {
   await app.register(cardsRoutes, { prefix: "/api/cards" });
   await app.register(boostersRoutes, { prefix: "/api/boosters" });
   await app.register(battleRoutes, { prefix: "/api/battle" });
+  await app.register(playerRoutes, { prefix: "/api/player" });
 
   app.get("/health", async () => ({ ok: true }));
 

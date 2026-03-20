@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import type { BattleAnswerResponse, BattleCardPublic, BattleStartResponse } from "../api/battle";
 import { answerBattle, startBattle } from "../api/battle";
@@ -8,12 +8,14 @@ import { DeckSelect } from "../components/battle/DeckSelect";
 import { QuizPhase } from "../components/battle/QuizPhase";
 import { RoundResult } from "../components/battle/RoundResult";
 import { BattleResult } from "../components/battle/BattleResult";
+import { usePlayer } from "../contexts/PlayerContext";
 
 type Phase = "deck" | "quiz" | "combat" | "roundResult" | "battleResult";
 
 const questionForWord = (word: string) => `Как переводится «${word}»?`;
 
 export function BattlePage() {
+  const { refresh: refreshPlayer } = usePlayer();
   const [phase, setPhase] = useState<Phase>("deck");
   const [startData, setStartData] = useState<BattleStartResponse | null>(null);
   const [roundNumber, setRoundNumber] = useState(1);
@@ -24,6 +26,10 @@ export function BattlePage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lastAnswer, setLastAnswer] = useState<BattleAnswerResponse | null>(null);
+
+  useEffect(() => {
+    if (lastAnswer?.battleResult) void refreshPlayer();
+  }, [lastAnswer?.battleResult, refreshPlayer]);
 
   const playerCard: BattleCardPublic | null = useMemo(() => {
     if (!startData) return null;

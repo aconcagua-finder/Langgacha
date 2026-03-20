@@ -5,11 +5,13 @@ import { openBooster } from "../api/boosters";
 import type { GeneratedCard } from "../types/card";
 import { BoosterPack } from "../components/booster/BoosterPack";
 import { BoosterReveal } from "../components/booster/BoosterReveal";
+import { usePlayer } from "../contexts/PlayerContext";
 
 type Phase = "pack" | "revealing" | "done";
 
 export function BoosterPage() {
   const showDebug = import.meta.env.DEV;
+  const { player } = usePlayer();
   const [phase, setPhase] = useState<Phase>("pack");
   const [cards, setCards] = useState<GeneratedCard[]>([]);
   const [visibleCount, setVisibleCount] = useState(0);
@@ -58,6 +60,14 @@ export function BoosterPage() {
     <main className="mx-auto flex min-h-[calc(100vh-64px)] max-w-5xl flex-col gap-8 px-6 py-10">
       <header className="flex flex-col gap-2">
         <h1 className="text-3xl font-extrabold tracking-tight">Бустер</h1>
+        {player ? (
+          <div className="text-sm text-slate-200/70">
+            Уровень: <span className="font-mono">{player.level}</span> · Освоено:{" "}
+            <span className="font-mono">
+              {player.progressToNext}/{player.progressNeeded}
+            </span>
+          </div>
+        ) : null}
         {showDebug ? (
           <p className="text-sm text-slate-200/70">
             API: <span className="font-mono">{API_URL}</span>
@@ -71,7 +81,24 @@ export function BoosterPage() {
         </div>
       ) : null}
 
-      {phase === "pack" ? <BoosterPack onOpen={onOpen} disabled={loading} /> : null}
+      {phase === "pack" ? (
+        <BoosterPack
+          onOpen={onOpen}
+          disabled={loading}
+          level={player?.level ?? "Principiante"}
+          packName={
+            player?.level === "Elemental"
+              ? "Пак Повседневного"
+              : player?.level === "Intermedio"
+                ? "Пак Уличного"
+                : player?.level === "Avanzado"
+                  ? "Пак Литературного"
+                  : player?.level === "Maestro"
+                    ? "Пак Легендарного"
+                    : "Пак Новичка"
+          }
+        />
+      ) : null}
 
       {phase !== "pack" ? (
         <section className="flex flex-col items-center gap-6">

@@ -22,13 +22,18 @@ export function CardFace({ card }: { card: GeneratedCard }) {
   return (
     <div
       className={[
-        "h-full w-full rounded-2xl border bg-slate-900/60 backdrop-blur",
+        "relative h-full w-full rounded-2xl border bg-slate-900/60 backdrop-blur",
         "flex flex-col overflow-hidden",
         rarityTheme.glow,
         rarityTheme.frameFx,
       ].join(" ")}
       style={{ borderColor: typeTheme.color }}
     >
+      {card.masteryProgress >= 5 ? (
+        <div className="pointer-events-none absolute right-4 top-4 z-10 rotate-12 rounded-xl bg-emerald-400/90 px-4 py-2 text-xs font-extrabold tracking-wide text-slate-950 shadow-lg">
+          ✓ Dominada
+        </div>
+      ) : null}
       <div
         className={[
           "relative h-44 w-full",
@@ -80,4 +85,3 @@ export function CardFace({ card }: { card: GeneratedCard }) {
     </div>
   );
 }
-

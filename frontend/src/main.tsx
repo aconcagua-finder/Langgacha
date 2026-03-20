@@ -3,13 +3,15 @@ import ReactDOM from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
 
 import App from "./App";
+import { PlayerProvider } from "./contexts/PlayerContext";
 import "./styles/index.css";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
-    <BrowserRouter>
-      <App />
-    </BrowserRouter>
+    <PlayerProvider>
+      <BrowserRouter>
+        <App />
+      </BrowserRouter>
+    </PlayerProvider>
   </React.StrictMode>,
 );
-

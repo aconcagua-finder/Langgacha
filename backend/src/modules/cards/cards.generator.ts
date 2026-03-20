@@ -1,7 +1,9 @@
 import type { Card, Word } from "@prisma/client";
 
 import { prisma } from "../../db/prisma.js";
+import { computeCondition } from "../../shared/condition.js";
 import { rollStat, type Rarity } from "../../shared/constants.js";
+import { getOrCreateDefaultPlayer } from "../player/player.service.js";
 import type { CardCondition, GeneratedCardDto } from "./cards.types.js";
 
 export const rollCondition = (): CardCondition => {
@@ -22,7 +24,7 @@ export const mapCardToDto = (card: Card & { word: Word }): GeneratedCardDto => (
   flavorText: card.word.flavorText,
   hint: card.word.hint,
   tags: card.word.tags,
-  condition: card.condition as CardCondition,
+  condition: computeCondition(card) as CardCondition,
   masteryProgress: card.masteryProgress,
   canEvolve: card.word.canEvolve,
 });
@@ -46,10 +48,14 @@ const pickRandomWord = async (params?: { rarity?: Rarity }): Promise<Word> => {
   return word;
 };
 
-export const createCardFromWord = async (word: Word): Promise<GeneratedCardDto> => {
+export const createCardFromWord = async (
+  word: Word,
+  params?: { playerId?: string },
+): Promise<GeneratedCardDto> => {
   const rarity = word.rarity as Rarity;
   const fue = rollStat(rarity, word.baseFue);
   const def = rollStat(rarity, word.baseDef);
+  const playerId = params?.playerId ?? (await getOrCreateDefaultPlayer()).id;
 
   const created = await prisma.card.create({
     data: {
@@ -59,6 +65,7 @@ export const createCardFromWord = async (word: Word): Promise<GeneratedCardDto> 
       condition: rollCondition(),
       masteryProgress: 0,
       isEvolved: false,
+      playerId,
     },
     include: { word: true },
   });
@@ -68,8 +75,8 @@ export const createCardFromWord = async (word: Word): Promise<GeneratedCardDto> 
 
 export const generateCardFromPool = async (params?: {
   rarity?: Rarity;
+  playerId?: string;
 }): Promise<GeneratedCardDto> => {
   const word = await pickRandomWord(params);
-  return createCardFromWord(word);
+  return createCardFromWord(word, { playerId: params?.playerId });
 };
-

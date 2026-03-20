@@ -10,14 +10,17 @@ import { CardFlip } from "../card/CardFlip";
 type Props = {
   group: CardGroup | null;
   onClose: () => void;
+  onDisintegrate: (cardId: string) => Promise<void>;
 };
 
-export function CardGroupModal({ group, onClose }: Props) {
+export function CardGroupModal({ group, onClose, onDisintegrate }: Props) {
   const [selected, setSelected] = useState<GeneratedCard | null>(null);
+  const [cards, setCards] = useState<GeneratedCard[]>([]);
 
   useEffect(() => {
     if (!group) return;
     setSelected(group.bestCard);
+    setCards(group.cards);
   }, [group]);
 
   useEffect(() => {
@@ -48,7 +51,7 @@ export function CardGroupModal({ group, onClose }: Props) {
             <div>
               <div className="text-xs text-slate-200/60">Стопка</div>
               <div className="text-2xl font-extrabold tracking-tight">
-                {title} <span className="text-slate-200/60">×{group.cards.length}</span>
+                {title} <span className="text-slate-200/60">×{cards.length}</span>
               </div>
             </div>
             <button
@@ -66,7 +69,7 @@ export function CardGroupModal({ group, onClose }: Props) {
                 Экземпляры
               </div>
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                {group.cards.map((c) => (
+                {cards.map((c) => (
                   <div key={c.id} className="flex flex-col items-center gap-2">
                     <button
                       type="button"
@@ -83,9 +86,16 @@ export function CardGroupModal({ group, onClose }: Props) {
                     </button>
                     <button
                       type="button"
-                      disabled
-                      title="Скоро"
-                      className="rounded-xl bg-slate-800/60 px-3 py-2 text-xs font-semibold text-slate-100/70 disabled:cursor-not-allowed"
+                      onClick={async () => {
+                        const ok = window.confirm("Распылить эту карту? Действие необратимо.");
+                        if (!ok) return;
+                        await onDisintegrate(c.id);
+                        const next = cards.filter((x) => x.id !== c.id);
+                        setCards(next);
+                        if (selected?.id === c.id) setSelected(next[0] ?? null);
+                        if (next.length === 0) onClose();
+                      }}
+                      className="rounded-xl bg-slate-800 px-3 py-2 text-xs font-semibold text-slate-50 hover:bg-slate-700"
                     >
                       Распылить
                     </button>

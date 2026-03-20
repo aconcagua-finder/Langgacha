@@ -517,6 +517,10 @@ const WORDS: SeedWord[] = [
 ];
 
 const main = async (): Promise<void> => {
+  const player =
+    (await prisma.player.findFirst({ orderBy: { createdAt: "asc" } })) ??
+    (await prisma.player.create({ data: { name: "Player", polvo: 0 } }));
+
   for (const w of WORDS) {
     await prisma.word.upsert({
       where: { language_word: { language: w.language, word: w.word } },
@@ -558,8 +562,9 @@ const main = async (): Promise<void> => {
   }
 
   const total = await prisma.word.count();
+  await prisma.card.updateMany({ where: { playerId: null }, data: { playerId: player.id } });
   // eslint-disable-next-line no-console
-  console.log(`Seed complete. Words in pool: ${total}`);
+  console.log(`Seed complete. Words in pool: ${total}. Player: ${player.id}`);
 };
 
 try {
@@ -567,4 +572,3 @@ try {
 } finally {
   await prisma.$disconnect();
 }
-

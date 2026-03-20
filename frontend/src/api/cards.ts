@@ -29,3 +29,11 @@ export const listCards = async (params: ListCardsParams = {}): Promise<Generated
   if (!res.ok) throw new Error(`Failed to list cards: ${res.status}`);
   return (await res.json()) as GeneratedCard[];
 };
+
+export const disintegrateCard = async (
+  cardId: string,
+): Promise<{ polvoGained: number; totalPolvo: number }> => {
+  const res = await fetch(`${API_URL}/api/cards/${cardId}/disintegrate`, { method: "POST" });
+  if (!res.ok) throw new Error(`Failed to disintegrate card: ${res.status}`);
+  return (await res.json()) as { polvoGained: number; totalPolvo: number };
+};

@@ -49,5 +49,15 @@ model Card {
 
   createdAt       DateTime @default(now())
   lastUsedAt      DateTime @default(now())
+
+  playerId        String?
+  player          Player?  @relation(fields: [playerId], references: [id])
 }
 
+model Player {
+  id        String   @id @default(uuid())
+  name      String   @default("Player")
+  polvo     Int      @default(0)
+  createdAt DateTime @default(now())
+  cards     Card[]
+}

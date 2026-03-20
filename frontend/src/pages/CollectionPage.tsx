@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 
-import { listCards, type ListCardsSort } from "../api/cards";
+import { disintegrateCard, listCards, type ListCardsSort } from "../api/cards";
 import type { GeneratedCard } from "../types/card";
 import { CardModal } from "../components/collection/CardModal";
 import { CardGroupModal } from "../components/collection/CardGroupModal";
@@ -9,8 +9,10 @@ import { CollectionFilters } from "../components/collection/CollectionFilters";
 import { CollectionGrid } from "../components/collection/CollectionGrid";
 import { groupCards } from "../utils/groupCards";
 import type { CardGroup } from "../utils/groupCards";
+import { usePlayer } from "../contexts/PlayerContext";
 
 export function CollectionPage() {
+  const { player, refresh: refreshPlayer } = usePlayer();
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
   const [selectedRarities, setSelectedRarities] = useState<string[]>([]);
   const [sort, setSort] = useState<ListCardsSort>("newest");
@@ -19,6 +21,7 @@ export function CollectionPage() {
   const [error, setError] = useState<string | null>(null);
   const [modalCard, setModalCard] = useState<GeneratedCard | null>(null);
   const [modalGroup, setModalGroup] = useState<CardGroup | null>(null);
+  const [toast, setToast] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -44,6 +47,25 @@ export function CollectionPage() {
   const uniqueWords = groups.length;
   const canStartBattle = cards.length >= 5;
 
+  const onDisintegrate = async (cardId: string) => {
+    try {
+      const res = await disintegrateCard(cardId);
+      setCards((prev) => prev.filter((c) => c.id !== cardId));
+      setToast(`+${res.polvoGained} Polvo`);
+      window.setTimeout(() => setToast(null), 1800);
+      await refreshPlayer();
+    } catch (e) {
+      setToast("Не удалось распылить карту");
+      window.setTimeout(() => setToast(null), 1800);
+      throw e;
+    }
+  };
+
+  const progressPct =
+    player && player.nextLevel
+      ? Math.min(100, Math.round((player.progressToNext / player.progressNeeded) * 100))
+      : 100;
+
   return (
     <>
       <main
@@ -61,6 +83,41 @@ export function CollectionPage() {
           </div>
         </div>
       </header>
+
+      {toast ? (
+        <div className="rounded-xl border border-emerald-400/30 bg-emerald-400/10 px-4 py-3 text-sm font-semibold text-emerald-100">
+          {toast}
+        </div>
+      ) : null}
+
+      {player ? (
+        <div className="rounded-2xl border border-slate-800/60 bg-slate-900/20 p-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="text-sm text-slate-200/80">
+              Уровень: <span className="font-mono">{player.level}</span>
+              {player.nextLevel ? (
+                <>
+                  {" "}
+                  → <span className="font-mono">{player.nextLevel}</span>
+                </>
+              ) : null}
+            </div>
+            <div className="text-sm text-slate-200/70">
+              Освоено:{" "}
+              <span className="font-mono">
+                {player.progressToNext}/{player.progressNeeded}
+              </span>
+            </div>
+          </div>
+          <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-slate-950/40">
+            <div className="h-full bg-sky-400" style={{ width: `${progressPct}%` }} />
+          </div>
+          <div className="mt-2 text-xs text-slate-200/60">
+            Доступные рарности:{" "}
+            <span className="font-mono">{player.unlockedRarities.join(", ")}</span>
+          </div>
+        </div>
+      ) : null}
 
       <CollectionFilters
         selectedTypes={selectedTypes}
@@ -111,8 +168,12 @@ export function CollectionPage() {
         </div>
       ) : null}
 
-      <CardModal card={modalCard} onClose={() => setModalCard(null)} />
-      <CardGroupModal group={modalGroup} onClose={() => setModalGroup(null)} />
+      <CardModal card={modalCard} onClose={() => setModalCard(null)} onDisintegrate={onDisintegrate} />
+      <CardGroupModal
+        group={modalGroup}
+        onClose={() => setModalGroup(null)}
+        onDisintegrate={onDisintegrate}
+      />
     </>
   );
 }

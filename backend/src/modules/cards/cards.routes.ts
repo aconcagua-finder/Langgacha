@@ -1,6 +1,6 @@
 import type { FastifyPluginAsync } from "fastify";
 
-import { generateCard, listCards } from "./cards.service.js";
+import { disintegrateCard, generateCard, listCards } from "./cards.service.js";
 
 export const cardsRoutes: FastifyPluginAsync = async (app) => {
   app.post("/generate", async () => {
@@ -15,5 +15,19 @@ export const cardsRoutes: FastifyPluginAsync = async (app) => {
     };
     return listCards(query);
   });
-};
 
+  app.post("/:cardId/disintegrate", async (request, reply) => {
+    const params = request.params as { cardId: string };
+    try {
+      return await disintegrateCard(params.cardId);
+    } catch (e) {
+      const message = e instanceof Error ? e.message : "Client Error";
+      const notFound = message.toLowerCase().includes("not found");
+      return reply.code(notFound ? 404 : 400).send({
+        error: notFound ? "Not Found" : "Bad Request",
+        message,
+        statusCode: notFound ? 404 : 400,
+      });
+    }
+  });
+};

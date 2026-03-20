@@ -50,6 +50,22 @@ export const STREAK_THRESHOLD = 3;
 export const STREAK_MULTIPLIER = 1.5;
 export const BONUS_CARD_CHANCE = 0.2;
 
+export const POLVO_PER_DISINTEGRATE: Record<string, number> = {
+  C: 5,
+  UC: 15,
+  R: 50,
+  SR: 200,
+  SSR: 1000,
+};
+
+export const PROGRESSION_LEVELS = [
+  { name: "Principiante", minDominated: 0, rarities: ["C"] },
+  { name: "Elemental", minDominated: 30, rarities: ["C", "UC"] },
+  { name: "Intermedio", minDominated: 80, rarities: ["C", "UC", "R"] },
+  { name: "Avanzado", minDominated: 150, rarities: ["C", "UC", "R", "SR"] },
+  { name: "Maestro", minDominated: 250, rarities: ["C", "UC", "R", "SR", "SSR"] },
+] as const;
+
 export const clamp = (value: number, min: number, max: number): number =>
   Math.max(min, Math.min(max, value));
 

@@ -43,6 +43,11 @@ export function CardMini({
       ].join(" ")}
       style={{ borderColor: typeTheme.color }}
     >
+      {card.masteryProgress >= 5 ? (
+        <div className="pointer-events-none absolute -right-12 top-6 z-10 rotate-12 rounded-xl bg-emerald-400/90 px-10 py-2 text-xs font-extrabold tracking-wide text-slate-950 shadow-lg">
+          ✓ Dominada
+        </div>
+      ) : null}
       <div className="h-2 w-full" style={{ backgroundColor: rarityTheme.badge }} />
 
       <div className="flex flex-1 flex-col gap-3 p-4">
@@ -75,4 +80,3 @@ export function CardMini({
     </div>
   );
 }
-

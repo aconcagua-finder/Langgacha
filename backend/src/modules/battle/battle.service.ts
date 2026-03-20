@@ -4,7 +4,9 @@ import type { Card, Word } from "@prisma/client";
 
 import { battleStore } from "../../db/redis.js";
 import { prisma } from "../../db/prisma.js";
+import { computeCondition, improveCondition } from "../../shared/condition.js";
 import { generateCardFromPool } from "../cards/cards.generator.js";
+import { addPolvo, getOrCreateDefaultPlayer } from "../player/player.service.js";
 import { applyConditionModifier, computeHp, simulateCombat } from "./battle.combat.js";
 import { generateBotDeck } from "./battle.bot.js";
 import { applyAnswerReward, polvoForDefeatedBot, shouldDropBonusCard } from "./battle.rewards.js";
@@ -49,8 +51,9 @@ const delState = async (battleId: string): Promise<void> => {
 };
 
 const buildPlayerBattleCard = (card: Card & { word: Word }): BattleCard => {
-  const fue = applyConditionModifier(card.fue, card.condition);
-  const def = applyConditionModifier(card.def, card.condition);
+  const condition = computeCondition(card);
+  const fue = applyConditionModifier(card.fue, condition);
+  const def = applyConditionModifier(card.def, condition);
   return {
     id: card.id,
     word: card.word.word,
@@ -60,7 +63,7 @@ const buildPlayerBattleCard = (card: Card & { word: Word }): BattleCard => {
     fue,
     def,
     hp: computeHp(def),
-    condition: card.condition,
+    condition,
     quizCorrect: card.word.quizCorrect,
     quizOptions: card.word.quizOptions,
   };
@@ -74,12 +77,27 @@ const stripQuizCorrect = (card: BattleCard): Omit<BattleCard, "quizCorrect"> => 
   return rest;
 };
 
-const incrementMastery = async (cardId: string): Promise<void> => {
-  const existing = await prisma.card.findUnique({ where: { id: cardId } });
+const onCorrectAnswer = async (cardId: string): Promise<void> => {
+  const existing = await prisma.card.findUnique({
+    where: { id: cardId },
+    select: { masteryProgress: true, condition: true, lastUsedAt: true },
+  });
   if (!existing) return;
-  const next = Math.min(5, existing.masteryProgress + 1);
-  if (next === existing.masteryProgress) return;
-  await prisma.card.update({ where: { id: cardId }, data: { masteryProgress: next } });
+  const nextMastery = Math.min(5, existing.masteryProgress + 1);
+  const effective = computeCondition({
+    condition: existing.condition,
+    lastUsedAt: existing.lastUsedAt,
+  });
+  const nextCondition = improveCondition(effective);
+
+  await prisma.card.update({
+    where: { id: cardId },
+    data: {
+      masteryProgress: nextMastery,
+      lastUsedAt: new Date(),
+      condition: nextCondition,
+    },
+  });
 };
 
 export const startBattle = async (cardIds: string[]): Promise<BattleStartResponse> => {
@@ -167,7 +185,7 @@ export const answerRound = async (params: {
     state.correctStreak += 1;
     state.maxStreak = Math.max(state.maxStreak, state.correctStreak);
     state.polvoFromAnswers += applyAnswerReward({ correctStreak: state.correctStreak });
-    await incrementMastery(playerCard.id);
+    await onCorrectAnswer(playerCard.id);
   } else {
     state.correctStreak = 0;
   }
@@ -228,8 +246,9 @@ export const answerRound = async (params: {
       : 0;
 
   let bonusCard: BattleResult["rewards"]["bonusCard"] = null;
+  const player = await getOrCreateDefaultPlayer();
   if (winner === "player" && shouldDropBonusCard()) {
-    bonusCard = await generateCardFromPool();
+    bonusCard = await generateCardFromPool({ playerId: player.id });
   }
 
   const battleResult: BattleResult = {
@@ -244,6 +263,7 @@ export const answerRound = async (params: {
     },
   };
 
+  await addPolvo(player.id, battleResult.rewards.polvo);
   await delState(state.id);
   return { round, battleResult };
 };

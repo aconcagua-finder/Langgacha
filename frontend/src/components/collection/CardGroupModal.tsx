@@ -6,6 +6,8 @@ import { CardMini } from "../card/CardMini";
 import { CardBack } from "../card/CardBack";
 import { CardFace } from "../card/CardFace";
 import { CardFlip } from "../card/CardFlip";
+import { ConfirmDialog } from "../ui/ConfirmDialog";
+import { DISINTEGRATE_COPY, POLVO_PER_DISINTEGRATE } from "../../shared/labels";
 
 type Props = {
   group: CardGroup | null;
@@ -16,6 +18,8 @@ type Props = {
 export function CardGroupModal({ group, onClose, onDisintegrate }: Props) {
   const [selected, setSelected] = useState<GeneratedCard | null>(null);
   const [cards, setCards] = useState<GeneratedCard[]>([]);
+  const [confirmCard, setConfirmCard] = useState<GeneratedCard | null>(null);
+  const [disintegratingId, setDisintegratingId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!group) return;
@@ -35,6 +39,10 @@ export function CardGroupModal({ group, onClose, onDisintegrate }: Props) {
   const title = useMemo(() => group?.word ?? "", [group]);
 
   if (!group) return null;
+
+  const polvo = confirmCard ? (POLVO_PER_DISINTEGRATE[confirmCard.rarity] ?? 0) : 0;
+  const danger = confirmCard ? ["R", "SR", "SSR"].includes(confirmCard.rarity) : false;
+  const description = danger ? DISINTEGRATE_COPY.rare(polvo) : DISINTEGRATE_COPY.common(polvo);
 
   return (
     <div
@@ -57,6 +65,7 @@ export function CardGroupModal({ group, onClose, onDisintegrate }: Props) {
             <button
               type="button"
               onClick={onClose}
+              disabled={!!disintegratingId}
               className="rounded-xl bg-slate-800 px-4 py-3 text-sm font-semibold text-slate-50 hover:bg-slate-700"
             >
               Закрыть
@@ -70,10 +79,17 @@ export function CardGroupModal({ group, onClose, onDisintegrate }: Props) {
               </div>
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 {cards.map((c) => (
-                  <div key={c.id} className="flex flex-col items-center gap-2">
+                  <div
+                    key={c.id}
+                    className={[
+                      "flex flex-col items-center gap-2",
+                      disintegratingId === c.id ? "disintegrating" : "",
+                    ].join(" ")}
+                  >
                     <button
                       type="button"
                       onClick={() => setSelected(c)}
+                      disabled={disintegratingId === c.id}
                       className={[
                         "rounded-2xl border p-1",
                         selected?.id === c.id
@@ -86,15 +102,8 @@ export function CardGroupModal({ group, onClose, onDisintegrate }: Props) {
                     </button>
                     <button
                       type="button"
-                      onClick={async () => {
-                        const ok = window.confirm("Распылить эту карту? Действие необратимо.");
-                        if (!ok) return;
-                        await onDisintegrate(c.id);
-                        const next = cards.filter((x) => x.id !== c.id);
-                        setCards(next);
-                        if (selected?.id === c.id) setSelected(next[0] ?? null);
-                        if (next.length === 0) onClose();
-                      }}
+                      disabled={disintegratingId === c.id}
+                      onClick={() => setConfirmCard(c)}
                       className="rounded-xl bg-slate-800 px-3 py-2 text-xs font-semibold text-slate-50 hover:bg-slate-700"
                     >
                       Распылить
@@ -124,6 +133,34 @@ export function CardGroupModal({ group, onClose, onDisintegrate }: Props) {
           </div>
         </div>
       </div>
+
+      <ConfirmDialog
+        open={!!confirmCard}
+        title={DISINTEGRATE_COPY.title}
+        description={description}
+        confirmLabel={DISINTEGRATE_COPY.confirm}
+        cancelLabel={DISINTEGRATE_COPY.cancel}
+        danger={danger}
+        onCancel={() => setConfirmCard(null)}
+        onConfirm={async () => {
+          const cardToRemove = confirmCard;
+          if (!cardToRemove) return;
+          setConfirmCard(null);
+          setDisintegratingId(cardToRemove.id);
+          await new Promise((r) => window.setTimeout(r, 500));
+          try {
+            await onDisintegrate(cardToRemove.id);
+            const next = cards.filter((x) => x.id !== cardToRemove.id);
+            setCards(next);
+            if (selected?.id === cardToRemove.id) setSelected(next[0] ?? null);
+            if (next.length === 0) onClose();
+          } catch {
+            // error toast handled upstream
+          } finally {
+            setDisintegratingId(null);
+          }
+        }}
+      />
     </div>
   );
 }

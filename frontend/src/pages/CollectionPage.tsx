@@ -10,7 +10,8 @@ import { CollectionGrid } from "../components/collection/CollectionGrid";
 import { groupCards } from "../utils/groupCards";
 import type { CardGroup } from "../utils/groupCards";
 import { usePlayer } from "../contexts/PlayerContext";
-import { LEVEL_LABELS, label } from "../shared/labels";
+import { LEVEL_LABELS, TOOLTIPS, label } from "../shared/labels";
+import { Tooltip } from "../components/ui/Tooltip";
 
 export function CollectionPage() {
   const { player, refresh: refreshPlayer } = usePlayer();
@@ -109,9 +110,11 @@ export function CollectionPage() {
               </span>
             </div>
           </div>
-          <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-slate-950/40">
-            <div className="h-full bg-sky-400" style={{ width: `${progressPct}%` }} />
-          </div>
+          <Tooltip text={TOOLTIPS.levelProgress}>
+            <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-slate-950/40">
+              <div className="h-full bg-sky-400" style={{ width: `${progressPct}%` }} />
+            </div>
+          </Tooltip>
           <div className="mt-2 text-xs text-slate-200/60">
             Доступные рарности:{" "}
             <span className="font-mono">{player.unlockedRarities.join(", ")}</span>

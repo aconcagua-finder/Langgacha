@@ -37,3 +37,32 @@ export const BATTLE_LABELS = {
 
 export const label = (map: Record<string, string>, key: string): string => map[key] ?? key;
 
+export const TOOLTIPS = {
+  fue: "Сила атаки карты",
+  def: "Защита карты",
+  conditionBrilliant: "Свежая карта, бонус к статам",
+  conditionNormal: "Стандартное состояние",
+  conditionWorn: "Давно не использовалась, штраф к статам",
+  conditionDeteriorated: "Сильно изношена, большой штраф к статам",
+  mastery: (progress: number) =>
+    `Прогресс освоения: ${progress}/5. Ответь правильно в бою для прокачки`,
+  polvo: "Валюта для крафта карт. Получай из боёв и распыления",
+  levelProgress: "Осваивай карты в боях для повышения уровня и открытия новых рарностей",
+};
+
+export const POLVO_PER_DISINTEGRATE: Record<string, number> = {
+  C: 5,
+  UC: 15,
+  R: 50,
+  SR: 200,
+  SSR: 1000,
+};
+
+export const DISINTEGRATE_COPY = {
+  title: "Распылить карту?",
+  confirm: "Распылить",
+  cancel: "Отмена",
+  common: (polvo: number) => `Вы получите ${polvo} Polvo. Действие необратимо.`,
+  rare: (polvo: number) =>
+    `Это редкая карта! Уверен?\nВы получите ${polvo} Polvo. Действие необратимо.`,
+};

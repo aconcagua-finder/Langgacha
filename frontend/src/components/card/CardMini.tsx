@@ -1,6 +1,14 @@
 import type { GeneratedCard } from "../../types/card";
 import { getRarityTheme, getTypeTheme } from "../../styles/card-themes";
-import { BATTLE_LABELS, CONDITION_LABELS, TYPE_LABELS, label } from "../../shared/labels";
+import {
+  BATTLE_LABELS,
+  CONDITION_LABELS,
+  RARITY_LABELS,
+  TOOLTIPS,
+  TYPE_LABELS,
+  label,
+} from "../../shared/labels";
+import { Tooltip } from "../ui/Tooltip";
 
 const masteryDots = (progress: number) => {
   const total = 5;
@@ -33,6 +41,14 @@ export function CardMini({
   const typeTheme = getTypeTheme(card.type);
   const rarityTheme = getRarityTheme(card.rarity);
   const sz = sizeClass[size];
+  const conditionTooltip =
+    card.condition === "Brilliant"
+      ? TOOLTIPS.conditionBrilliant
+      : card.condition === "Worn"
+        ? TOOLTIPS.conditionWorn
+        : card.condition === "Deteriorated"
+          ? TOOLTIPS.conditionDeteriorated
+          : TOOLTIPS.conditionNormal;
 
   return (
     <div
@@ -56,7 +72,9 @@ export function CardMini({
           <div className="text-xs font-semibold text-slate-200/70">
             {label(TYPE_LABELS, card.type)}
           </div>
-          <div className="text-xs font-semibold text-slate-200/50">{card.rarity}</div>
+          <Tooltip text={label(RARITY_LABELS, card.rarity)}>
+            <div className="text-xs font-semibold text-slate-200/50">{card.rarity}</div>
+          </Tooltip>
         </div>
 
         <div
@@ -78,17 +96,25 @@ export function CardMini({
 
         <div className="mt-auto rounded-xl bg-slate-950/40 px-3 py-2 text-xs text-slate-200/80">
           <div className="flex items-center justify-between font-mono">
-            <span>FUE {card.fue}</span>
-            <span>DEF {card.def}</span>
+            <Tooltip text={TOOLTIPS.fue}>
+              <span>FUE {card.fue}</span>
+            </Tooltip>
+            <Tooltip text={TOOLTIPS.def}>
+              <span>DEF {card.def}</span>
+            </Tooltip>
           </div>
           <div className="mt-2 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span>{conditionEmoji[card.condition] ?? "🟦"}</span>
-              <span className="text-slate-200/70">
-                {label(CONDITION_LABELS, card.condition)}
-              </span>
-            </div>
-            <div className="font-mono">{masteryDots(card.masteryProgress)}</div>
+            <Tooltip text={conditionTooltip}>
+              <div className="flex items-center gap-2">
+                <span>{conditionEmoji[card.condition] ?? "🟦"}</span>
+                <span className="text-slate-200/70">
+                  {label(CONDITION_LABELS, card.condition)}
+                </span>
+              </div>
+            </Tooltip>
+            <Tooltip text={TOOLTIPS.mastery(card.masteryProgress)}>
+              <div className="font-mono">{masteryDots(card.masteryProgress)}</div>
+            </Tooltip>
           </div>
         </div>
       </div>

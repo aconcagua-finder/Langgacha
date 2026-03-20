@@ -1,6 +1,8 @@
 import { NavLink } from "react-router-dom";
 
 import { usePlayer } from "../../contexts/PlayerContext";
+import { TOOLTIPS } from "../../shared/labels";
+import { Tooltip } from "../ui/Tooltip";
 
 const linkClassName = ({ isActive }: { isActive: boolean }) =>
   [
@@ -31,9 +33,13 @@ export function TopNav() {
         </nav>
 
         <div className="hidden items-center gap-2 text-sm font-semibold text-slate-200/80 sm:flex">
-          <span>✨</span>
-          <span className="font-mono">{player?.polvo ?? "—"}</span>
-          <span>Polvo</span>
+          <Tooltip text={TOOLTIPS.polvo}>
+            <div className="flex items-center gap-2">
+              <span>✨</span>
+              <span className="font-mono">{player?.polvo ?? "—"}</span>
+              <span>Polvo</span>
+            </div>
+          </Tooltip>
         </div>
       </div>
     </header>

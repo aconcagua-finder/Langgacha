@@ -1,6 +1,14 @@
 import type { GeneratedCard } from "../../types/card";
 import { getRarityTheme, getTypeTheme } from "../../styles/card-themes";
-import { BATTLE_LABELS, CONDITION_LABELS, TYPE_LABELS, label } from "../../shared/labels";
+import {
+  BATTLE_LABELS,
+  CONDITION_LABELS,
+  RARITY_LABELS,
+  TOOLTIPS,
+  TYPE_LABELS,
+  label,
+} from "../../shared/labels";
+import { Tooltip } from "../ui/Tooltip";
 
 const masteryDots = (progress: number) => {
   const total = 5;
@@ -19,6 +27,14 @@ const conditionEmoji: Record<string, string> = {
 export function CardFace({ card }: { card: GeneratedCard }) {
   const typeTheme = getTypeTheme(card.type);
   const rarityTheme = getRarityTheme(card.rarity);
+  const conditionTooltip =
+    card.condition === "Brilliant"
+      ? TOOLTIPS.conditionBrilliant
+      : card.condition === "Worn"
+        ? TOOLTIPS.conditionWorn
+        : card.condition === "Deteriorated"
+          ? TOOLTIPS.conditionDeteriorated
+          : TOOLTIPS.conditionNormal;
 
   return (
     <div
@@ -48,12 +64,14 @@ export function CardFace({ card }: { card: GeneratedCard }) {
           <div className="text-7xl drop-shadow">{typeTheme.emoji}</div>
         </div>
         <div className="absolute left-3 top-3 flex items-center gap-2">
-          <span
-            className="rounded-full px-2 py-1 text-xs font-semibold text-slate-950"
-            style={{ backgroundColor: rarityTheme.badge }}
-          >
-            {card.rarity}
-          </span>
+          <Tooltip text={label(RARITY_LABELS, card.rarity)}>
+            <span
+              className="rounded-full px-2 py-1 text-xs font-semibold text-slate-950"
+              style={{ backgroundColor: rarityTheme.badge }}
+            >
+              {card.rarity}
+            </span>
+          </Tooltip>
           <span className="text-xs text-slate-200/90">{label(TYPE_LABELS, card.type)}</span>
         </div>
       </div>
@@ -65,22 +83,30 @@ export function CardFace({ card }: { card: GeneratedCard }) {
         </div>
 
         <div className="grid grid-cols-2 gap-3">
-          <div className="rounded-xl bg-slate-950/40 p-3">
-            <div className="text-xs text-slate-200/70">FUE</div>
-            <div className="text-lg font-bold">{card.fue}</div>
-          </div>
-          <div className="rounded-xl bg-slate-950/40 p-3">
-            <div className="text-xs text-slate-200/70">DEF</div>
-            <div className="text-lg font-bold">{card.def}</div>
-          </div>
+          <Tooltip text={TOOLTIPS.fue}>
+            <div className="rounded-xl bg-slate-950/40 p-3">
+              <div className="text-xs text-slate-200/70">FUE</div>
+              <div className="text-lg font-bold">{card.fue}</div>
+            </div>
+          </Tooltip>
+          <Tooltip text={TOOLTIPS.def}>
+            <div className="rounded-xl bg-slate-950/40 p-3">
+              <div className="text-xs text-slate-200/70">DEF</div>
+              <div className="text-lg font-bold">{card.def}</div>
+            </div>
+          </Tooltip>
         </div>
 
         <div className="mt-auto flex items-center justify-between rounded-xl bg-slate-950/40 px-3 py-2 text-xs text-slate-200/80">
-          <div className="flex items-center gap-2">
-            <span>{conditionEmoji[card.condition] ?? "🟦"}</span>
-            <span>{label(CONDITION_LABELS, card.condition)}</span>
-          </div>
-          <div className="font-mono">{masteryDots(card.masteryProgress)}</div>
+          <Tooltip text={conditionTooltip}>
+            <div className="flex items-center gap-2">
+              <span>{conditionEmoji[card.condition] ?? "🟦"}</span>
+              <span>{label(CONDITION_LABELS, card.condition)}</span>
+            </div>
+          </Tooltip>
+          <Tooltip text={TOOLTIPS.mastery(card.masteryProgress)}>
+            <div className="font-mono">{masteryDots(card.masteryProgress)}</div>
+          </Tooltip>
         </div>
       </div>
     </div>

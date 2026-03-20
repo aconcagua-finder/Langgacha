@@ -2,6 +2,7 @@ import cors from "@fastify/cors";
 import Fastify, { type FastifyInstance } from "fastify";
 
 import { config } from "./config/index.js";
+import { battleRoutes } from "./modules/battle/battle.routes.js";
 import { cardsRoutes } from "./modules/cards/cards.routes.js";
 import { boostersRoutes } from "./modules/boosters/boosters.routes.js";
 
@@ -15,6 +16,7 @@ export const buildApp = async (): Promise<FastifyInstance> => {
 
   await app.register(cardsRoutes, { prefix: "/api/cards" });
   await app.register(boostersRoutes, { prefix: "/api/boosters" });
+  await app.register(battleRoutes, { prefix: "/api/battle" });
 
   app.get("/health", async () => ({ ok: true }));
 

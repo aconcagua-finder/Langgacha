@@ -22,9 +22,11 @@ export function TopNav() {
           <NavLink to="/collection" className={linkClassName}>
             Коллекция
           </NavLink>
+          <NavLink to="/battle" className={linkClassName}>
+            Бой
+          </NavLink>
         </nav>
       </div>
     </header>
   );
 }
-

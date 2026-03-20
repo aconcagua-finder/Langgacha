@@ -28,6 +28,28 @@ export const RARITY_RANK: Record<Rarity, number> = {
   SSR: 5,
 } as const;
 
+export const CONDITION_MODIFIERS: Record<string, number> = {
+  Brillante: 1.1,
+  Normal: 1.0,
+  Gastada: 0.9,
+  Deteriorada: 0.75,
+};
+
+export const INSPIRACION_BONUS = 0.15;
+
+export const POLVO_PER_RARITY_BATTLE: Record<string, number> = {
+  C: 2,
+  UC: 5,
+  R: 10,
+  SR: 40,
+  SSR: 200,
+};
+
+export const CORRECT_ANSWER_POLVO = 5;
+export const STREAK_THRESHOLD = 3;
+export const STREAK_MULTIPLIER = 1.5;
+export const BONUS_CARD_CHANCE = 0.2;
+
 export const clamp = (value: number, min: number, max: number): number =>
   Math.max(min, Math.min(max, value));
 
@@ -55,4 +77,3 @@ export const rollRarity = (allowed?: Rarity[]): Rarity => {
   }
   return pool[pool.length - 1] ?? "C";
 };
-

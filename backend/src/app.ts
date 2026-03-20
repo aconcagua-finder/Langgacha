@@ -10,6 +10,7 @@ import { boostersRoutes } from "./modules/boosters/boosters.routes.js";
 import { craftRoutes } from "./modules/craft/craft.routes.js";
 import { devRoutes } from "./modules/dev/dev.routes.js";
 import { playerRoutes } from "./modules/player/player.routes.js";
+import { raidRoutes } from "./modules/raid/raid.routes.js";
 
 export const buildApp = async (): Promise<FastifyInstance> => {
   const app = Fastify({ logger: true });
@@ -35,6 +36,7 @@ export const buildApp = async (): Promise<FastifyInstance> => {
   await app.register(devRoutes, { prefix: "/api/dev" });
   await app.register(battleRoutes, { prefix: "/api/battle" });
   await app.register(playerRoutes, { prefix: "/api/player" });
+  await app.register(raidRoutes, { prefix: "/api/raid" });
 
   app.get("/health", async () => ({ ok: true }));
 

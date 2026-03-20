@@ -4,6 +4,7 @@ import { prisma } from "../../db/prisma.js";
 import { MAX_BOOSTERS } from "../../shared/constants.js";
 import { getCurrentPlayer } from "../auth/auth.helpers.js";
 import { getOrCreateDefaultPlayer, getPlayerDto } from "../player/player.service.js";
+import { generateRaidBoss } from "../raid/raid.boss.js";
 
 const clampInt = (value: number): number => (Number.isFinite(value) ? Math.floor(value) : 0);
 
@@ -35,6 +36,8 @@ export const devRoutes: FastifyPluginAsync = async (app) => {
       dust?: unknown;
       addDust?: unknown;
       pityCounter?: unknown;
+      resetRaidAttacks?: unknown;
+      raidBossHp?: unknown;
     };
 
     const boosters = body.boosters === true;
@@ -53,11 +56,23 @@ export const devRoutes: FastifyPluginAsync = async (app) => {
         : body.pityCounter == null
           ? null
           : NaN;
+    const resetRaidAttacks = body.resetRaidAttacks === true;
+    const raidBossHp =
+      typeof body.raidBossHp === "number"
+        ? clampInt(body.raidBossHp)
+        : body.raidBossHp == null
+          ? null
+          : NaN;
 
-    if (Number.isNaN(dust) || Number.isNaN(addDust) || Number.isNaN(pityCounter)) {
+    if (
+      Number.isNaN(dust) ||
+      Number.isNaN(addDust) ||
+      Number.isNaN(pityCounter) ||
+      Number.isNaN(raidBossHp)
+    ) {
       return reply.code(400).send({
         error: "Bad Request",
-        message: "dust/addDust/pityCounter must be numbers if provided",
+        message: "dust/addDust/pityCounter/raidBossHp must be numbers if provided",
         statusCode: 400,
       });
     }
@@ -97,6 +112,30 @@ export const devRoutes: FastifyPluginAsync = async (app) => {
         where: { id: player.id },
         data: { pityCounter: Math.max(0, pityCounter) },
       });
+    }
+
+    if (resetRaidAttacks || raidBossHp !== null) {
+      const date = new Date().toISOString().slice(0, 10);
+      const raidDay = (await prisma.raidDay.findUnique({ where: { date } })) ?? (await generateRaidBoss(date));
+
+      if (resetRaidAttacks) {
+        await prisma.raidAttack.deleteMany({
+          where: { raidDayId: raidDay.id, playerId: player.id },
+        });
+      }
+
+      if (raidBossHp !== null) {
+        const hp = Math.max(0, raidBossHp);
+        const bossHp = Math.max(raidDay.bossHp, hp);
+        await prisma.raidDay.update({
+          where: { id: raidDay.id },
+          data: {
+            bossHp,
+            currentHp: Math.min(hp, bossHp),
+            defeated: hp <= 0 ? true : false,
+          },
+        });
+      }
     }
 
     return getPlayerDto(player.id);

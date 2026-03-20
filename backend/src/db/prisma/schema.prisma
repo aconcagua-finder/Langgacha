@@ -66,6 +66,7 @@ model Player {
   user          User?    @relation(fields: [userId], references: [id])
   createdAt DateTime @default(now())
   cards     Card[]
+  raidAttacks RaidAttack[]
 }
 
 model User {
@@ -75,4 +76,35 @@ model User {
   createdAt DateTime @default(now())
 
   player    Player?
+}
+
+model RaidDay {
+  id            String   @id @default(uuid())
+  date          String   @unique
+  bossWord      String
+  bossHp        Int
+  currentHp     Int
+  bossAtk       Int
+  bossDef       Int
+  bossRarity    String
+  bossType      String
+  bossFlavorText String @default("")
+  defeated      Boolean  @default(false)
+  createdAt     DateTime @default(now())
+
+  attacks       RaidAttack[]
+}
+
+model RaidAttack {
+  id        String   @id @default(uuid())
+  raidDayId String
+  raidDay   RaidDay  @relation(fields: [raidDayId], references: [id])
+  playerId  String
+  player    Player   @relation(fields: [playerId], references: [id])
+  cardId    String
+  damage    Int
+  correct   Boolean
+  createdAt DateTime @default(now())
+
+  @@unique([raidDayId, playerId, cardId])
 }

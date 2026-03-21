@@ -20,8 +20,9 @@
 .condition-brilliant {
   position: relative;
   box-shadow:
-    0 0 16px 3px rgba(200, 220, 255, 0.14),
-    0 0 28px 6px rgba(125, 211, 252, 0.07);
+    inset 0 0 0 1px rgba(191, 219, 254, 0.18),
+    0 0 14px 2px rgba(200, 220, 255, 0.12),
+    0 0 24px 5px rgba(125, 211, 252, 0.06);
 }
 
 .condition-brilliant::after {
@@ -32,17 +33,11 @@
   pointer-events: none;
   z-index: 20;
   background:
-    linear-gradient(
-      108deg,
-      transparent 0%,
-      transparent 44%,
-      rgba(255, 255, 255, 0.08) 48%,
-      rgba(255, 255, 255, 0.13) 50%,
-      rgba(255, 255, 255, 0.08) 52%,
-      transparent 56%,
-      transparent 100%
-    ),
-    radial-gradient(ellipse at top, rgba(191, 219, 254, 0.08) 0%, transparent 62%);
+    radial-gradient(circle at 16% 14%, rgba(255, 255, 255, 0.12) 0%, transparent 22%),
+    radial-gradient(circle at 82% 18%, rgba(191, 219, 254, 0.08) 0%, transparent 20%),
+    radial-gradient(circle at 74% 74%, rgba(255, 255, 255, 0.05) 0%, transparent 18%),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.04) 0%, transparent 24%),
+    radial-gradient(ellipse at top, rgba(191, 219, 254, 0.07) 0%, transparent 62%);
 }
 
 .condition-worn {

@@ -24,7 +24,7 @@ export function BattleResult({
           · Максимальная серия: <span className="font-mono">{result.rewards.streak}</span>
         </div>
         <div className="mt-2 text-sm text-slate-200/80">
-          Награда: <span className="font-mono">{result.rewards.dust}</span> Dust
+          Награда: <span className="font-mono">{result.rewards.dust}</span> Пыль
         </div>
       </div>
 

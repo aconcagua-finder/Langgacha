@@ -119,7 +119,7 @@ export function CraftPage() {
       <section className="rounded-2xl border border-slate-800/60 bg-slate-900/20 p-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="text-sm text-slate-200/70">
-            Dust: <span className="font-mono text-slate-100">{dust}</span>
+            Пыль: <span className="font-mono text-slate-100">{dust}</span>
           </div>
           <div className="text-sm text-slate-200/70">
             {craftAvailable ? (
@@ -159,7 +159,7 @@ export function CraftPage() {
               : !canAfford
                 ? "Не хватает"
                 : craftAvailable
-                  ? "Dust"
+                  ? "Пыль"
                   : "Завтра";
 
             return (
@@ -219,7 +219,7 @@ export function CraftPage() {
           {!selectedUnlocked ? (
             <div className="text-sm text-slate-200/70">Рарность ещё не разблокирована</div>
           ) : !canAffordSelected ? (
-            <div className="text-sm text-rose-200/80">Не хватает Dust</div>
+            <div className="text-sm text-rose-200/80">Не хватает Пыли</div>
           ) : !craftAvailable ? (
             <div className="text-sm text-slate-200/70">Крафт доступен 1 раз в день</div>
           ) : null}
@@ -232,7 +232,7 @@ export function CraftPage() {
             <CardFace card={result.card} />
           </div>
           <div className="text-sm text-slate-200/70">
-            −<span className="font-mono">{result.dustSpent}</span> Dust · Осталось{" "}
+            −<span className="font-mono">{result.dustSpent}</span> Пыль · Осталось{" "}
             <span className="font-mono">{result.dustRemaining}</span>
           </div>
           <div className="flex flex-wrap gap-3">
@@ -248,4 +248,3 @@ export function CraftPage() {
     </main>
   );
 }
-

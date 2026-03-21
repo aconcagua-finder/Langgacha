@@ -55,7 +55,7 @@ export function GuidePage() {
       <section className="flex flex-col gap-3">
         <GuideSection title="Как играть">
           <ul className="list-disc space-y-1 pl-5">
-            <li>LangGacha — карточная гача-игра для изучения испанского.</li>
+            <li>LangGacha — карточная гача-игра для изучения иностранных языков.</li>
             <li>Открывай бустеры → собирай карты → сражайся → учи слова.</li>
             <li>
               Цель: освоить слова (до <span className="font-mono">{config.masteryMax}</span> правильных ответов на карту) и побеждать рейд-босса
@@ -66,7 +66,7 @@ export function GuidePage() {
 
         <GuideSection title="Карты">
           <ul className="list-disc space-y-1 pl-5">
-            <li>Каждая карта — испанское слово с переводом.</li>
+            <li>Каждая карта — иностранное слово с переводом.</li>
             <li>
               <span className="font-semibold">Рарность:</span>{" "}
               <span className="font-mono">
@@ -138,7 +138,7 @@ export function GuidePage() {
             <li>Карты сражаются по очереди: проигравший выбывает, победитель несёт оставшееся HP в следующий раунд.</li>
             <li>
               Стрик: <span className="font-mono">{config.streakThreshold}+</span> правильных ответов подряд →{" "}
-              <span className="font-mono">×{config.streakMultiplier}</span> к Dust-награде.
+              <span className="font-mono">×{config.streakMultiplier}</span> к награде Пыли.
             </li>
           </ul>
         </GuideSection>
@@ -151,26 +151,26 @@ export function GuidePage() {
             </li>
             <li>Карты могут погибнуть — это нормально, отправляй следующую.</li>
             <li>
-              Победа → <span className="font-mono">{config.raidVictoryDust}</span> Dust + <span className="font-mono">{config.raidVictoryBoosters}</span> бустер.
+              Победа → <span className="font-mono">{config.raidVictoryDust}</span> Пыль + <span className="font-mono">{config.raidVictoryBoosters}</span> бустер.
             </li>
             <li>Приоритет: забытые и слабые карты идут первыми — тренируешь то, что знаешь хуже.</li>
           </ul>
         </GuideSection>
 
-        <GuideSection title="Dust и крафт">
+        <GuideSection title="Пыль и крафт">
           <ul className="list-disc space-y-1 pl-5">
             <li>
-              Dust — валюта. Получаешь из боёв, рейда и распыления карт.
+              Пыль — валюта. Получаешь из боёв, рейда и распыления карт.
             </li>
             <li>
-              <span className="font-semibold">Распыление:</span> уничтожь карту → получи Dust{" "}
+              <span className="font-semibold">Распыление:</span> уничтожь карту → получи Пыль{" "}
               <span className="font-mono">
                 ({rarityOrder.map((r) => `${r}: ${config.dustPerDisintegrate[r] ?? 0}`).join(", ")})
               </span>
               .
             </li>
             <li>
-              <span className="font-semibold">Крафт:</span> создай карту нужной рарности за Dust{" "}
+              <span className="font-semibold">Крафт:</span> создай карту нужной рарности за Пыль{" "}
               <span className="font-mono">({rarityOrder.map((r) => `${r}: ${config.dustPerCraft[r] ?? 0}`).join(", ")})</span>. Лимит:{" "}
               <span className="font-mono">{config.craftsPerDay}</span> крафт в день.
             </li>

@@ -87,7 +87,7 @@ export function TopNav() {
                 <div className="flex items-center gap-2">
                   <span>✨</span>
                   <span className="font-mono">{player?.dust ?? "—"}</span>
-                  <span>Dust</span>
+                  <span>Пыль</span>
                 </div>
               </Tooltip>
             </div>
@@ -166,7 +166,7 @@ export function TopNav() {
                   {user?.username ?? "—"}
                 </div>
                 <div className="mt-0.5 text-xs text-slate-200/60">
-                  Dust: <span className="font-mono">{player?.dust ?? "—"}</span>
+                  Пыль: <span className="font-mono">{player?.dust ?? "—"}</span>
                 </div>
               </div>
               <button

@@ -191,7 +191,7 @@ export function RaidPage() {
             </div>
           ) : status.defeated ? (
             <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-5 text-sm text-emerald-50">
-              Рейд завершён! Награды: <span className="font-mono">100</span> Dust +{" "}
+              Рейд завершён! Награды: <span className="font-mono">100</span> Пыль +{" "}
               <span className="font-mono">1</span> бустер.
             </div>
           ) : status.usedCards >= status.totalCards ? (
@@ -273,7 +273,7 @@ export function RaidPage() {
               </span>
             </div>
             <div className="rounded-xl bg-slate-950/40 px-4 py-3">
-              Dust: <span className="font-mono">+{result.dustEarned}</span>
+              Пыль: <span className="font-mono">+{result.dustEarned}</span>
             </div>
             <div className="rounded-xl bg-slate-950/40 px-4 py-3">
               Босс:{" "}
@@ -307,7 +307,7 @@ export function RaidPage() {
 
           {result.bossDefeated ? (
             <div className="mt-4 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-5 text-sm text-emerald-50">
-              Победа! Награды: <span className="font-mono">{result.victoryDust ?? 100}</span> Dust +{" "}
+              Победа! Награды: <span className="font-mono">{result.victoryDust ?? 100}</span> Пыль +{" "}
               <span className="font-mono">{result.victoryBoosters ?? 1}</span> бустер.
             </div>
           ) : null}

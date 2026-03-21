@@ -104,19 +104,16 @@ export function CardFace({ card, tilt = true }: { card: GeneratedCard; tilt?: bo
           <div className="text-sm text-slate-200/80">{card.translationRu}</div>
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
-          <Tooltip text={TOOLTIPS.atk}>
-            <div className="rounded-xl bg-slate-950/40 p-3">
-              <div className="text-xs text-slate-200/70">ATK</div>
-              <div className="text-lg font-bold">{card.atk}</div>
-            </div>
-          </Tooltip>
-          <Tooltip text={TOOLTIPS.def}>
-            <div className="rounded-xl bg-slate-950/40 p-3">
-              <div className="text-xs text-slate-200/70">DEF</div>
-              <div className="text-lg font-bold">{card.def}</div>
-            </div>
-          </Tooltip>
+        <div className="rounded-xl bg-slate-950/40 px-3 py-2 text-sm text-slate-200/80">
+          <div className="grid grid-cols-[1fr_auto_1fr] items-center font-mono">
+            <Tooltip text={TOOLTIPS.atk}>
+              <span className="justify-self-start">ATK {card.atk}</span>
+            </Tooltip>
+            <span className="px-2 text-slate-200/35">·</span>
+            <Tooltip text={TOOLTIPS.def}>
+              <span className="justify-self-end">DEF {card.def}</span>
+            </Tooltip>
+          </div>
         </div>
 
         <div className="mt-auto flex items-center justify-between rounded-xl bg-slate-950/40 px-3 py-2 text-xs text-slate-200/80">

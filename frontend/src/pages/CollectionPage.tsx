@@ -7,7 +7,6 @@ import { CardModal } from "../components/collection/CardModal";
 import { CardGroupModal } from "../components/collection/CardGroupModal";
 import { CollectionFilters } from "../components/collection/CollectionFilters";
 import { CollectionGrid } from "../components/collection/CollectionGrid";
-import { CollectionTable } from "../components/collection/CollectionTable";
 import { groupCards } from "../utils/groupCards";
 import type { CardGroup } from "../utils/groupCards";
 import { usePlayer } from "../contexts/PlayerContext";
@@ -22,7 +21,6 @@ export function CollectionPage() {
   const [cards, setCards] = useState<GeneratedCard[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [viewMode, setViewMode] = useState<"cards" | "table">("cards");
   const [modalCard, setModalCard] = useState<GeneratedCard | null>(null);
   const [modalGroup, setModalGroup] = useState<CardGroup | null>(null);
   const [toast, setToast] = useState<string | null>(null);
@@ -83,36 +81,6 @@ export function CollectionPage() {
             Всего карт: <span className="font-mono">{cards.length}</span> · Уникальных
             слов: <span className="font-mono">{uniqueWords}</span>
           </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => setViewMode("cards")}
-            className={[
-              "flex h-11 w-11 items-center justify-center rounded-xl border text-sm font-extrabold transition-colors",
-              viewMode === "cards"
-                ? "border-sky-400/40 bg-sky-400/15 text-sky-100"
-                : "border-slate-800/60 bg-slate-950/40 text-slate-200/80 hover:bg-slate-900/60",
-            ].join(" ")}
-            aria-label="Карточный вид"
-            aria-pressed={viewMode === "cards"}
-          >
-            🔳
-          </button>
-          <button
-            type="button"
-            onClick={() => setViewMode("table")}
-            className={[
-              "flex h-11 w-11 items-center justify-center rounded-xl border text-sm font-extrabold transition-colors",
-              viewMode === "table"
-                ? "border-sky-400/40 bg-sky-400/15 text-sky-100"
-                : "border-slate-800/60 bg-slate-950/40 text-slate-200/80 hover:bg-slate-900/60",
-            ].join(" ")}
-            aria-label="Табличный вид"
-            aria-pressed={viewMode === "table"}
-          >
-            ☰
-          </button>
         </div>
       </header>
 
@@ -181,21 +149,11 @@ export function CollectionPage() {
           </Link>
         </div>
       ) : (
-        <>
-          {viewMode === "cards" ? (
-            <CollectionGrid
-              groups={groups}
-              onOpenCard={(c) => setModalCard(c)}
-              onOpenGroup={(g) => setModalGroup(g)}
-            />
-          ) : (
-            <CollectionTable
-              groups={groups}
-              onOpenCard={(c) => setModalCard(c)}
-              onOpenGroup={(g) => setModalGroup(g)}
-            />
-          )}
-        </>
+        <CollectionGrid
+          groups={groups}
+          onOpenCard={(c) => setModalCard(c)}
+          onOpenGroup={(g) => setModalGroup(g)}
+        />
       )}
 
       </main>

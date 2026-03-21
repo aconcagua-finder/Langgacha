@@ -104,28 +104,29 @@ export function CardFace({ card, tilt = true }: { card: GeneratedCard; tilt?: bo
           <div className="text-sm text-slate-200/80">{card.translationRu}</div>
         </div>
 
-        <div className="rounded-xl bg-slate-950/40 px-3 py-2 text-sm text-slate-200/80">
-          <div className="grid grid-cols-[1fr_auto_1fr] items-center font-mono">
+        <div className="mt-auto rounded-xl bg-slate-950/40 px-3 py-2 text-xs text-slate-200/80">
+          <div className="grid grid-cols-[auto_minmax(0,1fr)_minmax(0,1fr)_auto] items-center gap-2">
             <Tooltip text={TOOLTIPS.atk}>
-              <span className="justify-self-start">ATK {card.atk}</span>
+              <span className="font-mono">ATK {card.atk}</span>
             </Tooltip>
-            <span className="px-2 text-slate-200/35">·</span>
+
+            <Tooltip text={conditionTooltip}>
+              <div className="flex min-w-0 items-center gap-2">
+                <span>{conditionEmoji[card.condition] ?? "🟦"}</span>
+                <span className="truncate">{label(CONDITION_LABELS, card.condition)}</span>
+              </div>
+            </Tooltip>
+
+            <Tooltip text={TOOLTIPS.mastery(card.masteryProgress, masteryMax)}>
+              <div className="justify-self-end font-mono">
+                {masteryDots(card.masteryProgress, masteryMax)}
+              </div>
+            </Tooltip>
+
             <Tooltip text={TOOLTIPS.def}>
-              <span className="justify-self-end">DEF {card.def}</span>
+              <span className="justify-self-end font-mono">DEF {card.def}</span>
             </Tooltip>
           </div>
-        </div>
-
-        <div className="mt-auto flex items-center justify-between rounded-xl bg-slate-950/40 px-3 py-2 text-xs text-slate-200/80">
-          <Tooltip text={conditionTooltip}>
-            <div className="flex items-center gap-2">
-              <span>{conditionEmoji[card.condition] ?? "🟦"}</span>
-              <span>{label(CONDITION_LABELS, card.condition)}</span>
-            </div>
-          </Tooltip>
-          <Tooltip text={TOOLTIPS.mastery(card.masteryProgress, masteryMax)}>
-            <div className="font-mono">{masteryDots(card.masteryProgress, masteryMax)}</div>
-          </Tooltip>
         </div>
       </div>
     </div>

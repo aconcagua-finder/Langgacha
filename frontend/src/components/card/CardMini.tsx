@@ -1,6 +1,7 @@
 import type { GeneratedCard } from "../../types/card";
 import { getRarityTheme, getTypeTheme } from "../../styles/card-themes";
 import { useTiltEffect } from "../../hooks/useTiltEffect";
+import { useConfig } from "../../contexts/ConfigContext";
 import {
   BATTLE_LABELS,
   CONDITION_LABELS,
@@ -11,8 +12,7 @@ import {
 } from "../../shared/labels";
 import { Tooltip } from "../ui/Tooltip";
 
-const masteryDots = (progress: number) => {
-  const total = 5;
+const masteryDots = (progress: number, total: number) => {
   return Array.from({ length: total }, (_, i) => (i < progress ? "●" : "○")).join(
     "",
   );
@@ -47,6 +47,7 @@ export function CardMini({
   tilt?: boolean;
   selected?: boolean;
 }) {
+  const { config } = useConfig();
   const typeTheme = getTypeTheme(card.type);
   const rarityTheme = getRarityTheme(card.rarity);
   const sz = sizeClass[size];
@@ -61,6 +62,7 @@ export function CardMini({
 
   const compact = size === "booster";
   const tiltFx = useTiltEffect({ enabled: tilt });
+  const masteryMax = config?.masteryMax ?? 5;
   return (
     <div
       className={[
@@ -89,7 +91,7 @@ export function CardMini({
           }}
         />
       ) : null}
-      {card.masteryProgress >= 5 ? (
+      {card.masteryProgress >= masteryMax ? (
         <div className="pointer-events-none absolute right-2 top-10 z-10 rounded-lg bg-emerald-400/90 px-2 py-1 text-[10px] font-extrabold tracking-wide text-slate-950 shadow-lg">
           ✓ {BATTLE_LABELS.mastered}
         </div>
@@ -164,8 +166,8 @@ export function CardMini({
               </div>
             </Tooltip>
             {compact ? null : (
-              <Tooltip text={TOOLTIPS.mastery(card.masteryProgress)}>
-                <div className="font-mono">{masteryDots(card.masteryProgress)}</div>
+              <Tooltip text={TOOLTIPS.mastery(card.masteryProgress, masteryMax)}>
+                <div className="font-mono">{masteryDots(card.masteryProgress, masteryMax)}</div>
               </Tooltip>
             )}
           </div>

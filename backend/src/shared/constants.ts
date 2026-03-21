@@ -60,6 +60,7 @@ export const DUST_PER_DISINTEGRATE: Record<string, number> = {
 
 export const MAX_BOOSTERS = 7;
 export const BOOSTER_RECHARGE_MS = 10 * 60 * 1000;
+export const BOOSTER_SIZE = 5;
 export const PITY_THRESHOLD = 10;
 
 export const RAID_BOSS_HP_MULTIPLIER = 5;
@@ -78,6 +79,8 @@ export const DUST_PER_CRAFT: Record<string, number> = {
 };
 
 export const STARTING_DUST = 100;
+export const CRAFTS_PER_DAY = 1;
+export const MASTERY_MAX = 5;
 
 export const PROGRESSION_LEVELS = [
   { name: "Beginner", minDominated: 0, rarities: ["C"] },

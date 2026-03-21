@@ -3,6 +3,7 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import { TopNav } from "./components/layout/TopNav";
 import { PlayerProvider } from "./contexts/PlayerContext";
 import { useAuth } from "./contexts/AuthContext";
+import { useConfig } from "./contexts/ConfigContext";
 import { AuthPage } from "./pages/AuthPage";
 import { BoosterPage } from "./pages/BoosterPage";
 import { BattlePage } from "./pages/BattlePage";
@@ -12,12 +13,21 @@ import { CraftPage } from "./pages/CraftPage";
 import { GuidePage } from "./pages/GuidePage";
 
 export default function App() {
+  const { loading: configLoading, error: configError } = useConfig();
   const { isAuthenticated, loading } = useAuth();
 
-  if (loading) {
+  if (configLoading || loading) {
     return (
       <main className="mx-auto flex min-h-screen max-w-5xl items-center justify-center px-6 py-10 text-sm text-slate-200/70">
         Загрузка…
+      </main>
+    );
+  }
+
+  if (configError) {
+    return (
+      <main className="mx-auto flex min-h-screen max-w-5xl items-center justify-center px-6 py-10 text-sm text-rose-100">
+        Ошибка загрузки конфигурации: {configError}
       </main>
     );
   }

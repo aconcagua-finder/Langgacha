@@ -7,12 +7,13 @@ import { BoosterPack } from "../components/booster/BoosterPack";
 import { BoosterRevealGrid } from "../components/booster/BoosterRevealGrid";
 import { usePlayer } from "../contexts/PlayerContext";
 import { LEVEL_LABELS, label } from "../shared/labels";
-import { PITY_THRESHOLD } from "../shared/constants";
+import { useConfig } from "../contexts/ConfigContext";
 
 type Phase = "pack" | "revealing";
 
 export function BoosterPage() {
   const showDebug = import.meta.env.DEV;
+  const { config } = useConfig();
   const { player } = usePlayer();
   const [phase, setPhase] = useState<Phase>("pack");
   const [cards, setCards] = useState<GeneratedCard[]>([]);
@@ -143,9 +144,13 @@ export function BoosterPage() {
             {player ? (
               <div className="text-xs text-slate-200/50">
                 До гарантии SR+:{" "}
-                <span className="font-mono">
-                  {Math.min(PITY_THRESHOLD, player.pityCounter)}/{PITY_THRESHOLD}
-                </span>
+                {config?.pityThreshold != null ? (
+                  <span className="font-mono">
+                    {Math.min(config.pityThreshold, player.pityCounter)}/{config.pityThreshold}
+                  </span>
+                ) : (
+                  <span className="font-mono">—</span>
+                )}
               </div>
             ) : null}
             {timerText && boosterInfo.count < boosterInfo.maxBoosters ? (

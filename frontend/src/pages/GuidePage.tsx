@@ -1,26 +1,7 @@
 import type { ReactNode } from "react";
 import { useId, useState } from "react";
 
-import {
-  BOOSTER_RECHARGE_MS,
-  BOOSTER_SIZE,
-  CONDITION_MODIFIERS,
-  CRAFTS_PER_DAY,
-  DUST_PER_CRAFT,
-  DUST_PER_DISINTEGRATE,
-  INSPIRATION_BONUS,
-  MASTERY_MAX,
-  MAX_BOOSTERS,
-  PITY_THRESHOLD,
-  PROGRESSION_LEVELS,
-  RAID_MAX_CARDS,
-  RAID_VICTORY_BOOSTERS,
-  RAID_VICTORY_DUST,
-  RARITY_CHANCES,
-  RARITY_ORDER,
-  STREAK_MULTIPLIER,
-  STREAK_THRESHOLD,
-} from "../shared/constants";
+import { useConfig } from "../contexts/ConfigContext";
 import { CONDITION_LABELS, LEVEL_LABELS, TYPE_LABELS, label } from "../shared/labels";
 
 function percentDelta(multiplier: number): string {
@@ -54,7 +35,13 @@ function GuideSection({ title, children }: { title: string; children: ReactNode 
 }
 
 export function GuidePage() {
-  const rechargeMinutes = Math.round(BOOSTER_RECHARGE_MS / 60000);
+  const { config } = useConfig();
+  if (!config) return null;
+
+  const rechargeMinutes = Math.round(config.boosterRechargeMs / 60000);
+  const rarityOrder = config.rarityOrder;
+  const rarityChances = config.rarityChances;
+  const conditionModifiers = config.conditionModifiers;
 
   return (
     <main className="mx-auto flex min-h-[calc(100vh-64px)] max-w-5xl flex-col gap-8 px-6 py-10">
@@ -71,7 +58,7 @@ export function GuidePage() {
             <li>LangGacha — карточная гача-игра для изучения испанского.</li>
             <li>Открывай бустеры → собирай карты → сражайся → учи слова.</li>
             <li>
-              Цель: освоить слова (до <span className="font-mono">{MASTERY_MAX}</span> правильных ответов на карту) и побеждать рейд-босса
+              Цель: освоить слова (до <span className="font-mono">{config.masteryMax}</span> правильных ответов на карту) и побеждать рейд-босса
               каждый день.
             </li>
           </ul>
@@ -83,7 +70,7 @@ export function GuidePage() {
             <li>
               <span className="font-semibold">Рарность:</span>{" "}
               <span className="font-mono">
-                {RARITY_ORDER.map((r) => `${r} ${RARITY_CHANCES[r]}%`).join(" · ")}
+                {rarityOrder.map((r) => `${r} ${rarityChances[r] ?? 0}%`).join(" · ")}
               </span>
               .
             </li>
@@ -103,10 +90,10 @@ export function GuidePage() {
             <li>
               <span className="font-semibold">Эффект на статы:</span>{" "}
               <span className="font-mono">
-                {label(CONDITION_LABELS, "Brilliant")} ({percentDelta(CONDITION_MODIFIERS.Brilliant)}) →{" "}
-                {label(CONDITION_LABELS, "Normal")} ({percentDelta(CONDITION_MODIFIERS.Normal)}) →{" "}
-                {label(CONDITION_LABELS, "Worn")} ({percentDelta(CONDITION_MODIFIERS.Worn)}) →{" "}
-                {label(CONDITION_LABELS, "Deteriorated")} ({percentDelta(CONDITION_MODIFIERS.Deteriorated)})
+                {label(CONDITION_LABELS, "Brilliant")} ({percentDelta(conditionModifiers.Brilliant ?? 1)}) →{" "}
+                {label(CONDITION_LABELS, "Normal")} ({percentDelta(conditionModifiers.Normal ?? 1)}) →{" "}
+                {label(CONDITION_LABELS, "Worn")} ({percentDelta(conditionModifiers.Worn ?? 1)}) →{" "}
+                {label(CONDITION_LABELS, "Deteriorated")} ({percentDelta(conditionModifiers.Deteriorated ?? 1)})
               </span>
               .
             </li>
@@ -118,7 +105,7 @@ export function GuidePage() {
           <ul className="list-disc space-y-1 pl-5">
             <li>Ответь правильно на вопрос о слове в бою → +1 к прогрессу.</li>
             <li>
-              <span className="font-mono">{MASTERY_MAX}</span> правильных ответов → карта «Освоена».
+              <span className="font-mono">{config.masteryMax}</span> правильных ответов → карта «Освоена».
             </li>
             <li>Освоенные карты влияют на уровень и открытие новых рарностей.</li>
           </ul>
@@ -127,15 +114,15 @@ export function GuidePage() {
         <GuideSection title="Бустеры">
           <ul className="list-disc space-y-1 pl-5">
             <li>
-              Бустер = <span className="font-mono">{BOOSTER_SIZE}</span> случайных карт.
+              Бустер = <span className="font-mono">{config.boosterSize}</span> случайных карт.
             </li>
             <li>
-              Максимум <span className="font-mono">{MAX_BOOSTERS}</span> бустеров, +1 каждые{" "}
+              Максимум <span className="font-mono">{config.maxBoosters}</span> бустеров, +1 каждые{" "}
               <span className="font-mono">{rechargeMinutes}</span> минут.
             </li>
             <li>Гарантия: минимум 1 карта UC+ в каждом бустере.</li>
             <li>
-              Pity-система: каждые <span className="font-mono">{PITY_THRESHOLD}</span> бустеров без SR+ → гарантированная SR+ карта.
+              Pity-система: каждые <span className="font-mono">{config.pityThreshold}</span> бустеров без SR+ → гарантированная SR+ карта.
             </li>
           </ul>
         </GuideSection>
@@ -145,13 +132,13 @@ export function GuidePage() {
             <li>Выбери 5 карт из коллекции (или нажми «Авто»).</li>
             <li>Перед каждым раундом — вопрос: переведи слово на карте.</li>
             <li>
-              Правильный ответ → «Воодушевление»: <span className="font-mono">+{Math.round(INSPIRATION_BONUS * 100)}%</span> к{" "}
+              Правильный ответ → «Воодушевление»: <span className="font-mono">+{Math.round(config.inspirationBonus * 100)}%</span> к{" "}
               <span className="font-mono">ATK</span>.
             </li>
             <li>Карты сражаются по очереди: проигравший выбывает, победитель несёт оставшееся HP в следующий раунд.</li>
             <li>
-              Стрик: <span className="font-mono">{STREAK_THRESHOLD}+</span> правильных ответов подряд →{" "}
-              <span className="font-mono">×{STREAK_MULTIPLIER}</span> к Dust-награде.
+              Стрик: <span className="font-mono">{config.streakThreshold}+</span> правильных ответов подряд →{" "}
+              <span className="font-mono">×{config.streakMultiplier}</span> к Dust-награде.
             </li>
           </ul>
         </GuideSection>
@@ -160,11 +147,11 @@ export function GuidePage() {
           <ul className="list-disc space-y-1 pl-5">
             <li>Ежедневный мощный босс.</li>
             <li>
-              Используешь до <span className="font-mono">{RAID_MAX_CARDS}</span> карт: карта бьёт босса, босс бьёт карту — обмен ударами до смерти одного.
+              Используешь до <span className="font-mono">{config.raidMaxCards}</span> карт: карта бьёт босса, босс бьёт карту — обмен ударами до смерти одного.
             </li>
             <li>Карты могут погибнуть — это нормально, отправляй следующую.</li>
             <li>
-              Победа → <span className="font-mono">{RAID_VICTORY_DUST}</span> Dust + <span className="font-mono">{RAID_VICTORY_BOOSTERS}</span> бустер.
+              Победа → <span className="font-mono">{config.raidVictoryDust}</span> Dust + <span className="font-mono">{config.raidVictoryBoosters}</span> бустер.
             </li>
             <li>Приоритет: забытые и слабые карты идут первыми — тренируешь то, что знаешь хуже.</li>
           </ul>
@@ -178,14 +165,14 @@ export function GuidePage() {
             <li>
               <span className="font-semibold">Распыление:</span> уничтожь карту → получи Dust{" "}
               <span className="font-mono">
-                ({RARITY_ORDER.map((r) => `${r}: ${DUST_PER_DISINTEGRATE[r]}`).join(", ")})
+                ({rarityOrder.map((r) => `${r}: ${config.dustPerDisintegrate[r] ?? 0}`).join(", ")})
               </span>
               .
             </li>
             <li>
               <span className="font-semibold">Крафт:</span> создай карту нужной рарности за Dust{" "}
-              <span className="font-mono">({RARITY_ORDER.map((r) => `${r}: ${DUST_PER_CRAFT[r]}`).join(", ")})</span>. Лимит:{" "}
-              <span className="font-mono">{CRAFTS_PER_DAY}</span> крафт в день.
+              <span className="font-mono">({rarityOrder.map((r) => `${r}: ${config.dustPerCraft[r] ?? 0}`).join(", ")})</span>. Лимит:{" "}
+              <span className="font-mono">{config.craftsPerDay}</span> крафт в день.
             </li>
           </ul>
         </GuideSection>
@@ -196,7 +183,7 @@ export function GuidePage() {
               Уровни открываются по количеству освоенных карт (Dominada):
             </div>
             <ul className="list-disc space-y-1 pl-5">
-              {PROGRESSION_LEVELS.map((lvl) => (
+              {config.progressionLevels.map((lvl) => (
                 <li key={lvl.name}>
                   {label(LEVEL_LABELS, lvl.name)} (<span className="font-mono">{lvl.minDominated}</span>) →{" "}
                   <span className="font-mono">{lvl.rarities.join(", ")}</span>
@@ -209,4 +196,3 @@ export function GuidePage() {
     </main>
   );
 }
-

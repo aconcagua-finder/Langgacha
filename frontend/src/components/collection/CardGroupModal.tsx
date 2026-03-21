@@ -7,7 +7,8 @@ import { CardBack } from "../card/CardBack";
 import { CardFace } from "../card/CardFace";
 import { CardFlip } from "../card/CardFlip";
 import { ConfirmDialog } from "../ui/ConfirmDialog";
-import { DISINTEGRATE_COPY, DUST_PER_DISINTEGRATE } from "../../shared/labels";
+import { DISINTEGRATE_COPY } from "../../shared/labels";
+import { useConfig } from "../../contexts/ConfigContext";
 
 type Props = {
   group: CardGroup | null;
@@ -16,6 +17,7 @@ type Props = {
 };
 
 export function CardGroupModal({ group, onClose, onDisintegrate }: Props) {
+  const { config } = useConfig();
   const [selected, setSelected] = useState<GeneratedCard | null>(null);
   const [cards, setCards] = useState<GeneratedCard[]>([]);
   const [confirmCard, setConfirmCard] = useState<GeneratedCard | null>(null);
@@ -40,7 +42,7 @@ export function CardGroupModal({ group, onClose, onDisintegrate }: Props) {
 
   if (!group) return null;
 
-  const dust = confirmCard ? (DUST_PER_DISINTEGRATE[confirmCard.rarity] ?? 0) : 0;
+  const dust = confirmCard ? (config?.dustPerDisintegrate?.[confirmCard.rarity] ?? 0) : 0;
   const danger = confirmCard ? ["R", "SR", "SSR"].includes(confirmCard.rarity) : false;
   const description = danger ? DISINTEGRATE_COPY.rare(dust) : DISINTEGRATE_COPY.common(dust);
 

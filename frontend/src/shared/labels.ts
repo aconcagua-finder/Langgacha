@@ -1,5 +1,3 @@
-import { DUST_PER_DISINTEGRATE, MASTERY_MAX } from "./constants";
-
 export const LEVEL_LABELS: Record<string, string> = {
   Beginner: "Начинающий",
   Elementary: "Базовый",
@@ -46,13 +44,11 @@ export const TOOLTIPS = {
   conditionNormal: "Стандартное состояние",
   conditionWorn: "Давно не использовалась, штраф к статам",
   conditionDeteriorated: "Сильно изношена, большой штраф к статам",
-  mastery: (progress: number) =>
-    `Прогресс освоения: ${progress}/${MASTERY_MAX}. Ответь правильно в бою для прокачки`,
+  mastery: (progress: number, masteryMax: number) =>
+    `Прогресс освоения: ${progress}/${masteryMax}. Ответь правильно в бою для прокачки`,
   dust: "Валюта для крафта карт. Получай из боёв и распыления",
   levelProgress: "Осваивай карты в боях для повышения уровня и открытия новых рарностей",
 };
-
-export { DUST_PER_DISINTEGRATE };
 
 export const DISINTEGRATE_COPY = {
   title: "Распылить карту?",

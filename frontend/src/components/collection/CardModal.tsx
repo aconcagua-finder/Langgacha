@@ -5,7 +5,8 @@ import { CardBack } from "../card/CardBack";
 import { CardFace } from "../card/CardFace";
 import { CardFlip } from "../card/CardFlip";
 import { ConfirmDialog } from "../ui/ConfirmDialog";
-import { DISINTEGRATE_COPY, DUST_PER_DISINTEGRATE } from "../../shared/labels";
+import { DISINTEGRATE_COPY } from "../../shared/labels";
+import { useConfig } from "../../contexts/ConfigContext";
 
 type Props = {
   card: GeneratedCard | null;
@@ -14,6 +15,7 @@ type Props = {
 };
 
 export function CardModal({ card, onClose, onDisintegrate }: Props) {
+  const { config } = useConfig();
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [disintegrating, setDisintegrating] = useState(false);
 
@@ -28,7 +30,7 @@ export function CardModal({ card, onClose, onDisintegrate }: Props) {
 
   if (!card) return null;
 
-  const dust = DUST_PER_DISINTEGRATE[card.rarity] ?? 0;
+  const dust = config?.dustPerDisintegrate?.[card.rarity] ?? 0;
   const danger = ["R", "SR", "SSR"].includes(card.rarity);
   const description = danger ? DISINTEGRATE_COPY.rare(dust) : DISINTEGRATE_COPY.common(dust);
 

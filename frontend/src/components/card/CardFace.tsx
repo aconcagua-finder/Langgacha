@@ -1,6 +1,7 @@
 import type { GeneratedCard } from "../../types/card";
 import { getRarityTheme, getTypeTheme } from "../../styles/card-themes";
 import { useTiltEffect } from "../../hooks/useTiltEffect";
+import { useConfig } from "../../contexts/ConfigContext";
 import {
   BATTLE_LABELS,
   CONDITION_LABELS,
@@ -11,8 +12,7 @@ import {
 } from "../../shared/labels";
 import { Tooltip } from "../ui/Tooltip";
 
-const masteryDots = (progress: number) => {
-  const total = 5;
+const masteryDots = (progress: number, total: number) => {
   return Array.from({ length: total }, (_, i) => (i < progress ? "●" : "○")).join(
     "",
   );
@@ -26,6 +26,8 @@ const conditionEmoji: Record<string, string> = {
 };
 
 export function CardFace({ card, tilt = true }: { card: GeneratedCard; tilt?: boolean }) {
+  const { config } = useConfig();
+  const masteryMax = config?.masteryMax ?? 5;
   const typeTheme = getTypeTheme(card.type);
   const rarityTheme = getRarityTheme(card.rarity);
   const tiltFx = useTiltEffect({ enabled: tilt });
@@ -63,7 +65,7 @@ export function CardFace({ card, tilt = true }: { card: GeneratedCard; tilt?: bo
           }}
         />
       ) : null}
-      {card.masteryProgress >= 5 ? (
+      {card.masteryProgress >= masteryMax ? (
         <div className="pointer-events-none absolute right-4 top-4 z-10 rotate-12 rounded-xl bg-emerald-400/90 px-4 py-2 text-xs font-extrabold tracking-wide text-slate-950 shadow-lg">
           ✓ {BATTLE_LABELS.mastered}
         </div>
@@ -124,8 +126,8 @@ export function CardFace({ card, tilt = true }: { card: GeneratedCard; tilt?: bo
               <span>{label(CONDITION_LABELS, card.condition)}</span>
             </div>
           </Tooltip>
-          <Tooltip text={TOOLTIPS.mastery(card.masteryProgress)}>
-            <div className="font-mono">{masteryDots(card.masteryProgress)}</div>
+          <Tooltip text={TOOLTIPS.mastery(card.masteryProgress, masteryMax)}>
+            <div className="font-mono">{masteryDots(card.masteryProgress, masteryMax)}</div>
           </Tooltip>
         </div>
       </div>

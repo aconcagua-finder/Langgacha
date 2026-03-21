@@ -8,8 +8,8 @@ import {
   RAID_VICTORY_BOOSTERS,
   RAID_VICTORY_DUST,
 } from "../../shared/constants.js";
+import { applyConditionModifier, computeDamage, computeHp } from "../../shared/combat.js";
 import { mapCardToDto } from "../cards/cards.generator.js";
-import { applyConditionModifier, computeDamage, computeHp } from "../battle/battle.combat.js";
 
 import { generateRaidBoss } from "./raid.boss.js";
 import type { NextRaidCard, RaidAttackResult, RaidStatus } from "./raid.types.js";

@@ -1,4 +1,4 @@
-import { CONDITION_MODIFIERS } from "./constants.js";
+import { CONDITION_MODIFIERS, DEF_SCALING_FACTOR } from "./constants.js";
 
 export const applyConditionModifier = (value: number, condition: string): number => {
   const m = CONDITION_MODIFIERS[condition] ?? 1;
@@ -8,7 +8,7 @@ export const applyConditionModifier = (value: number, condition: string): number
 export const computeHp = (effectiveDef: number): number => Math.round(effectiveDef * 1.5);
 
 export const computeDamage = (attackerAtk: number, defenderDef: number): number => {
-  const dmg = attackerAtk - defenderDef * 0.5;
+  const reduction = defenderDef / (defenderDef + DEF_SCALING_FACTOR);
+  const dmg = attackerAtk * (1 - reduction);
   return Math.max(1, Math.round(dmg));
 };
-

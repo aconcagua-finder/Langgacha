@@ -13,6 +13,7 @@ const main = async (): Promise<void> => {
       where: { language_word: { language: w.language, word: w.word } },
       create: {
         language: w.language,
+        conceptKey: w.conceptKey,
         word: w.word,
         translationRu: w.translationRu,
         type: w.type,
@@ -30,6 +31,7 @@ const main = async (): Promise<void> => {
         evolutionData: w.evolutionData ?? undefined,
       },
       update: {
+        conceptKey: w.conceptKey,
         translationRu: w.translationRu,
         type: w.type,
         rarity: w.rarity,
@@ -57,16 +59,6 @@ const main = async (): Promise<void> => {
   await prisma.word.updateMany({
     where: { type: "Expresión" },
     data: { type: "Expression" },
-  });
-
-  await prisma.card.updateMany({
-    where: { condition: "Brillante" },
-    data: { condition: "Brilliant" },
-  });
-  await prisma.card.updateMany({ where: { condition: "Gastada" }, data: { condition: "Worn" } });
-  await prisma.card.updateMany({
-    where: { condition: "Deteriorada" },
-    data: { condition: "Deteriorated" },
   });
 
   const total = await prisma.word.count();

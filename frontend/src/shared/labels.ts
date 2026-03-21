@@ -33,6 +33,7 @@ export const TYPE_LABELS: Record<string, string> = {
 export const BATTLE_LABELS = {
   inspiration: "Воодушевление",
   mastered: "Освоена",
+  evolved: "Эволюция",
 };
 
 export const label = (map: Record<string, string>, key: string): string => map[key] ?? key;
@@ -44,6 +45,7 @@ export const TOOLTIPS = {
   conditionNormal: "Стандартное состояние",
   conditionWorn: "Давно не использовалась, штраф к статам",
   conditionDeteriorated: "Сильно изношена, большой штраф к статам",
+  evolved: "Эволюционированная карта: +20% к базовым статам",
   mastery: (progress: number, masteryMax: number) =>
     `Прогресс освоения: ${progress}/${masteryMax}. Ответь правильно в бою для прокачки`,
   dust: "Валюта для крафта карт. Получай из боёв и распыления",
@@ -57,4 +59,12 @@ export const DISINTEGRATE_COPY = {
   common: (dust: number) => `Вы получите ${dust} Пыль. Действие необратимо.`,
   rare: (dust: number) =>
     `Это редкая карта! Уверен?\nВы получите ${dust} Пыль. Действие необратимо.`,
+};
+
+export const EVOLVE_COPY = {
+  title: "Эволюционировать карту?",
+  confirm: "Эволюционировать",
+  cancel: "Отмена",
+  description: (dustCost: number) =>
+    `Слово полностью освоено.\nСтоимость эволюции: ${dustCost} Пыль.\nКарта получит +20% к ATK и DEF, а мастерство слова сбросится.`,
 };

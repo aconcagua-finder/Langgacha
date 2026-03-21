@@ -4,9 +4,14 @@ import type { Card, Word } from "@prisma/client";
 
 import { battleStore } from "../../db/redis.js";
 import { prisma } from "../../db/prisma.js";
-import { computeCondition, improveCondition } from "../../shared/condition.js";
+import { computeConditionFromReview } from "../../shared/condition.js";
 import { generateCardFromPool } from "../cards/cards.generator.js";
 import { addDust } from "../player/player.service.js";
+import {
+  getWordProgressMap,
+  recordCorrectReview,
+  type WordProgressState,
+} from "../word-progress/word-progress.service.js";
 import { applyConditionModifier, computeHp, simulateCombat } from "./battle.combat.js";
 import { generateBotDeck } from "./battle.bot.js";
 import { applyAnswerReward, dustForDefeatedBot, shouldDropBonusCard } from "./battle.rewards.js";
@@ -50,8 +55,12 @@ const delState = async (battleId: string): Promise<void> => {
   await battleStore.del(battleKey(battleId));
 };
 
-const buildPlayerBattleCard = (card: Card & { word: Word }): BattleCard => {
-  const condition = computeCondition(card);
+const buildPlayerBattleCard = (
+  card: Card & { word: Word },
+  progressMap: Map<string, WordProgressState>,
+): BattleCard => {
+  const progress = progressMap.get(card.wordId) ?? null;
+  const condition = computeConditionFromReview(progress?.lastReviewedAt ?? null);
   const atk = applyConditionModifier(card.atk, condition);
   const def = applyConditionModifier(card.def, condition);
   return {
@@ -77,27 +86,13 @@ const stripQuizCorrect = (card: BattleCard): Omit<BattleCard, "quizCorrect"> => 
   return rest;
 };
 
-const onCorrectAnswer = async (cardId: string): Promise<void> => {
+const onCorrectAnswer = async (cardId: string, playerId: string): Promise<void> => {
   const existing = await prisma.card.findUnique({
     where: { id: cardId },
-    select: { masteryProgress: true, condition: true, lastUsedAt: true },
+    select: { wordId: true },
   });
   if (!existing) return;
-  const nextMastery = Math.min(5, existing.masteryProgress + 1);
-  const effective = computeCondition({
-    condition: existing.condition,
-    lastUsedAt: existing.lastUsedAt,
-  });
-  const nextCondition = improveCondition(effective);
-
-  await prisma.card.update({
-    where: { id: cardId },
-    data: {
-      masteryProgress: nextMastery,
-      lastUsedAt: new Date(),
-      condition: nextCondition,
-    },
-  });
+  await recordCorrectReview(playerId, existing.wordId);
 };
 
 export const startBattle = async (playerId: string, cardIds: string[]): Promise<BattleStartResponse> => {
@@ -118,7 +113,11 @@ export const startBattle = async (playerId: string, cardIds: string[]): Promise<
   const ordered = cardIds.map((id) => byId.get(id));
   if (ordered.some((c) => !c)) throw new Error("Some cards were not found.");
 
-  const playerCards = ordered.map((c) => buildPlayerBattleCard(c!));
+  const progressMap = await getWordProgressMap(
+    playerId,
+    ordered.map((card) => card!.wordId),
+  );
+  const playerCards = ordered.map((c) => buildPlayerBattleCard(c!, progressMap));
   const botCards = await generateBotDeck(playerCards);
 
   const battleId = randomUUID();
@@ -186,7 +185,7 @@ export const answerRound = async (playerId: string, params: {
     state.correctStreak += 1;
     state.maxStreak = Math.max(state.maxStreak, state.correctStreak);
     state.dustFromAnswers += applyAnswerReward({ correctStreak: state.correctStreak });
-    await onCorrectAnswer(playerCard.id);
+    await onCorrectAnswer(playerCard.id, state.playerId);
   } else {
     state.correctStreak = 0;
   }

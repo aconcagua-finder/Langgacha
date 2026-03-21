@@ -2,7 +2,7 @@ import type { Prisma } from "@prisma/client";
 
 import { prisma } from "../../db/prisma.js";
 import { DUST_PER_DISINTEGRATE, RARITY_RANK, type Rarity } from "../../shared/constants.js";
-import { generateCardFromPool, mapCardToDto } from "./cards.generator.js";
+import { generateCardFromPool, mapCardsToDtos } from "./cards.generator.js";
 import type { GeneratedCardDto } from "./cards.types.js";
 import { addDust } from "../player/player.service.js";
 
@@ -62,7 +62,7 @@ export const listCards = async (
     });
   }
 
-  return cards.map(mapCardToDto);
+  return mapCardsToDtos(cards, playerId);
 };
 
 export const disintegrateCard = async (

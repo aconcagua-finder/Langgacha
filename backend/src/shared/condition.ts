@@ -1,24 +1,15 @@
-export function computeCondition(card: { condition: string; lastUsedAt: Date }): string {
-  const now = Date.now();
-  const last = new Date(card.lastUsedAt).getTime();
-  const daysSinceUse = (now - last) / (1000 * 60 * 60 * 24);
+export type ComputedCondition = "Brilliant" | "Normal" | "Worn" | "Deteriorated";
 
-  if (daysSinceUse >= 7) return "Deteriorated";
-  if (daysSinceUse >= 3) return "Worn";
-  return normalizeCondition(card.condition);
-}
+export function computeConditionFromReview(
+  lastReviewedAt: Date | string | null,
+): ComputedCondition {
+  if (!lastReviewedAt) return "Deteriorated";
 
-const normalizeCondition = (condition: string): string => {
-  if (condition === "Brillante") return "Brilliant";
-  if (condition === "Gastada") return "Worn";
-  if (condition === "Deteriorada") return "Deteriorated";
-  return condition;
-};
+  const daysSinceReview =
+    (Date.now() - new Date(lastReviewedAt).getTime()) / (1000 * 60 * 60 * 24);
 
-export function improveCondition(current: string): string {
-  const normalized = normalizeCondition(current);
-  if (normalized === "Deteriorated") return "Worn";
-  if (normalized === "Worn") return "Normal";
-  if (normalized === "Normal") return "Brilliant";
-  return normalized;
+  if (daysSinceReview >= 7) return "Deteriorated";
+  if (daysSinceReview >= 3) return "Worn";
+  if (daysSinceReview < 1) return "Brilliant";
+  return "Normal";
 }

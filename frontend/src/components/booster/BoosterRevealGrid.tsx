@@ -112,8 +112,14 @@ function RevealSlot({
         className="transition-transform duration-200 ease-in-out"
         style={{ transform: `scaleX(${scaleX})`, willChange: "transform" }}
       >
-        <div className="h-[126px] w-[84px] min-[375px]:h-[135px] min-[375px]:w-[90px] sm:h-[150px] sm:w-[100px] md:h-[180px] md:w-[120px] lg:h-[210px] lg:w-[140px] xl:h-[240px] xl:w-[160px]">
-          {showFront ? <CardMini card={card} size="booster" /> : <CardBackCover />}
+        <div className="w-[120px] min-[375px]:w-[130px] sm:w-[150px] md:w-[170px] lg:w-[190px] xl:w-[200px]">
+          {showFront ? (
+            <CardMini card={card} size="mini" />
+          ) : (
+            <div className="aspect-[200/320]">
+              <CardBackCover />
+            </div>
+          )}
         </div>
       </div>
     </button>

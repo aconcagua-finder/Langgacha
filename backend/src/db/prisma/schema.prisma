@@ -10,6 +10,7 @@ datasource db {
 model Word {
   id            String   @id @default(uuid())
   language      String
+  conceptKey    String?
   word          String
   translationRu String
   type          String
@@ -31,6 +32,7 @@ model Word {
   createdAt     DateTime @default(now())
 
   cards         Card[]
+  wordProgress  WordProgress[]
 
   @@unique([language, word], name: "language_word")
 }
@@ -43,15 +45,14 @@ model Card {
   atk             Int      @map("fue")
   def             Int
 
-  masteryProgress Int      @default(0)
-  condition       String   @default("Normal")
   isEvolved       Boolean  @default(false)
 
   createdAt       DateTime @default(now())
-  lastUsedAt      DateTime @default(now())
 
   playerId        String?
   player          Player?  @relation(fields: [playerId], references: [id])
+
+  raidAttacks     RaidAttack[]
 }
 
 model Player {
@@ -66,7 +67,20 @@ model Player {
   user          User?    @relation(fields: [userId], references: [id])
   createdAt DateTime @default(now())
   cards     Card[]
+  wordProgress WordProgress[]
   raidAttacks RaidAttack[]
+}
+
+model WordProgress {
+  id              String   @id @default(uuid())
+  playerId        String
+  player          Player   @relation(fields: [playerId], references: [id])
+  wordId          String
+  word            Word     @relation(fields: [wordId], references: [id])
+  masteryProgress Int      @default(0)
+  lastReviewedAt  DateTime @default(now())
+
+  @@unique([playerId, wordId])
 }
 
 model User {
@@ -102,6 +116,7 @@ model RaidAttack {
   playerId  String
   player    Player   @relation(fields: [playerId], references: [id])
   cardId    String
+  card      Card     @relation(fields: [cardId], references: [id])
   damage    Int
   correct   Boolean
   createdAt DateTime @default(now())

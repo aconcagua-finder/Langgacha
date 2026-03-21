@@ -2,6 +2,7 @@ import type { GeneratedCard } from "../../types/card";
 import { getRarityTheme, getTypeTheme } from "../../styles/card-themes";
 import { useTiltEffect } from "../../hooks/useTiltEffect";
 import { useConfig } from "../../contexts/ConfigContext";
+import { getCardImageUrl } from "../../utils/cardImage";
 import {
   BATTLE_LABELS,
   CONDITION_LABELS,
@@ -51,6 +52,14 @@ export function CardMini({
   const typeTheme = getTypeTheme(card.type);
   const rarityTheme = getRarityTheme(card.rarity);
   const sz = sizeClass[size];
+  const conditionClass =
+    card.condition === "Deteriorated"
+      ? "condition-deteriorated"
+      : card.condition === "Worn"
+        ? "condition-worn"
+        : card.condition === "Brilliant"
+          ? "condition-brilliant"
+          : "";
   const conditionTooltip =
     card.condition === "Brilliant"
       ? TOOLTIPS.conditionBrilliant
@@ -72,6 +81,8 @@ export function CardMini({
         "relative overflow-hidden rounded-2xl border bg-slate-900/60 backdrop-blur",
         "flex flex-col",
         "transition-shadow duration-150",
+        conditionClass,
+        card.isEvolved ? "card-evolved" : "",
         tiltFx.isEnabled ? "group" : "",
         selected ? "ring-2 ring-sky-400/60" : "hover:ring-1 hover:ring-slate-700/70",
       ].join(" ")}
@@ -104,9 +115,18 @@ export function CardMini({
             <span>{typeTheme.emoji}</span>
             {compact ? null : <span>{label(TYPE_LABELS, card.type)}</span>}
           </div>
-          <Tooltip text={label(RARITY_LABELS, card.rarity)}>
-            <div className="text-xs font-semibold text-slate-200/50">{card.rarity}</div>
-          </Tooltip>
+          <div className="flex items-center gap-2">
+            {card.isEvolved ? (
+              <Tooltip text={TOOLTIPS.evolved}>
+                <div className="rounded-full border border-sky-300/35 bg-sky-300/12 px-2 py-1 text-[10px] font-bold text-sky-100">
+                  🔄
+                </div>
+              </Tooltip>
+            ) : null}
+            <Tooltip text={label(RARITY_LABELS, card.rarity)}>
+              <div className="text-xs font-semibold text-slate-200/50">{card.rarity}</div>
+            </Tooltip>
+          </div>
         </div>
 
         <div
@@ -118,9 +138,24 @@ export function CardMini({
           ].join(" ")}
           style={{ borderColor: "rgba(255,255,255,0.08)" }}
         >
-          <div className={["drop-shadow", compact ? "text-3xl" : "text-5xl"].join(" ")}>
-            {typeTheme.emoji}
-          </div>
+          {(() => {
+            const imgUrl = getCardImageUrl(card.conceptKey);
+            return imgUrl ? (
+              <img
+                src={imgUrl}
+                alt={card.word}
+                className={
+                  compact
+                    ? "h-12 w-12 object-contain drop-shadow-lg sm:h-14 sm:w-14"
+                    : "h-20 w-20 object-contain drop-shadow-lg"
+                }
+              />
+            ) : (
+              <div className={["drop-shadow", compact ? "text-3xl" : "text-5xl"].join(" ")}>
+                {typeTheme.emoji}
+              </div>
+            );
+          })()}
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(255,255,255,0.18),transparent_55%)]" />
         </div>
 

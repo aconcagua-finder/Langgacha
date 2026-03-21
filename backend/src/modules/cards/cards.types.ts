@@ -2,6 +2,7 @@ export type CardCondition = "Brilliant" | "Normal" | "Worn" | "Deteriorated";
 
 export type GeneratedCardDto = {
   id: string;
+  conceptKey?: string | null;
   word: string;
   translationRu: string;
   type: string;
@@ -15,4 +16,5 @@ export type GeneratedCardDto = {
   condition: CardCondition;
   masteryProgress: number;
   canEvolve: boolean;
+  isEvolved: boolean;
 };

@@ -31,6 +31,7 @@ export type NextRaidCard = {
     condition: string;
     masteryProgress: number;
     canEvolve: boolean;
+    isEvolved: boolean;
   };
   quiz: {
     question: string;

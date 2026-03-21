@@ -9,6 +9,7 @@ export type GameConfig = {
   inspirationBonus: number;
   streakThreshold: number;
   streakMultiplier: number;
+  defScalingFactor: number;
   maxBoosters: number;
   boosterRechargeMs: number;
   boosterSize: number;

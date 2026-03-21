@@ -63,8 +63,14 @@ export const BOOSTER_RECHARGE_MS = 10 * 60 * 1000;
 export const BOOSTER_SIZE = 5;
 export const PITY_THRESHOLD = 10;
 
-export const RAID_BOSS_HP_MULTIPLIER = 5;
-export const RAID_BOSS_ATK_SCALE = 0.5;
+export const DEF_SCALING_FACTOR = 200;
+
+export const RAID_BOSS_HP_MULTIPLIER = 9;
+export const RAID_BOSS_ATK_SCALE = 2;
+export const RAID_BOSS_DEF_SCALE = 0.8;
+export const RAID_BOSS_TOP_CARD_COUNT = 20;
+export const RAID_BOSS_DIFFICULTY_MIN = 0.7;
+export const RAID_BOSS_DIFFICULTY_MAX = 1.5;
 export const RAID_VICTORY_DUST = 100;
 export const RAID_VICTORY_BOOSTERS = 1;
 export const RAID_PER_ATTACK_DUST = 2;

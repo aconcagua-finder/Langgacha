@@ -7,16 +7,54 @@ import { getOrCreateDefaultPlayer, getPlayerDto } from "../player/player.service
 import { generateRaidBoss } from "../raid/raid.boss.js";
 
 const clampInt = (value: number): number => (Number.isFinite(value) ? Math.floor(value) : 0);
+const todayUtc = (): string => new Date().toISOString().slice(0, 10);
+
+const ensureDevEnabled = (reply: { code: (statusCode: number) => { send: (body: unknown) => unknown } }) => {
+  if (process.env.NODE_ENV === "production") {
+    return reply.code(403).send({
+      error: "Forbidden",
+      message: "Dev endpoints are disabled in production",
+      statusCode: 403,
+    });
+  }
+
+  return null;
+};
+
+const resetTodayRaid = async () => {
+  const date = todayUtc();
+  const raidDays = await prisma.raidDay.findMany({
+    where: { date },
+    select: { id: true },
+  });
+  const raidDayIds = raidDays.map((raidDay) => raidDay.id);
+
+  const deletedAttacks = raidDayIds.length
+    ? await prisma.raidAttack.deleteMany({
+        where: { raidDayId: { in: raidDayIds } },
+      })
+    : { count: 0 };
+
+  const deletedRaidDays = await prisma.raidDay.deleteMany({ where: { date } });
+
+  return {
+    date,
+    deletedRaidDays: deletedRaidDays.count,
+    deletedRaidAttacks: deletedAttacks.count,
+  };
+};
 
 export const devRoutes: FastifyPluginAsync = async (app) => {
+  app.delete("/raid-reset", async (_request, reply) => {
+    const blocked = ensureDevEnabled(reply);
+    if (blocked) return blocked;
+
+    return resetTodayRaid();
+  });
+
   app.post("/reset", async (request, reply) => {
-    if (process.env.NODE_ENV === "production") {
-      return reply.code(403).send({
-        error: "Forbidden",
-        message: "Dev endpoints are disabled in production",
-        statusCode: 403,
-      });
-    }
+    const blocked = ensureDevEnabled(reply);
+    if (blocked) return blocked;
 
     const getPlayerForDev = async () => {
       if (request.headers.authorization) {
@@ -115,8 +153,10 @@ export const devRoutes: FastifyPluginAsync = async (app) => {
     }
 
     if (resetRaidAttacks || raidBossHp !== null) {
-      const date = new Date().toISOString().slice(0, 10);
-      const raidDay = (await prisma.raidDay.findUnique({ where: { date } })) ?? (await generateRaidBoss(date));
+      const date = todayUtc();
+      const raidDay =
+        (await prisma.raidDay.findUnique({ where: { date } })) ??
+        (await generateRaidBoss(date, player.id));
 
       if (resetRaidAttacks) {
         await prisma.raidAttack.deleteMany({

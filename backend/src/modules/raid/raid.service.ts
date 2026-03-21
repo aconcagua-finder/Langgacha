@@ -1,5 +1,5 @@
 import { prisma } from "../../db/prisma.js";
-import { computeCondition, improveCondition } from "../../shared/condition.js";
+import { computeConditionFromReview } from "../../shared/condition.js";
 import {
   INSPIRATION_BONUS,
   MAX_BOOSTERS,
@@ -10,6 +10,10 @@ import {
 } from "../../shared/constants.js";
 import { applyConditionModifier, computeDamage, computeHp } from "../../shared/combat.js";
 import { mapCardToDto } from "../cards/cards.generator.js";
+import {
+  getWordProgressMap,
+  recordCorrectReview,
+} from "../word-progress/word-progress.service.js";
 
 import { generateRaidBoss } from "./raid.boss.js";
 import type { NextRaidCard, RaidAttackResult, RaidStatus } from "./raid.types.js";
@@ -26,15 +30,15 @@ const conditionRank: Record<string, number> = {
   Brilliant: 3,
 };
 
-const getOrCreateTodayRaidDay = async () => {
+const getOrCreateTodayRaidDay = async (playerId?: string) => {
   const date = todayUtc();
   const existing = await prisma.raidDay.findUnique({ where: { date } });
   if (existing) return existing;
-  return generateRaidBoss(date);
+  return generateRaidBoss(date, playerId);
 };
 
 export const getTodayRaid = async (playerId: string): Promise<RaidStatus> => {
-  const raidDay = await getOrCreateTodayRaidDay();
+  const raidDay = await getOrCreateTodayRaidDay(playerId);
 
   const [totalCards, usedCardsAgg, damageAgg] = await Promise.all([
     prisma.card.count({ where: { playerId } }),
@@ -64,7 +68,7 @@ export const getTodayRaid = async (playerId: string): Promise<RaidStatus> => {
 };
 
 export const getNextCard = async (playerId: string): Promise<NextRaidCard | null> => {
-  const raidDay = await getOrCreateTodayRaidDay();
+  const raidDay = await getOrCreateTodayRaidDay(playerId);
 
   const usedCount = await prisma.raidAttack.count({
     where: { raidDayId: raidDay.id, playerId },
@@ -87,10 +91,17 @@ export const getNextCard = async (playerId: string): Promise<NextRaidCard | null
 
   if (!cards.length) return null;
 
+  const wordProgressMap = await getWordProgressMap(
+    playerId,
+    cards.map((card) => card.wordId),
+  );
+
   const prepared = cards.map((c) => {
-    const condition = computeCondition(c);
+    const progress = wordProgressMap.get(c.wordId) ?? null;
+    const condition = computeConditionFromReview(progress?.lastReviewedAt ?? null);
     const rank = conditionRank[condition] ?? 2;
-    return { card: c, rank, mastery: c.masteryProgress, r: Math.random() };
+    const mastery = progress?.masteryProgress ?? 0;
+    return { card: c, rank, mastery, r: Math.random() };
   });
 
   prepared.sort((a, b) => {
@@ -102,7 +113,10 @@ export const getNextCard = async (playerId: string): Promise<NextRaidCard | null
   const chosen = prepared[0]?.card;
   if (!chosen) return null;
 
-  const dto = mapCardToDto(chosen);
+  const dto = await mapCardToDto(chosen, {
+    playerId,
+    progress: wordProgressMap.get(chosen.wordId) ?? null,
+  });
 
   return {
     card: dto,
@@ -118,7 +132,7 @@ export const attackBoss = async (
   cardId: string,
   answer: string,
 ): Promise<RaidAttackResult> => {
-  const raidDay = await getOrCreateTodayRaidDay();
+  const raidDay = await getOrCreateTodayRaidDay(playerId);
 
   return prisma.$transaction(async (tx) => {
     const raid = await tx.raidDay.findUnique({ where: { id: raidDay.id } });
@@ -146,7 +160,12 @@ export const attackBoss = async (
       normalizeAnswer(answer) === normalizeAnswer(card.word.quizCorrect);
     const inspirationApplied = quizCorrect;
 
-    const effectiveCondition = computeCondition(card);
+    const wordProgress = await tx.wordProgress.findUnique({
+      where: { playerId_wordId: { playerId, wordId: card.wordId } },
+      select: { masteryProgress: true, lastReviewedAt: true },
+    });
+
+    const effectiveCondition = computeConditionFromReview(wordProgress?.lastReviewedAt ?? null);
     const effectiveAtkBase = applyConditionModifier(card.atk, effectiveCondition);
     const effectiveDef = applyConditionModifier(card.def, effectiveCondition);
     const effectiveAtk = inspirationApplied
@@ -184,21 +203,7 @@ export const attackBoss = async (
     const now = new Date();
 
     if (quizCorrect) {
-      const nextMastery = Math.min(5, card.masteryProgress + 1);
-      const nextCondition = improveCondition(effectiveCondition);
-      await tx.card.update({
-        where: { id: card.id },
-        data: {
-          masteryProgress: nextMastery,
-          lastUsedAt: now,
-          condition: nextCondition,
-        },
-      });
-    } else {
-      await tx.card.update({
-        where: { id: card.id },
-        data: { lastUsedAt: now },
-      });
+      await recordCorrectReview(playerId, card.wordId, tx, now);
     }
 
     await tx.raidAttack.create({

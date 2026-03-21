@@ -7,8 +7,9 @@
     "build": "npm run prisma:generate && tsc -p tsconfig.json",
     "start": "node dist/server.js",
     "prisma:generate": "prisma generate --schema src/db/prisma/schema.prisma",
+    "db:prepush-word-progress": "prisma db execute --schema src/db/prisma/schema.prisma --file scripts/prepush-word-progress.sql",
     "db:push": "prisma db push --schema src/db/prisma/schema.prisma --accept-data-loss",
-    "db:setup": "npm run prisma:generate && npm run db:push && tsx scripts/seed.ts"
+    "db:setup": "npm run prisma:generate && npm run db:prepush-word-progress && npm run db:push && tsx scripts/seed.ts"
   },
   "dependencies": {
     "@fastify/cors": "^10.1.0",

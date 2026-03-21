@@ -48,7 +48,7 @@ export const getPlayerDto = async (playerId: string): Promise<PlayerDto> => {
   const boosterInfo = publicBoosterInfo(boosterStatus);
   const craftAvailability = getDailyAvailability(player.lastCraftAt ?? null);
 
-  const dominatedCount = await prisma.card.count({
+  const dominatedCount = await prisma.wordProgress.count({
     where: { playerId, masteryProgress: { gte: 5 } },
   });
 

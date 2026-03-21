@@ -2,9 +2,9 @@ import type { GeneratedCard } from "../../types/card";
 import { getRarityTheme, getTypeTheme } from "../../styles/card-themes";
 import { useTiltEffect } from "../../hooks/useTiltEffect";
 import { useConfig } from "../../contexts/ConfigContext";
+import { getCardImageUrl } from "../../utils/cardImage";
 import {
   BATTLE_LABELS,
-  CONDITION_LABELS,
   RARITY_LABELS,
   TOOLTIPS,
   TYPE_LABELS,
@@ -31,6 +31,14 @@ export function CardFace({ card, tilt = true }: { card: GeneratedCard; tilt?: bo
   const typeTheme = getTypeTheme(card.type);
   const rarityTheme = getRarityTheme(card.rarity);
   const tiltFx = useTiltEffect({ enabled: tilt });
+  const conditionClass =
+    card.condition === "Deteriorated"
+      ? "condition-deteriorated"
+      : card.condition === "Worn"
+        ? "condition-worn"
+        : card.condition === "Brilliant"
+          ? "condition-brilliant"
+          : "";
   const conditionTooltip =
     card.condition === "Brilliant"
       ? TOOLTIPS.conditionBrilliant
@@ -47,6 +55,8 @@ export function CardFace({ card, tilt = true }: { card: GeneratedCard; tilt?: bo
         "flex flex-col overflow-hidden",
         rarityTheme.glow,
         rarityTheme.frameFx,
+        conditionClass,
+        card.isEvolved ? "card-evolved" : "",
         tiltFx.isEnabled ? "group" : "",
       ].join(" ")}
       style={{ ...tiltFx.style, borderColor: rarityTheme.border }}
@@ -80,7 +90,18 @@ export function CardFace({ card, tilt = true }: { card: GeneratedCard; tilt?: bo
         style={{ borderBottomColor: "rgba(255,255,255,0.08)" }}
       >
         <div className="absolute inset-0 flex items-center justify-center">
-          <div className="text-7xl drop-shadow">{typeTheme.emoji}</div>
+          {(() => {
+            const imgUrl = getCardImageUrl(card.conceptKey);
+            return imgUrl ? (
+              <img
+                src={imgUrl}
+                alt={card.word}
+                className="h-36 w-36 object-contain drop-shadow-lg"
+              />
+            ) : (
+              <div className="text-7xl drop-shadow">{typeTheme.emoji}</div>
+            );
+          })()}
         </div>
         <div className="absolute left-3 top-3 flex items-center gap-2">
           <Tooltip text={label(RARITY_LABELS, card.rarity)}>
@@ -91,24 +112,31 @@ export function CardFace({ card, tilt = true }: { card: GeneratedCard; tilt?: bo
               {card.rarity}
             </span>
           </Tooltip>
+          {card.isEvolved ? (
+            <Tooltip text={TOOLTIPS.evolved}>
+              <span className="rounded-full border border-sky-300/35 bg-sky-300/12 px-2 py-1 text-xs font-bold text-sky-100">
+                🔄 {BATTLE_LABELS.evolved}
+              </span>
+            </Tooltip>
+          ) : null}
           <span className="flex items-center gap-1 rounded-full border border-white/10 bg-slate-950/35 px-2 py-1 text-xs text-slate-100/90">
-          <span>{typeTheme.emoji}</span>
-          <span>{label(TYPE_LABELS, card.type)}</span>
-        </span>
+            <span>{typeTheme.emoji}</span>
+            <span>{label(TYPE_LABELS, card.type)}</span>
+          </span>
         </div>
       </div>
 
       <div className="flex flex-1 flex-col gap-3 p-4 pb-14">
-        <div>
+        <div className="text-center">
           <div className="text-3xl font-extrabold tracking-tight">{card.word}</div>
           <div className="text-sm text-slate-200/80">{card.translationRu}</div>
         </div>
       </div>
 
       <Tooltip text={TOOLTIPS.atk}>
-        <div className="pointer-events-auto absolute bottom-3 left-3 z-10 flex items-center gap-2 rounded-2xl bg-amber-500/85 px-3 py-2 text-lg font-extrabold text-slate-950 shadow-lg">
-          <span className="text-base">🗡️</span>
-          <span className="font-mono">{card.atk}</span>
+        <div className="pointer-events-auto absolute bottom-3 left-3 z-10 rounded-xl bg-slate-950/50 px-3 py-1.5 backdrop-blur">
+          <div className="text-[10px] uppercase tracking-wider text-slate-400">ATK</div>
+          <div className="text-lg font-extrabold text-slate-50">{card.atk}</div>
         </div>
       </Tooltip>
 
@@ -122,9 +150,11 @@ export function CardFace({ card, tilt = true }: { card: GeneratedCard; tilt?: bo
       </div>
 
       <Tooltip text={TOOLTIPS.def}>
-        <div className="pointer-events-auto absolute bottom-3 right-3 z-10 flex items-center gap-2 rounded-2xl bg-sky-500/80 px-3 py-2 text-lg font-extrabold text-slate-950 shadow-lg">
-          <span className="text-base">🛡️</span>
-          <span className="font-mono">{card.def}</span>
+        <div className="pointer-events-auto absolute bottom-3 right-3 z-10 rounded-xl bg-slate-950/50 px-3 py-1.5 backdrop-blur">
+          <div className="text-right text-[10px] uppercase tracking-wider text-slate-400">
+            DEF
+          </div>
+          <div className="text-right text-lg font-extrabold text-slate-50">{card.def}</div>
         </div>
       </Tooltip>
     </div>

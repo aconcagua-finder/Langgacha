@@ -3,9 +3,12 @@ import type { Word } from "@prisma/client";
 import { prisma } from "../../db/prisma.js";
 import {
   RAID_BOSS_ATK_SCALE,
+  RAID_BOSS_DEF_SCALE,
+  RAID_BOSS_DIFFICULTY_MAX,
+  RAID_BOSS_DIFFICULTY_MIN,
   RAID_BOSS_HP_MULTIPLIER,
-  rollStat,
-  type Rarity,
+  RAID_BOSS_TOP_CARD_COUNT,
+  randomBetween,
 } from "../../shared/constants.js";
 
 const pickRandomWord = async (where?: { rarity?: { in: string[] } }): Promise<Word> => {
@@ -17,15 +20,52 @@ const pickRandomWord = async (where?: { rarity?: { in: string[] } }): Promise<Wo
   return word;
 };
 
-export const generateRaidBoss = async (date: string) => {
+const getPlayerBaseline = async (
+  playerId?: string,
+): Promise<{ avgPlayerAtk: number; avgPlayerDef: number }> => {
+  let avgPlayerAtk = 300;
+  let avgPlayerDef = 300;
+
+  if (!playerId) {
+    return { avgPlayerAtk, avgPlayerDef };
+  }
+
+  const playerCards = await prisma.card.findMany({
+    where: { playerId },
+    select: { atk: true, def: true },
+    orderBy: [{ atk: "desc" }, { def: "desc" }],
+    take: RAID_BOSS_TOP_CARD_COUNT,
+  });
+
+  if (playerCards.length > 0) {
+    avgPlayerAtk = Math.round(
+      playerCards.reduce((sum, card) => sum + card.atk, 0) / playerCards.length,
+    );
+    avgPlayerDef = Math.round(
+      playerCards.reduce((sum, card) => sum + card.def, 0) / playerCards.length,
+    );
+  }
+
+  return { avgPlayerAtk, avgPlayerDef };
+};
+
+export const generateRaidBoss = async (date: string, playerId?: string) => {
   const preferred = ["R", "SR", "SSR"];
   const preferredCount = await prisma.word.count({ where: { rarity: { in: preferred } } });
-  const word = preferredCount > 0 ? await pickRandomWord({ rarity: { in: preferred } }) : await pickRandomWord();
+  const word =
+    preferredCount > 0
+      ? await pickRandomWord({ rarity: { in: preferred } })
+      : await pickRandomWord();
 
-  const rarity = word.rarity as Rarity;
-  const bossHp = rollStat(rarity, 80) * RAID_BOSS_HP_MULTIPLIER;
-  const bossAtk = Math.round(rollStat(rarity, 50) * RAID_BOSS_ATK_SCALE);
-  const bossDef = rollStat(rarity, 60);
+  const { avgPlayerAtk, avgPlayerDef } = await getPlayerBaseline(playerId);
+  const difficultyMultiplier = randomBetween(
+    RAID_BOSS_DIFFICULTY_MIN,
+    RAID_BOSS_DIFFICULTY_MAX,
+  );
+
+  const bossDef = Math.round(avgPlayerAtk * difficultyMultiplier * RAID_BOSS_DEF_SCALE);
+  const bossAtk = Math.round(avgPlayerDef * difficultyMultiplier * RAID_BOSS_ATK_SCALE);
+  const bossHp = Math.round(avgPlayerAtk * difficultyMultiplier * RAID_BOSS_HP_MULTIPLIER);
 
   return prisma.raidDay.create({
     data: {
@@ -41,4 +81,3 @@ export const generateRaidBoss = async (date: string) => {
     },
   });
 };
-

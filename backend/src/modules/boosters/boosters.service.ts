@@ -37,17 +37,16 @@ export const openBooster = async (playerId: string): Promise<OpenBoosterResponse
 
   const unlocked = (player.unlockedRarities as Rarity[]).filter((r) => available.includes(r));
   const allowed = unlocked.length ? unlocked : (["C"] as Rarity[]);
+  const availableUcPlus = UC_PLUS.filter((r) => available.includes(r));
+  const availableSrPlus = SR_PLUS.filter((r) => available.includes(r));
 
   const rolledRarities: Rarity[] = Array.from({ length: 5 }, () =>
     rollRarity(allowed),
   );
 
-  const hasUcPlusUnlocked = allowed.some((r) => r !== "C");
   const hasUcPlusRolled = rolledRarities.some((r) => r !== "C");
-  if (hasUcPlusUnlocked && !hasUcPlusRolled) {
-    const allowedUcPlus = UC_PLUS.filter((r) => allowed.includes(r));
-    rolledRarities[4] = rollRarity(allowedUcPlus.length ? allowedUcPlus : allowed);
-    if (rolledRarities[4] === "C" && allowedUcPlus.length) rolledRarities[4] = allowedUcPlus[0];
+  if (!hasUcPlusRolled && availableUcPlus.length) {
+    rolledRarities[4] = rollRarity(availableUcPlus);
   }
 
   const { pityCounter } = await prisma.player.findUniqueOrThrow({
@@ -55,16 +54,13 @@ export const openBooster = async (playerId: string): Promise<OpenBoosterResponse
     select: { pityCounter: true },
   });
 
-  const hasSrUnlocked = allowed.includes("SR");
-  const srPlusAllowed = SR_PLUS.filter((r) => allowed.includes(r));
-
   const shouldForceSrPlus =
-    hasSrUnlocked &&
+    availableSrPlus.length > 0 &&
     pityCounter >= PITY_THRESHOLD - 1 &&
     !rolledRarities.some((r) => r === "SR" || r === "SSR");
 
-  if (shouldForceSrPlus && srPlusAllowed.length) {
-    rolledRarities[4] = rollRarity(srPlusAllowed);
+  if (shouldForceSrPlus) {
+    rolledRarities[4] = rollRarity(availableSrPlus);
   }
 
   const cards = await prisma.$transaction(async (tx) => {
@@ -72,16 +68,12 @@ export const openBooster = async (playerId: string): Promise<OpenBoosterResponse
       rolledRarities.map((rarity) => generateCardFromPool({ rarity, playerId, db: tx })),
     );
 
-    // Safety: if due to missing rarities we still got all C, force-replace last card from UC+
-    if (hasUcPlusUnlocked && created.every((c) => c.rarity === "C")) {
-      const allowedUcPlus = UC_PLUS.filter((r) => allowed.includes(r));
-      if (allowedUcPlus.length) {
-        created[4] = await generateCardFromPool({
-          rarity: rollRarity(allowedUcPlus),
-          playerId,
-          db: tx,
-        });
-      }
+    if (created.every((c) => c.rarity === "C") && availableUcPlus.length) {
+      created[4] = await generateCardFromPool({
+        rarity: rollRarity(availableUcPlus),
+        playerId,
+        db: tx,
+      });
     }
 
     const hasSrPlus = created.some((c) => c.rarity === "SR" || c.rarity === "SSR");

@@ -5,6 +5,7 @@ import {
   BOOSTER_SIZE,
   CONDITION_MODIFIERS,
   CRAFTS_PER_DAY,
+  DEF_SCALING_FACTOR,
   DUST_PER_CRAFT,
   DUST_PER_DISINTEGRATE,
   INSPIRATION_BONUS,
@@ -30,6 +31,7 @@ export const configRoutes: FastifyPluginAsync = async (app) => {
       inspirationBonus: INSPIRATION_BONUS,
       streakThreshold: STREAK_THRESHOLD,
       streakMultiplier: STREAK_MULTIPLIER,
+      defScalingFactor: DEF_SCALING_FACTOR,
       maxBoosters: MAX_BOOSTERS,
       boosterRechargeMs: BOOSTER_RECHARGE_MS,
       boosterSize: BOOSTER_SIZE,
@@ -45,4 +47,3 @@ export const configRoutes: FastifyPluginAsync = async (app) => {
     };
   });
 };
-

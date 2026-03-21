@@ -1,11 +1,16 @@
 import type { Card, Word } from "@prisma/client";
 
 import { prisma } from "../../db/prisma.js";
-import { computeCondition } from "../../shared/condition.js";
+import { computeConditionFromReview } from "../../shared/condition.js";
 import { rollStat, type Rarity } from "../../shared/constants.js";
+import {
+  getWordProgress,
+  getWordProgressMap,
+  type WordProgressState,
+} from "../word-progress/word-progress.service.js";
 import type { CardCondition, GeneratedCardDto } from "./cards.types.js";
 
-type DbClient = Pick<typeof prisma, "word" | "card">;
+type DbClient = Pick<typeof prisma, "word" | "card" | "wordProgress">;
 
 export const rollCondition = (): CardCondition => {
   const r = Math.random();
@@ -13,8 +18,12 @@ export const rollCondition = (): CardCondition => {
   return "Normal";
 };
 
-export const mapCardToDto = (card: Card & { word: Word }): GeneratedCardDto => ({
+const toDto = (
+  card: Card & { word: Word },
+  progress?: WordProgressState | null,
+): GeneratedCardDto => ({
   id: card.id,
+  conceptKey: card.word.conceptKey,
   word: card.word.word,
   translationRu: card.word.translationRu,
   type: card.word.type,
@@ -25,10 +34,47 @@ export const mapCardToDto = (card: Card & { word: Word }): GeneratedCardDto => (
   flavorText: card.word.flavorText,
   hint: card.word.hint,
   tags: card.word.tags,
-  condition: computeCondition(card) as CardCondition,
-  masteryProgress: card.masteryProgress,
+  condition: computeConditionFromReview(progress?.lastReviewedAt ?? null) as CardCondition,
+  masteryProgress: progress?.masteryProgress ?? 0,
   canEvolve: card.word.canEvolve,
+  isEvolved: card.isEvolved,
 });
+
+export const mapCardToDto = async (
+  card: Card & { word: Word },
+  params?: {
+    playerId?: string | null;
+    db?: DbClient;
+    progress?: WordProgressState | null;
+  },
+): Promise<GeneratedCardDto> => {
+  if (params && "progress" in params) {
+    return toDto(card, params.progress ?? null);
+  }
+
+  const playerId = params?.playerId ?? card.playerId;
+  if (!playerId) return toDto(card, null);
+
+  const progress = await getWordProgress(playerId, card.wordId, params?.db ?? prisma);
+  return toDto(card, progress);
+};
+
+export const mapCardsToDtos = async (
+  cards: Array<Card & { word: Word }>,
+  playerId?: string | null,
+  db: DbClient = prisma,
+): Promise<GeneratedCardDto[]> => {
+  if (!cards.length) return [];
+  if (!playerId) return cards.map((card) => toDto(card, null));
+
+  const progressMap = await getWordProgressMap(
+    playerId,
+    cards.map((card) => card.wordId),
+    db,
+  );
+
+  return cards.map((card) => toDto(card, progressMap.get(card.wordId) ?? null));
+};
 
 const pickRandomWord = async (
   params?: { rarity?: Rarity; db?: DbClient },
@@ -67,15 +113,13 @@ export const createCardFromWord = async (
       wordId: word.id,
       atk,
       def,
-      condition: rollCondition(),
-      masteryProgress: 0,
       isEvolved: false,
       playerId,
     },
     include: { word: true },
   });
 
-  return mapCardToDto(created);
+  return mapCardToDto(created, { playerId, db });
 };
 
 export const generateCardFromPool = async (params: {

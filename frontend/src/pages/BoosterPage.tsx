@@ -7,10 +7,9 @@ import { BoosterPack } from "../components/booster/BoosterPack";
 import { BoosterRevealGrid } from "../components/booster/BoosterRevealGrid";
 import { usePlayer } from "../contexts/PlayerContext";
 import { LEVEL_LABELS, label } from "../shared/labels";
+import { PITY_THRESHOLD } from "../shared/constants";
 
 type Phase = "pack" | "revealing";
-
-const PITY_THRESHOLD = 10;
 
 export function BoosterPage() {
   const showDebug = import.meta.env.DEV;
@@ -231,4 +230,3 @@ export function BoosterPage() {
     </main>
   );
 }
-

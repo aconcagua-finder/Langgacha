@@ -57,6 +57,9 @@ export function TopNav() {
           <NavLink to="/collection" className={linkClassName}>
             Коллекция
           </NavLink>
+          <NavLink to="/guide" className={linkClassName}>
+            Гайд
+          </NavLink>
         </nav>
 
         <div className="flex items-center gap-2">
@@ -136,6 +139,7 @@ export function TopNav() {
                 { to: "/raid", label: "Рейд" },
                 { to: "/craft", label: "Крафт" },
                 { to: "/collection", label: "Коллекция" },
+                { to: "/guide", label: "Гайд" },
               ].map((l) => (
                 <NavLink
                   key={l.to}

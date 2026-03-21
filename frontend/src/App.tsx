@@ -9,6 +9,7 @@ import { BattlePage } from "./pages/BattlePage";
 import { RaidPage } from "./pages/RaidPage";
 import { CollectionPage } from "./pages/CollectionPage";
 import { CraftPage } from "./pages/CraftPage";
+import { GuidePage } from "./pages/GuidePage";
 
 export default function App() {
   const { isAuthenticated, loading } = useAuth();
@@ -40,6 +41,7 @@ export default function App() {
           <Route path="/battle" element={<BattlePage />} />
           <Route path="/raid" element={<RaidPage />} />
           <Route path="/craft" element={<CraftPage />} />
+          <Route path="/guide" element={<GuidePage />} />
           <Route path="/login" element={<Navigate to="/" replace />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

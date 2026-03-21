@@ -38,7 +38,7 @@ export function CardFace({ card, tilt = true }: { card: GeneratedCard; tilt?: bo
         ? "condition-worn"
         : card.condition === "Brilliant"
           ? "condition-brilliant"
-          : "";
+          : "condition-normal";
   const conditionTooltip =
     card.condition === "Brilliant"
       ? TOOLTIPS.conditionBrilliant

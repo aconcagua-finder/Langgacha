@@ -59,7 +59,7 @@ export function CardMini({
         ? "condition-worn"
         : card.condition === "Brilliant"
           ? "condition-brilliant"
-          : "";
+          : "condition-normal";
   const conditionTooltip =
     card.condition === "Brilliant"
       ? TOOLTIPS.conditionBrilliant

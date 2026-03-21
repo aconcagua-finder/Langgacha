@@ -3,7 +3,7 @@ export type ComputedCondition = "Brilliant" | "Normal" | "Worn" | "Deteriorated"
 export function computeConditionFromReview(
   lastReviewedAt: Date | string | null,
 ): ComputedCondition {
-  if (!lastReviewedAt) return "Deteriorated";
+  if (!lastReviewedAt) return "Normal";
 
   const daysSinceReview =
     (Date.now() - new Date(lastReviewedAt).getTime()) / (1000 * 60 * 60 * 24);

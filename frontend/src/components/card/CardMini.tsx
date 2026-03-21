@@ -156,21 +156,21 @@ export function CardMini({
               <span>DEF {card.def}</span>
             </Tooltip>
           </div>
-          <div className={["flex items-center justify-between", compact ? "mt-1.5" : "mt-2"].join(" ")}>
-            <Tooltip text={conditionTooltip}>
-              <div className="flex items-center gap-2">
-                <span>{conditionEmoji[card.condition] ?? "🟦"}</span>
-                <span className="text-slate-200/70">
-                  {label(CONDITION_LABELS, card.condition)}
-                </span>
-              </div>
-            </Tooltip>
-            {compact ? null : (
+          {compact ? null : (
+            <div className="mt-2 flex items-center justify-between">
+              <Tooltip text={conditionTooltip}>
+                <div className="flex items-center gap-2">
+                  <span>{conditionEmoji[card.condition] ?? "🟦"}</span>
+                  <span className="text-slate-200/70">
+                    {label(CONDITION_LABELS, card.condition)}
+                  </span>
+                </div>
+              </Tooltip>
               <Tooltip text={TOOLTIPS.mastery(card.masteryProgress, masteryMax)}>
                 <div className="font-mono">{masteryDots(card.masteryProgress, masteryMax)}</div>
               </Tooltip>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

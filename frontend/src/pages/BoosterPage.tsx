@@ -23,7 +23,7 @@ export function BoosterPage() {
   const [secondsLeft, setSecondsLeft] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const hasPack = cards.length === 5;
+  const hasPack = cards.length > 0;
 
   useEffect(() => {
     let cancelled = false;
@@ -179,6 +179,7 @@ export function BoosterPage() {
           disabled={loading || boosterInfo?.count === 0}
           disabledLabel={loading ? "Открываю…" : "Нет бустеров"}
           level={player?.level ?? "Beginner"}
+          cardCount={config?.boosterSize}
           packName={
             player?.level === "Elementary"
               ? "Пак Повседневного"

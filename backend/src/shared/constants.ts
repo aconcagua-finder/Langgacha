@@ -60,7 +60,7 @@ export const DUST_PER_DISINTEGRATE: Record<string, number> = {
 
 export const MAX_BOOSTERS = 7;
 export const BOOSTER_RECHARGE_MS = 10 * 60 * 1000;
-export const BOOSTER_SIZE = 5;
+export const BOOSTER_SIZE = 7;
 export const PITY_THRESHOLD = 10;
 
 export const DEF_SCALING_FACTOR = 200;

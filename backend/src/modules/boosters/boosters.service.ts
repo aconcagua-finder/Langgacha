@@ -1,6 +1,7 @@
 import { prisma } from "../../db/prisma.js";
 import {
   BOOSTER_RECHARGE_MS,
+  BOOSTER_SIZE,
   PITY_THRESHOLD,
   rollRarity,
   type Rarity,
@@ -12,6 +13,17 @@ import type { OpenBoosterResponse } from "./boosters.types.js";
 
 const UC_PLUS: Rarity[] = ["UC", "R", "SR", "SSR"];
 const SR_PLUS: Rarity[] = ["SR", "SSR"];
+
+const randomIndex = (length: number): number => Math.floor(Math.random() * length);
+
+const shuffleCards = <T>(items: T[]): T[] => {
+  const next = [...items];
+  for (let i = next.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [next[i], next[j]] = [next[j]!, next[i]!];
+  }
+  return next;
+};
 
 const getAvailableRarities = async (): Promise<Rarity[]> => {
   const grouped = await prisma.word.groupBy({
@@ -40,13 +52,13 @@ export const openBooster = async (playerId: string): Promise<OpenBoosterResponse
   const availableUcPlus = UC_PLUS.filter((r) => available.includes(r));
   const availableSrPlus = SR_PLUS.filter((r) => available.includes(r));
 
-  const rolledRarities: Rarity[] = Array.from({ length: 5 }, () =>
+  const rolledRarities: Rarity[] = Array.from({ length: BOOSTER_SIZE }, () =>
     rollRarity(allowed),
   );
 
   const hasUcPlusRolled = rolledRarities.some((r) => r !== "C");
   if (!hasUcPlusRolled && availableUcPlus.length) {
-    rolledRarities[4] = rollRarity(availableUcPlus);
+    rolledRarities[randomIndex(rolledRarities.length)] = rollRarity(availableUcPlus);
   }
 
   const { pityCounter } = await prisma.player.findUniqueOrThrow({
@@ -60,7 +72,7 @@ export const openBooster = async (playerId: string): Promise<OpenBoosterResponse
     !rolledRarities.some((r) => r === "SR" || r === "SSR");
 
   if (shouldForceSrPlus) {
-    rolledRarities[4] = rollRarity(availableSrPlus);
+    rolledRarities[randomIndex(rolledRarities.length)] = rollRarity(availableSrPlus);
   }
 
   const cards = await prisma.$transaction(async (tx) => {
@@ -69,7 +81,8 @@ export const openBooster = async (playerId: string): Promise<OpenBoosterResponse
     );
 
     if (created.every((c) => c.rarity === "C") && availableUcPlus.length) {
-      created[4] = await generateCardFromPool({
+      const idx = randomIndex(created.length);
+      created[idx] = await generateCardFromPool({
         rarity: rollRarity(availableUcPlus),
         playerId,
         db: tx,
@@ -97,7 +110,7 @@ export const openBooster = async (playerId: string): Promise<OpenBoosterResponse
       : new Date(boosterStatus.lastBoosterAt.getTime() + BOOSTER_RECHARGE_MS).toISOString();
 
   return {
-    cards,
+    cards: shuffleCards(cards),
     boosterInfo: publicBoosterInfo({
       ...boosterStatus,
       count: nextCount,

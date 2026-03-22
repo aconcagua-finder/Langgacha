@@ -1,0 +1,83 @@
+.booster-pack-shell {
+  background-size: 140% 140%;
+}
+
+.booster-pack-shimmer::after {
+  content: "";
+  position: absolute;
+  inset: -20%;
+  background:
+    linear-gradient(
+      115deg,
+      transparent 25%,
+      rgba(255, 255, 255, 0.05) 42%,
+      rgba(255, 255, 255, 0.26) 50%,
+      transparent 64%
+    );
+  transform: translateX(-65%) rotate(10deg);
+  animation: booster-pack-shimmer 3.8s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.booster-pack-tear {
+  border-top: 1px dashed rgba(255, 255, 255, 0.24);
+}
+
+@keyframes booster-pack-shimmer {
+  0%,
+  100% {
+    transform: translateX(-70%) rotate(10deg);
+    opacity: 0.5;
+  }
+  45% {
+    opacity: 0.9;
+  }
+  60% {
+    transform: translateX(75%) rotate(10deg);
+    opacity: 0;
+  }
+}
+
+@keyframes reveal-glow {
+  0% {
+    box-shadow: 0 0 0 0 var(--glow-color);
+    transform: scale(1);
+  }
+  30% {
+    box-shadow: 0 0 30px 10px var(--glow-color);
+    transform: scale(1.05);
+  }
+  100% {
+    box-shadow: 0 0 0 0 transparent;
+    transform: scale(1);
+  }
+}
+
+.reveal-glow-r {
+  --glow-color: rgba(59, 130, 246, 0.35);
+  animation: reveal-glow 600ms ease-out;
+}
+
+.reveal-glow-sr {
+  --glow-color: rgba(234, 179, 8, 0.5);
+  animation: reveal-glow 800ms ease-out;
+}
+
+.reveal-glow-ssr {
+  --glow-color: rgba(168, 85, 247, 0.6);
+  animation: reveal-glow 1000ms ease-out;
+}
+
+@keyframes card-back-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.85;
+  }
+}
+
+.card-back-pulse {
+  animation: card-back-pulse 2s ease-in-out infinite;
+}

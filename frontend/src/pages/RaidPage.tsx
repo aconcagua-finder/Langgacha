@@ -8,17 +8,28 @@ import {
   type RaidAttackResult,
   type RaidStatus,
 } from "../api/raid";
+import { QuizPhase } from "../components/battle/QuizPhase";
 import { CardMini } from "../components/card/CardMini";
 import { getRarityTheme, getTypeTheme } from "../styles/card-themes";
 import { RARITY_LABELS, TYPE_LABELS, label } from "../shared/labels";
 
 type Phase = "overview" | "quiz" | "result";
+type QuizFeedback = {
+  selectedAnswer: string;
+  correctAnswer: string;
+  isCorrect: boolean;
+};
 
 const hpBarClass = (pct: number) => {
   if (pct >= 0.6) return "bg-emerald-400";
   if (pct >= 0.3) return "bg-amber-400";
   return "bg-rose-400";
 };
+
+const QUIZ_AUTO_ADVANCE_MS = 1500;
+
+const getQuizCorrectAnswer = (card: NextRaidCard): string =>
+  card.quiz.type === "translate" ? card.card.translationRu : card.card.word;
 
 function BossCard({ status }: { status: RaidStatus }) {
   const rarityTheme = getRarityTheme(status.bossRarity);
@@ -91,6 +102,7 @@ export function RaidPage() {
   const [result, setResult] = useState<RaidAttackResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [quizFeedback, setQuizFeedback] = useState<QuizFeedback | null>(null);
 
   const refresh = async () => {
     const data = await getRaidStatus();
@@ -111,6 +123,16 @@ export function RaidPage() {
     };
   }, []);
 
+  useEffect(() => {
+    if (phase !== "quiz" || !quizFeedback?.isCorrect || !result) return undefined;
+
+    const timeoutId = window.setTimeout(() => {
+      setPhase("result");
+    }, QUIZ_AUTO_ADVANCE_MS);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [phase, quizFeedback?.isCorrect, result]);
+
   const usedText = useMemo(() => {
     if (!status) return null;
     return `${status.usedCards}/${status.totalCards}`;
@@ -128,6 +150,7 @@ export function RaidPage() {
     setLoading(true);
     setError(null);
     setResult(null);
+    setQuizFeedback(null);
     try {
       const card = await getNextRaidCard();
       setNextCard(card);
@@ -150,10 +173,16 @@ export function RaidPage() {
     try {
       const res = await attackRaidBoss(nextCard.card.id, answer);
       setResult(res);
-      setPhase("result");
+      setQuizFeedback({
+        selectedAnswer: answer,
+        correctAnswer: getQuizCorrectAnswer(nextCard),
+        isCorrect: res.correct,
+      });
+      setPhase("quiz");
       await refresh();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Unknown error");
+      setQuizFeedback(null);
     } finally {
       setLoading(false);
     }
@@ -227,22 +256,22 @@ export function RaidPage() {
           </div>
 
           <div className="flex flex-col gap-4">
-            <div className="rounded-2xl border border-slate-800/60 bg-slate-950/40 p-5">
-              <div className="text-sm font-extrabold text-slate-100">{nextCard.quiz.question}</div>
-              <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
-                {nextCard.quiz.options.map((opt) => (
-                  <button
-                    key={opt}
-                    type="button"
-                    disabled={loading}
-                    onClick={() => onAnswer(opt)}
-                    className="min-h-[44px] rounded-xl border border-slate-800/60 bg-slate-950/40 px-4 py-3 text-left text-sm font-semibold text-slate-200/80 hover:bg-slate-900/60 disabled:opacity-60"
-                  >
-                    {opt}
-                  </button>
-                ))}
-              </div>
-            </div>
+            <QuizPhase
+              type={nextCard.quiz.type}
+              question={nextCard.quiz.question}
+              options={nextCard.quiz.options}
+              disabled={loading}
+              correctAnswer={quizFeedback?.correctAnswer}
+              showResult={Boolean(quizFeedback)}
+              selectedAnswer={quizFeedback?.selectedAnswer}
+              resultCorrect={quizFeedback?.isCorrect}
+              onContinue={
+                quizFeedback && !quizFeedback.isCorrect && result
+                  ? () => setPhase("result")
+                  : undefined
+              }
+              onPick={onAnswer}
+            />
           </div>
         </section>
       ) : null}
@@ -319,6 +348,7 @@ export function RaidPage() {
                 setPhase("overview");
                 setNextCard(null);
                 setResult(null);
+                setQuizFeedback(null);
               }}
               className="rounded-xl border border-slate-800/60 bg-slate-950/40 px-5 py-3 text-sm font-extrabold text-slate-200/80 hover:bg-slate-900/60"
             >

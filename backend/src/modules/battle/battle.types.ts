@@ -3,6 +3,7 @@ import type { Quiz, QuizPublic } from "../quiz/quiz.types.js";
 
 export type BattleCard = {
   id: string;
+  conceptKey?: string | null;
   word: string;
   translationRu: string;
   type: string;
@@ -33,6 +34,7 @@ export type RoundResult = {
   playerCard: BattleCardResult;
   botCard: BattleCardResult;
   quizCorrect: boolean;
+  correctAnswer: string;
   inspirationApplied: boolean;
   combatLog: CombatTick[];
   winner: "player" | "bot";
@@ -69,6 +71,7 @@ export type BattleStartResponse = {
 
 export type BattleAnswerResponse = {
   round: RoundResult;
+  nextQuiz?: QuizPublic;
   battleResult?: BattleResult;
 };
 

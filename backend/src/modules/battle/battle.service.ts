@@ -7,8 +7,9 @@ import { prisma } from "../../db/prisma.js";
 import { computeConditionFromReview } from "../../shared/condition.js";
 import { generateCardFromPool } from "../cards/cards.generator.js";
 import { addDust } from "../player/player.service.js";
-import { generateQuiz, type Quiz } from "../quiz/index.js";
+import { generateQuiz, isQuizAnswerCorrect, type Quiz } from "../quiz/index.js";
 import {
+  getWordProgress,
   getWordProgressMap,
   recordCorrectReview,
   type WordProgressState,
@@ -84,6 +85,7 @@ const buildPlayerBattleCard = async (
   });
   return {
     id: card.id,
+    conceptKey: card.word.conceptKey,
     word: card.word.word,
     translationRu: card.word.translationRu,
     type: card.word.type,
@@ -96,7 +98,33 @@ const buildPlayerBattleCard = async (
   };
 };
 
-const normalizeAnswer = (s: string): string => s.trim().toLowerCase();
+const regenerateQuiz = async (card: BattleCard, playerId: string): Promise<Quiz> => {
+  const refreshed = await prisma.card.findUnique({
+    where: { id: card.id },
+    include: { word: true },
+  });
+
+  if (!refreshed || refreshed.playerId !== playerId) {
+    return card.quiz;
+  }
+
+  const progress = await getWordProgress(playerId, refreshed.wordId);
+  const quiz = await generateQuiz({
+    word: refreshed.word.word,
+    translationRu: refreshed.word.translationRu,
+    quizCorrect: refreshed.word.quizCorrect,
+    quizOptions: refreshed.word.quizOptions,
+    masteryProgress: progress?.masteryProgress ?? 0,
+    isEvolved: refreshed.isEvolved,
+    evolutionData: refreshed.word.evolutionData,
+    wordType: refreshed.word.type,
+    rarity: refreshed.word.rarity,
+    language: refreshed.word.language,
+  });
+
+  card.quiz = quiz;
+  return quiz;
+};
 
 const toRoundCard = (card: BattleCard): RoundResult["playerCard"] => {
   const { quiz, ...rest } = card;
@@ -192,8 +220,11 @@ export const answerRound = async (playerId: string, params: {
   const botCard = state.botCards[state.botPos];
   if (!playerCard || !botCard) throw new Error("Battle is already finished.");
 
-  const quizCorrect =
-    normalizeAnswer(params.answer) === normalizeAnswer(playerCard.quiz.correctAnswer);
+  const quizCorrect = isQuizAnswerCorrect(
+    playerCard.quiz.type,
+    params.answer,
+    playerCard.quiz.correctAnswer,
+  );
 
   let inspirationApplied = false;
   if (quizCorrect) {
@@ -220,6 +251,7 @@ export const answerRound = async (playerId: string, params: {
     playerCard: toRoundCard(playerCard),
     botCard: toRoundCard(botCard),
     quizCorrect,
+    correctAnswer: playerCard.quiz.correctAnswer,
     inspirationApplied,
     combatLog: combat.log,
     winner: combat.winner,
@@ -250,9 +282,15 @@ export const answerRound = async (playerId: string, params: {
   const finished =
     state.playerPos >= state.playerCards.length || state.botPos >= state.botCards.length;
   if (!finished) {
+    let nextQuiz = toPublicQuiz(state.playerCards[state.playerPos].quiz);
+    if (combat.winner === "player") {
+      nextQuiz = toPublicQuiz(
+        await regenerateQuiz(state.playerCards[state.playerPos], state.playerId),
+      );
+    }
     state.currentRound += 1;
     await setState(state);
-    return { round };
+    return { round, nextQuiz };
   }
 
   const winner: "player" | "bot" = state.botPos >= state.botCards.length ? "player" : "bot";

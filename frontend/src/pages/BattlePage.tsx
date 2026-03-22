@@ -9,13 +9,23 @@ import { QuizPhase } from "../components/battle/QuizPhase";
 import { RoundResult } from "../components/battle/RoundResult";
 import { BattleResult } from "../components/battle/BattleResult";
 import { usePlayer } from "../contexts/PlayerContext";
+import type { QuizData } from "../types/quiz";
 
 type Phase = "deck" | "quiz" | "combat" | "roundResult" | "battleResult";
+type QuizFeedback = {
+  selectedAnswer: string;
+  correctAnswer: string;
+  isCorrect: boolean;
+};
+
+const QUIZ_AUTO_ADVANCE_MS = 1500;
 
 export function BattlePage() {
   const { refresh: refreshPlayer } = usePlayer();
   const [phase, setPhase] = useState<Phase>("deck");
   const [startData, setStartData] = useState<BattleStartResponse | null>(null);
+  const [currentQuiz, setCurrentQuiz] = useState<QuizData | null>(null);
+  const [nextQuiz, setNextQuiz] = useState<QuizData | null>(null);
   const [roundNumber, setRoundNumber] = useState(1);
   const [playerPos, setPlayerPos] = useState(0);
   const [botPos, setBotPos] = useState(0);
@@ -24,10 +34,21 @@ export function BattlePage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lastAnswer, setLastAnswer] = useState<BattleAnswerResponse | null>(null);
+  const [quizFeedback, setQuizFeedback] = useState<QuizFeedback | null>(null);
 
   useEffect(() => {
     if (lastAnswer?.battleResult) void refreshPlayer();
   }, [lastAnswer?.battleResult, refreshPlayer]);
+
+  useEffect(() => {
+    if (phase !== "quiz" || !quizFeedback?.isCorrect || !lastAnswer) return undefined;
+
+    const timeoutId = window.setTimeout(() => {
+      setPhase("combat");
+    }, QUIZ_AUTO_ADVANCE_MS);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [phase, quizFeedback?.isCorrect, lastAnswer]);
 
   const playerCard: BattleCardPublic | null = useMemo(() => {
     if (!startData) return null;
@@ -39,11 +60,11 @@ export function BattlePage() {
     return startData.botCards[botPos] ?? null;
   }, [startData, botPos]);
 
-  const currentQuiz = playerCard?.quiz ?? startData?.rounds?.[0]?.quiz ?? null;
-
   const reset = () => {
     setPhase("deck");
     setStartData(null);
+    setCurrentQuiz(null);
+    setNextQuiz(null);
     setRoundNumber(1);
     setPlayerPos(0);
     setBotPos(0);
@@ -52,14 +73,19 @@ export function BattlePage() {
     setSubmitting(false);
     setError(null);
     setLastAnswer(null);
+    setQuizFeedback(null);
   };
 
   const onStart = async (cardIds: string[]) => {
     setError(null);
     setSubmitting(true);
+    setQuizFeedback(null);
+    setCurrentQuiz(null);
+    setNextQuiz(null);
     try {
       const data = await startBattle(cardIds);
       setStartData(data);
+      setCurrentQuiz(data.rounds[0]?.quiz ?? data.playerCards[0]?.quiz ?? null);
       setRoundNumber(1);
       setPlayerPos(0);
       setBotPos(0);
@@ -74,15 +100,22 @@ export function BattlePage() {
   };
 
   const onPickAnswer = async (answer: string) => {
-    if (!startData) return;
+    if (!startData || !currentQuiz) return;
     setSubmitting(true);
     setError(null);
     try {
       const res = await answerBattle({ battleId: startData.battleId, roundNumber, answer });
       setLastAnswer(res);
-      setPhase("combat");
+      setNextQuiz(res.nextQuiz ?? null);
+      setQuizFeedback({
+        selectedAnswer: answer,
+        correctAnswer: res.round.correctAnswer,
+        isCorrect: res.round.quizCorrect,
+      });
+      setPhase("quiz");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Unknown error");
+      setQuizFeedback(null);
       setPhase("quiz");
     } finally {
       setSubmitting(false);
@@ -98,12 +131,14 @@ export function BattlePage() {
   const onNext = () => {
     if (!startData || !lastAnswer) return;
     if (lastAnswer.battleResult) {
+      setNextQuiz(null);
       setPhase("battleResult");
       return;
     }
 
     const winner = lastAnswer.round.winner;
     const survivorHp = lastAnswer.round.survivorHpLeft;
+    let nextPlayerPos = playerPos;
 
     if (winner === "player") {
       const nextBotPos = botPos + 1;
@@ -111,12 +146,15 @@ export function BattlePage() {
       setBotHp(startData.botCards[nextBotPos]?.hp ?? 0);
       setPlayerHp(survivorHp);
     } else {
-      const nextPlayerPos = playerPos + 1;
+      nextPlayerPos = playerPos + 1;
       setPlayerPos(nextPlayerPos);
       setPlayerHp(startData.playerCards[nextPlayerPos]?.hp ?? 0);
       setBotHp(survivorHp);
     }
 
+    setCurrentQuiz(nextQuiz ?? startData.playerCards[nextPlayerPos]?.quiz ?? null);
+    setNextQuiz(null);
+    setQuizFeedback(null);
     setRoundNumber((v) => v + 1);
     setPhase("quiz");
   };
@@ -159,12 +197,22 @@ export function BattlePage() {
                 playerHp={playerHp}
                 botHp={botHp}
                 vsLabel="Раунд"
+                hidePlayerWord={phase === "quiz" && !quizFeedback}
               />
               <QuizPhase
                 type={currentQuiz.type}
                 question={currentQuiz.question}
                 options={currentQuiz.options}
                 disabled={submitting}
+                correctAnswer={quizFeedback?.correctAnswer}
+                showResult={Boolean(quizFeedback)}
+                selectedAnswer={quizFeedback?.selectedAnswer}
+                resultCorrect={quizFeedback?.isCorrect}
+                onContinue={
+                  quizFeedback && !quizFeedback.isCorrect && lastAnswer
+                    ? () => setPhase("combat")
+                    : undefined
+                }
                 onPick={onPickAnswer}
               />
             </>

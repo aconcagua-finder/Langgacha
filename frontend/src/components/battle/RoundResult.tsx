@@ -1,3 +1,5 @@
+import { useEffect } from "react";
+
 import type { RoundResult as RoundResultType } from "../../api/battle";
 import { BATTLE_LABELS } from "../../shared/labels";
 
@@ -10,6 +12,20 @@ export function RoundResult({
   onNext: () => void;
   nextLabel: string;
 }) {
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.ctrlKey || event.metaKey || event.altKey || event.shiftKey) return;
+      if (event.repeat) return;
+      if (event.key !== "Enter" && event.key !== " ") return;
+
+      event.preventDefault();
+      onNext();
+    };
+
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [onNext]);
+
   return (
     <div className="w-full rounded-2xl border border-slate-800/60 bg-slate-900/20 p-5">
       <div className="flex flex-wrap items-center justify-between gap-3">

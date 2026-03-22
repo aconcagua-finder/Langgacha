@@ -40,6 +40,7 @@ const buildBotCard = async (word: Word): Promise<BattleCard> => {
   });
   return {
     id: `bot:${randomUUID()}`,
+    conceptKey: word.conceptKey,
     word: word.word,
     translationRu: word.translationRu,
     type: word.type,

@@ -40,10 +40,19 @@ const pickQuizType = (masteryProgress: number): QuizType => {
   if (masteryProgress === 1) {
     return roll < 0.7 ? "translate" : "reverse";
   }
-  if (masteryProgress <= 3) {
-    return roll < 0.4 ? "translate" : "reverse";
+  if (masteryProgress === 2) {
+    if (roll < 0.3) return "translate";
+    if (roll < 0.9) return "reverse";
+    return "typing";
   }
-  return roll < 0.2 ? "translate" : "reverse";
+  if (masteryProgress === 3) {
+    if (roll < 0.2) return "translate";
+    if (roll < 0.7) return "reverse";
+    return "typing";
+  }
+  if (roll < 0.1) return "translate";
+  if (roll < 0.5) return "reverse";
+  return "typing";
 };
 
 const buildTranslateQuiz = (params: GenerateQuizParams): Quiz => ({
@@ -51,6 +60,13 @@ const buildTranslateQuiz = (params: GenerateQuizParams): Quiz => ({
   question: `Как переводится «${params.word}»?`,
   options: shuffle(params.quizOptions),
   correctAnswer: params.quizCorrect,
+});
+
+const buildTypingQuiz = (params: GenerateQuizParams): Quiz => ({
+  type: "typing",
+  question: `Напишите по-испански: «${params.translationRu}»`,
+  options: [],
+  correctAnswer: params.word,
 });
 
 const getDistractorPool = async (): Promise<DistractorWord[]> => {
@@ -129,6 +145,9 @@ const buildReverseQuiz = async (params: GenerateQuizParams): Promise<Quiz | null
 
 export const generateQuiz = async (params: GenerateQuizParams): Promise<Quiz> => {
   const selectedType = pickQuizType(params.masteryProgress);
+  if (selectedType === "typing") {
+    return buildTypingQuiz(params);
+  }
   if (selectedType === "reverse") {
     const reverseQuiz = await buildReverseQuiz(params);
     if (reverseQuiz) return reverseQuiz;

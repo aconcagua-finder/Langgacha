@@ -1,6 +1,8 @@
 import type { BattleCardPublic } from "../../api/battle";
+import { getCardImageUrl } from "../../utils/cardImage";
 import { getRarityTheme, getTypeTheme } from "../../styles/card-themes";
 import { BATTLE_LABELS, CONDITION_LABELS, TYPE_LABELS, label } from "../../shared/labels";
+import { useTiltEffect } from "../../hooks/useTiltEffect";
 
 const hpColor = (hp: number, maxHp: number) => {
   const pct = maxHp > 0 ? hp / maxHp : 0;
@@ -15,76 +17,149 @@ function CardPanel({
   hp,
   maxHp,
   inspiration,
+  hideWord = false,
 }: {
   side: "player" | "bot";
   card: BattleCardPublic;
   hp: number;
   maxHp: number;
   inspiration?: boolean;
+  hideWord?: boolean;
 }) {
   const typeTheme = getTypeTheme(card.type);
   const rarityTheme = getRarityTheme(card.rarity);
+  const tiltFx = useTiltEffect({ maxTiltDeg: 8, scale: 1.01 });
+  const imgUrl = getCardImageUrl(card.conceptKey);
+  const conditionClass =
+    card.condition === "Deteriorated"
+      ? "condition-deteriorated"
+      : card.condition === "Worn"
+        ? "condition-worn"
+        : card.condition === "Brilliant"
+          ? "condition-brilliant"
+          : "condition-normal";
+  const displayWord = hideWord ? "???" : card.word;
 
   return (
     <div
       className={[
-        "w-full max-w-sm rounded-2xl border bg-slate-900/50 p-3 backdrop-blur sm:p-4",
+        "relative w-full max-w-[220px] overflow-hidden rounded-2xl border bg-slate-900/60 p-3 backdrop-blur sm:max-w-[228px]",
         rarityTheme.glow,
+        rarityTheme.frameFx,
+        conditionClass,
+        tiltFx.isEnabled ? "group" : "",
       ].join(" ")}
-      style={{ borderColor: rarityTheme.border }}
+      style={{ ...tiltFx.style, borderColor: rarityTheme.border }}
+      onMouseEnter={tiltFx.onMouseEnter}
+      onMouseLeave={tiltFx.onMouseLeave}
+      onMouseMove={tiltFx.onMouseMove}
+      ref={tiltFx.ref}
     >
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <div className="text-xs text-slate-200/60">{side === "player" ? "Игрок" : "Бот"}</div>
-          <div className="mt-1 text-xl font-extrabold tracking-tight sm:text-2xl">{card.word}</div>
-          <div className="mt-2 flex items-center gap-2 text-xs text-slate-200/70">
+      {tiltFx.isEnabled ? (
+        <div
+          className="pointer-events-none absolute inset-0 opacity-[var(--tilt-glare)] transition-opacity duration-150"
+          style={{
+            background:
+              "radial-gradient(circle at var(--tilt-x) var(--tilt-y), rgba(255,255,255,0.20), transparent 60%)",
+            mixBlendMode: "screen",
+          }}
+        />
+      ) : null}
+
+      <div className="rounded-2xl border border-white/10 bg-slate-950/45 p-2.5 backdrop-blur">
+        <div className="flex items-start justify-between gap-2">
+          <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-300/65">
+            {side === "player" ? "Игрок" : "Бот"}
+          </div>
+          <span
+            className="rounded-full px-2 py-1 text-[10px] font-extrabold text-slate-950"
+            style={{ backgroundColor: rarityTheme.badge }}
+          >
+            {card.rarity}
+          </span>
+        </div>
+
+        <div className="mt-2 flex flex-wrap items-center gap-1.5">
+          <div className="flex items-center gap-1.5 rounded-full border border-white/10 bg-slate-900/70 px-2 py-1 text-[10px] text-slate-100/90">
             <span>{typeTheme.emoji}</span>
             <span>{label(TYPE_LABELS, card.type)}</span>
-            <span className="opacity-60">·</span>
-            <span
-              className="rounded-full px-2 py-1 font-semibold text-slate-950"
-              style={{ backgroundColor: rarityTheme.badge }}
-            >
-              {card.rarity}
+          </div>
+          <span className="rounded-full border border-white/10 bg-slate-900/70 px-2 py-1 text-[10px] font-semibold text-slate-100/80">
+            {label(CONDITION_LABELS, card.condition)}
+          </span>
+        </div>
+
+        <div className="mt-2">
+          <div className="flex items-center justify-between text-[10px] text-slate-200/75">
+            <span>HP</span>
+            <span className="font-mono">
+              {Math.max(0, hp)} / {maxHp}
             </span>
           </div>
+          <div className="mt-1.5 h-2.5 w-full overflow-hidden rounded-full bg-slate-900/70">
+            <div
+              className={["h-full transition-[width] duration-500", hpColor(hp, maxHp)].join(" ")}
+              style={{ width: `${Math.max(0, Math.min(1, hp / maxHp)) * 100}%` }}
+            />
+          </div>
         </div>
+
         {inspiration ? (
-          <div className="rounded-full bg-emerald-400 px-3 py-1 text-[11px] font-bold text-slate-950">
-            {BATTLE_LABELS.inspiration} +15%
+          <div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-emerald-400 px-2 py-1 text-[10px] font-bold text-slate-950">
+            <span>⚔</span>
+            <span>{BATTLE_LABELS.inspiration} +15%</span>
           </div>
         ) : null}
       </div>
 
-      <div className="mt-3 grid grid-cols-2 gap-2 sm:mt-4 sm:gap-3">
-        <div className="rounded-xl bg-slate-950/40 p-2.5 sm:p-3">
-          <div className="text-[11px] text-slate-200/70 sm:text-xs">ATK</div>
-          <div className="text-base font-bold sm:text-lg">{card.atk}</div>
+      <div className="mt-2.5 flex flex-col gap-2.5">
+        <div
+          className={[
+            "relative flex h-24 items-center justify-center overflow-hidden rounded-2xl border",
+            "bg-gradient-to-br",
+            rarityTheme.gradient,
+            "sm:h-28",
+          ].join(" ")}
+          style={{ borderColor: "rgba(255,255,255,0.08)" }}
+        >
+          {imgUrl ? (
+            <img
+              src={imgUrl}
+              alt={card.word}
+              className="h-20 w-20 object-contain drop-shadow-lg sm:h-24 sm:w-24"
+            />
+          ) : (
+            <div className="text-5xl drop-shadow sm:text-6xl">{typeTheme.emoji}</div>
+          )}
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(255,255,255,0.18),transparent_55%)]" />
         </div>
-        <div className="rounded-xl bg-slate-950/40 p-2.5 sm:p-3">
-          <div className="text-[11px] text-slate-200/70 sm:text-xs">DEF</div>
-          <div className="text-base font-bold sm:text-lg">{card.def}</div>
-        </div>
-      </div>
 
-      <div className="mt-3 sm:mt-4">
-        <div className="flex items-center justify-between text-xs text-slate-200/70">
-          <div>HP</div>
-          <div className="font-mono">
-            {Math.max(0, hp)} / {maxHp}
+        <div className="rounded-2xl border border-white/10 bg-slate-950/45 px-3 py-3 text-center backdrop-blur">
+          <div
+            className={[
+              "text-xl font-extrabold leading-tight tracking-tight sm:text-2xl",
+              hideWord ? "tracking-[0.2em] text-slate-100/92" : "",
+            ].join(" ")}
+          >
+            {displayWord}
+          </div>
+          <div className="mt-1 text-[11px] text-slate-200/65">
+            {hideWord ? "Слово скрыто до ответа" : label(TYPE_LABELS, card.type)}
           </div>
         </div>
-        <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-slate-950/40">
-          <div
-            className={["h-full", hpColor(hp, maxHp)].join(" ")}
-            style={{ width: `${Math.max(0, Math.min(1, hp / maxHp)) * 100}%` }}
-          />
-        </div>
-      </div>
 
-      <div className="mt-3 text-xs text-slate-200/70 sm:mt-4">
-        Состояние:{" "}
-        <span className="font-mono">{label(CONDITION_LABELS, card.condition)}</span>
+        <div className="grid grid-cols-2 gap-2">
+          <div className="rounded-xl bg-slate-950/60 px-3 py-2 backdrop-blur">
+            <div className="text-[10px] uppercase tracking-wider text-slate-400">ATK</div>
+            <div className="text-base font-extrabold text-slate-50">{card.atk}</div>
+          </div>
+          <div className="rounded-xl bg-slate-950/60 px-3 py-2 backdrop-blur">
+            <div className="text-right text-[10px] uppercase tracking-wider text-slate-400">
+              DEF
+            </div>
+            <div className="text-right text-base font-extrabold text-slate-50">{card.def}</div>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -97,6 +172,7 @@ export function BattleArena({
   botHp,
   playerInspired,
   vsLabel,
+  hidePlayerWord,
 }: {
   playerCard: BattleCardPublic;
   botCard: BattleCardPublic;
@@ -104,6 +180,7 @@ export function BattleArena({
   botHp: number;
   playerInspired?: boolean;
   vsLabel?: string;
+  hidePlayerWord?: boolean;
 }) {
   return (
     <div className="flex w-full flex-col items-center justify-center gap-4 sm:gap-6 lg:flex-row">
@@ -113,6 +190,7 @@ export function BattleArena({
         hp={playerHp}
         maxHp={playerCard.hp}
         inspiration={playerInspired}
+        hideWord={hidePlayerWord}
       />
       <div className="text-xl font-extrabold tracking-tight text-slate-200/70 sm:text-2xl">
         {vsLabel ?? "VS"}

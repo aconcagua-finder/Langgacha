@@ -5,6 +5,7 @@ import { apiFetch } from "./fetcher";
 
 export type BattleCardPublic = {
   id: string;
+  conceptKey?: string | null;
   word: string;
   type: string;
   rarity: string;
@@ -40,6 +41,7 @@ export type RoundResult = {
   playerCard: BattleCardRound;
   botCard: BattleCardRound;
   quizCorrect: boolean;
+  correctAnswer: string;
   inspirationApplied: boolean;
   combatLog: CombatTick[];
   winner: "player" | "bot";
@@ -62,6 +64,7 @@ export type BattleResult = {
 
 export type BattleAnswerResponse = {
   round: RoundResult;
+  nextQuiz?: QuizData;
   battleResult?: BattleResult;
 };
 

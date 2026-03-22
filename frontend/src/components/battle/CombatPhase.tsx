@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 
 import type { CombatTick } from "../../api/battle";
 import { BattleArena } from "./BattleArena";
@@ -23,14 +23,13 @@ export function CombatPhase({
   combatLog,
   onDone,
 }: Props) {
+  const tickDelay = combatLog.length > 6 ? 400 : 800;
   const [idx, setIdx] = useState(0);
   const [playerHp, setPlayerHp] = useState(initialPlayerHp);
   const [botHp, setBotHp] = useState(initialBotHp);
   const [floating, setFloating] = useState<{ side: "player" | "bot"; text: string } | null>(
     null,
   );
-
-  const currentTick = useMemo(() => combatLog[idx], [combatLog, idx]);
 
   useEffect(() => {
     setIdx(0);
@@ -53,10 +52,10 @@ export function CombatPhase({
     const timer = window.setTimeout(() => {
       setFloating(null);
       setIdx((v) => v + 1);
-    }, 800);
+    }, tickDelay);
 
     return () => window.clearTimeout(timer);
-  }, [idx, combatLog, playerHp, botHp, onDone]);
+  }, [idx, combatLog, playerHp, botHp, onDone, tickDelay]);
 
   return (
     <div className="flex flex-col items-center gap-4">
@@ -73,10 +72,10 @@ export function CombatPhase({
           <div
             className={[
               "pointer-events-none absolute top-8 text-3xl font-extrabold",
-              "animate-[float_800ms_ease-out]",
               floating.side === "player" ? "left-1/4" : "right-1/4",
               "text-rose-300 drop-shadow",
             ].join(" ")}
+            style={{ animation: `float ${tickDelay}ms ease-out` }}
           >
             {floating.text}
           </div>
@@ -91,7 +90,9 @@ export function CombatPhase({
           }
         `}
       </style>
-      <div className="text-xs text-slate-200/60">Ход {Math.min(idx + 1, combatLog.length)} / {combatLog.length}</div>
+      <div className="text-xs text-slate-200/60">
+        Ход {Math.min(idx + 1, combatLog.length)} / {combatLog.length}
+      </div>
     </div>
   );
 }

@@ -11,7 +11,12 @@ import {
 } from "../../shared/constants.js";
 import { applyConditionModifier, computeDamage, computeHp } from "../../shared/combat.js";
 import { mapCardToDto } from "../cards/cards.generator.js";
-import { generateQuiz, type Quiz } from "../quiz/index.js";
+import {
+  generateQuiz,
+  isQuizAnswerCorrect,
+  type Quiz,
+  type QuizType,
+} from "../quiz/index.js";
 import {
   getWordProgressMap,
   recordCorrectReview,
@@ -23,7 +28,6 @@ import type { NextRaidCard, RaidAttackResult, RaidStatus } from "./raid.types.js
 const todayUtc = (): string => new Date().toISOString().slice(0, 10);
 const RAID_QUIZ_TTL_SECONDS = 60 * 10;
 
-const normalizeAnswer = (s: string): string => s.trim().toLowerCase();
 const raidQuizKey = (playerId: string, cardId: string): string => `raid:quiz:${playerId}:${cardId}`;
 
 const toPublicQuiz = (quiz: Quiz): NextRaidCard["quiz"] => {
@@ -36,6 +40,35 @@ const conditionRank: Record<string, number> = {
   Worn: 1,
   Normal: 2,
   Brilliant: 3,
+};
+
+type StoredRaidQuiz = {
+  type: QuizType;
+  correctAnswer: string;
+};
+
+const parseStoredRaidQuiz = (raw: string | null): StoredRaidQuiz | null => {
+  if (!raw) return null;
+
+  try {
+    const parsed = JSON.parse(raw) as Partial<StoredRaidQuiz>;
+    if (
+      typeof parsed.correctAnswer === "string" &&
+      (parsed.type === "translate" || parsed.type === "reverse" || parsed.type === "typing")
+    ) {
+      return {
+        type: parsed.type,
+        correctAnswer: parsed.correctAnswer,
+      };
+    }
+  } catch {
+    // Backward compatibility with old raid quiz payloads stored as a raw answer string.
+  }
+
+  return {
+    type: "translate",
+    correctAnswer: raw,
+  };
 };
 
 const getOrCreateTodayRaidDay = async (playerId?: string) => {
@@ -141,7 +174,10 @@ export const getNextCard = async (playerId: string): Promise<NextRaidCard | null
 
   await battleStore.set(
     raidQuizKey(playerId, chosen.id),
-    quiz.correctAnswer,
+    JSON.stringify({
+      type: quiz.type,
+      correctAnswer: quiz.correctAnswer,
+    } satisfies StoredRaidQuiz),
     RAID_QUIZ_TTL_SECONDS,
   );
 
@@ -158,7 +194,7 @@ export const attackBoss = async (
 ): Promise<RaidAttackResult> => {
   const raidDay = await getOrCreateTodayRaidDay(playerId);
   const quizKey = raidQuizKey(playerId, cardId);
-  const savedCorrectAnswer = await battleStore.get(quizKey);
+  const savedQuiz = parseStoredRaidQuiz(await battleStore.get(quizKey));
 
   const result = await prisma.$transaction(async (tx) => {
     const raid = await tx.raidDay.findUnique({ where: { id: raidDay.id } });
@@ -182,8 +218,9 @@ export const attackBoss = async (
     });
     if (!card || card.playerId !== playerId) throw new Error("Card not found.");
 
-    const correctAnswer = savedCorrectAnswer ?? card.word.quizCorrect;
-    const quizCorrect = normalizeAnswer(answer) === normalizeAnswer(correctAnswer);
+    const correctAnswer = savedQuiz?.correctAnswer ?? card.word.quizCorrect;
+    const quizType = savedQuiz?.type ?? "translate";
+    const quizCorrect = isQuizAnswerCorrect(quizType, answer, correctAnswer);
     const inspirationApplied = quizCorrect;
 
     const wordProgress = await tx.wordProgress.findUnique({
@@ -200,14 +237,15 @@ export const attackBoss = async (
 
     const bossHpBefore = raid.currentHp;
     let bossHp = bossHpBefore;
-    let cardHp = computeHp(effectiveDef);
+    const cardMaxHp = computeHp(effectiveDef);
+    let cardHp = cardMaxHp;
 
     let totalDamageDealt = 0;
     let totalDamageTaken = 0;
     let rounds = 0;
 
     while (cardHp > 0 && bossHp > 0) {
-      const rawCardDamage = computeDamage(effectiveAtk, raid.bossDef);
+      const rawCardDamage = computeDamage(effectiveAtk, raid.bossDef, raid.bossHp);
       const cardDamage = Math.min(bossHp, rawCardDamage);
       bossHp -= cardDamage;
       totalDamageDealt += cardDamage;
@@ -215,7 +253,7 @@ export const attackBoss = async (
 
       if (bossHp <= 0) break;
 
-      const rawBossDamage = computeDamage(raid.bossAtk, effectiveDef);
+      const rawBossDamage = computeDamage(raid.bossAtk, effectiveDef, cardMaxHp);
       const bossDamage = Math.min(cardHp, rawBossDamage);
       cardHp -= bossDamage;
       totalDamageTaken += bossDamage;
@@ -278,7 +316,7 @@ export const attackBoss = async (
     const result: RaidAttackResult = {
       correct: quizCorrect,
       inspirationApplied,
-      cardHp: computeHp(effectiveDef),
+      cardHp: cardMaxHp,
       cardFinalHp,
       bossHpBefore,
       bossCurrentHp,

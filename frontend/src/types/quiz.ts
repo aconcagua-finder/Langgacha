@@ -1,4 +1,4 @@
-export type QuizType = "translate" | "reverse";
+export type QuizType = "translate" | "reverse" | "typing";
 
 export type QuizData = {
   type: QuizType;

@@ -152,21 +152,24 @@ export function BattlePage() {
   };
 
   return (
-    <main className="mx-auto flex min-h-[calc(100vh-64px)] max-w-5xl flex-col gap-8 px-6 py-10">
-      <header className="flex items-center justify-between gap-4">
-        <div className="flex flex-col gap-2">
-          <h1 className="text-3xl font-extrabold tracking-tight">Бой</h1>
-          <div className="text-sm text-slate-200/70">
+    <main className="mx-auto flex min-h-[calc(100vh-64px)] max-w-5xl flex-col gap-4 px-6 py-4">
+      <header className="flex items-center justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-2 text-sm text-slate-200/70">
+          <h1 className="text-xl font-extrabold tracking-tight text-slate-50">Бой</h1>
+          <span className="text-slate-200/35">·</span>
+          <span>
             Раунд <span className="font-mono">{Math.min(roundNumber, 5)}/5</span>
-            <span className="mx-2 text-slate-200/35">·</span>
+          </span>
+          <span className="text-slate-200/35">·</span>
+          <span>
             Счёт <span className="font-mono">{playerWins}:{botWins}</span>
-          </div>
+          </span>
         </div>
         {phase !== "deck" ? (
           <button
             type="button"
             onClick={reset}
-            className="rounded-xl bg-slate-800 px-4 py-3 text-sm font-semibold text-slate-50 hover:bg-slate-700"
+            className="rounded-xl bg-slate-800 px-3 py-2 text-sm font-semibold text-slate-50 hover:bg-slate-700"
           >
             Сбросить
           </button>
@@ -182,7 +185,7 @@ export function BattlePage() {
       {phase === "deck" ? <DeckSelect onStart={onStart} /> : null}
 
       {phase !== "deck" && playerCard && botCard ? (
-        <section className="flex flex-col gap-6">
+        <section className="flex flex-col gap-3">
           {phase === "quiz" && currentQuiz ? (
             <>
               <BattleArena

@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 
 import type { BattleResult as BattleResultType } from "../../api/battle";
+import { BATTLE_LABELS } from "../../shared/labels";
 import { getRarityTheme, getTypeTheme } from "../../styles/card-themes";
 import { getCardImageUrl } from "../../utils/cardImage";
 import { CardBack } from "../card/CardBack";
@@ -19,7 +20,7 @@ function RoundCardPreview({
   return (
     <div
       className={[
-        "w-full max-w-[180px] overflow-hidden rounded-2xl border bg-slate-900/60 p-2.5 backdrop-blur",
+        "w-full max-w-[140px] overflow-hidden rounded-2xl border bg-slate-900/60 p-2 backdrop-blur",
         rarityTheme.glow,
         rarityTheme.frameFx,
       ].join(" ")}
@@ -50,16 +51,16 @@ function RoundCardPreview({
           <img
             src={imgUrl}
             alt={card.word}
-            className="h-16 w-16 object-contain drop-shadow-lg"
+            className="h-14 w-14 object-contain drop-shadow-lg"
           />
         ) : (
-          <div className="text-4xl drop-shadow">{typeTheme.emoji}</div>
+          <div className="text-3xl drop-shadow">{typeTheme.emoji}</div>
         )}
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(255,255,255,0.18),transparent_55%)]" />
       </div>
 
       <div className="mt-2 text-center">
-        <div className="line-clamp-2 text-sm font-extrabold leading-tight tracking-tight text-slate-50">
+        <div className="line-clamp-2 text-xs font-extrabold leading-tight tracking-tight text-slate-50 sm:text-sm">
           {card.word}
         </div>
         <div className="mt-1 line-clamp-1 text-[11px] text-slate-200/70">{card.translationRu}</div>
@@ -81,8 +82,8 @@ export function BattleResult({
   onAgain: () => void;
 }) {
   return (
-    <div className="flex flex-col gap-6">
-      <div className="rounded-2xl border border-slate-800/60 bg-slate-900/20 p-6">
+    <div className="flex flex-col gap-4">
+      <div className="rounded-2xl border border-slate-800/60 bg-slate-900/20 p-5">
         <div className="text-2xl font-extrabold tracking-tight">
           {result.winner === "player" ? "Победа" : "Поражение"} {result.playerWins}:{result.botWins}
         </div>
@@ -105,15 +106,15 @@ export function BattleResult({
         </div>
       ) : null}
 
-      <div className="rounded-2xl border border-slate-800/60 bg-slate-900/20 p-6">
+      <div className="rounded-2xl border border-slate-800/60 bg-slate-900/20 p-5">
         <div className="text-sm font-semibold text-slate-200/80">Раунды</div>
-        <div className="mt-4 flex flex-col gap-3">
+        <div className="mt-3 flex flex-col gap-2.5">
           {result.rounds.map((r) => {
             const playerWon = r.winner === "player";
             return (
               <div
                 key={r.roundNumber}
-                className="rounded-2xl border border-slate-800/60 bg-slate-950/20 p-4"
+                className="rounded-2xl border border-slate-800/60 bg-slate-950/20 p-3"
               >
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-200/55">
@@ -132,27 +133,19 @@ export function BattleResult({
                     </div>
                     {r.inspirationApplied ? (
                       <div className="rounded-full bg-amber-300/15 px-2 py-1 text-[10px] font-extrabold text-amber-200">
-                        Inspiration
+                        {BATTLE_LABELS.inspiration}
                       </div>
                     ) : null}
                   </div>
                 </div>
 
-                <div className="mt-3 flex flex-col items-center gap-3 md:flex-row md:justify-between">
+                <div className="mt-2.5 flex flex-row items-center justify-center gap-2 sm:gap-3">
                   <RoundCardPreview card={r.playerCard} />
-                  <div
-                    className={[
-                      "flex h-12 w-12 shrink-0 items-center justify-center rounded-full border text-xl font-extrabold",
-                      "border-white/10 bg-slate-900/50",
-                      playerWon ? "text-emerald-300" : "text-rose-300",
-                    ].join(" ")}
-                  >
-                    {playerWon ? "✅" : "❌"}
-                  </div>
+                  <div className="shrink-0 text-lg text-slate-200/65 sm:text-xl">⚔</div>
                   <RoundCardPreview card={r.botCard} />
                 </div>
 
-                <div className="mt-3 text-xs text-slate-200/65">
+                <div className="mt-2.5 text-center text-xs text-slate-200/65">
                   Квиз:{" "}
                   <span className={r.quizCorrect ? "text-emerald-300" : "text-rose-300"}>
                     {r.quizCorrect ? "верно" : "неверно"}

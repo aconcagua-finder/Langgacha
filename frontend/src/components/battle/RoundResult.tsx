@@ -17,7 +17,7 @@ function RoundCardMini({
   return (
     <div
       className={[
-        "w-full max-w-[180px] overflow-hidden rounded-2xl border bg-slate-900/60 p-2.5 backdrop-blur",
+        "w-full max-w-[160px] overflow-hidden rounded-2xl border bg-slate-900/60 p-2 backdrop-blur",
         rarityTheme.glow,
         rarityTheme.frameFx,
       ].join(" ")}
@@ -45,15 +45,15 @@ function RoundCardMini({
         style={{ borderColor: "rgba(255,255,255,0.08)" }}
       >
         {imgUrl ? (
-          <img src={imgUrl} alt={card.word} className="h-16 w-16 object-contain drop-shadow-lg" />
+          <img src={imgUrl} alt={card.word} className="h-14 w-14 object-contain drop-shadow-lg" />
         ) : (
-          <div className="text-4xl drop-shadow">{typeTheme.emoji}</div>
+          <div className="text-3xl drop-shadow">{typeTheme.emoji}</div>
         )}
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(255,255,255,0.18),transparent_55%)]" />
       </div>
 
       <div className="mt-2 text-center">
-        <div className="line-clamp-2 text-sm font-extrabold leading-tight tracking-tight text-slate-50">
+        <div className="line-clamp-2 text-xs font-extrabold leading-tight tracking-tight text-slate-50 sm:text-sm">
           {card.word}
         </div>
         <div className="mt-1 line-clamp-1 text-[11px] text-slate-200/70">{card.translationRu}</div>
@@ -91,52 +91,44 @@ export function RoundResult({
   }, [onNext]);
 
   return (
-    <div className="w-full rounded-2xl border border-slate-800/60 bg-slate-900/20 p-5">
-      <div className="text-lg font-extrabold tracking-tight">
-        Раунд {round.roundNumber}:{" "}
-        <span className={round.winner === "player" ? "text-emerald-300" : "text-rose-300"}>
-          {round.winner === "player" ? "победа" : "поражение"}
-        </span>
+    <div className="w-full rounded-2xl border border-slate-800/60 bg-slate-900/20 p-4">
+      <div className="flex flex-wrap items-center gap-2 text-sm">
+        <div className="text-base font-extrabold tracking-tight">
+          Раунд {round.roundNumber}:{" "}
+          <span className={round.winner === "player" ? "text-emerald-300" : "text-rose-300"}>
+            {round.winner === "player" ? "победа" : "поражение"}
+          </span>
+        </div>
+        {round.inspirationApplied ? (
+          <span className="rounded-full bg-emerald-400 px-2 py-1 text-xs font-bold text-slate-950">
+            {BATTLE_LABELS.inspiration}
+          </span>
+        ) : null}
       </div>
 
-      <div className="mt-5 flex flex-col items-center gap-3 md:flex-row md:justify-between">
+      <div className="mt-4 flex flex-row items-center justify-center gap-2 sm:gap-3">
         <RoundCardMini card={round.playerCard} />
-        <div
-          className={[
-            "flex h-14 w-14 shrink-0 flex-col items-center justify-center rounded-full border border-white/10 bg-slate-950/45",
-            round.winner === "player" ? "text-emerald-300" : "text-rose-300",
-          ].join(" ")}
-        >
-          <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-200/55">
-            VS
-          </span>
-          <span className="text-lg">{round.winner === "player" ? "✅" : "❌"}</span>
-        </div>
+        <div className="shrink-0 text-lg text-slate-200/65 sm:text-xl">⚔</div>
         <RoundCardMini card={round.botCard} />
       </div>
 
-      <div className="mt-5 flex flex-wrap items-center gap-2 text-sm text-slate-200/80">
+      <div className="mt-4 flex flex-wrap items-center justify-center gap-2 text-sm text-slate-200/80">
         <span>
           Квиз:{" "}
           <span className={round.quizCorrect ? "text-emerald-300" : "text-rose-300"}>
             {round.quizCorrect ? "верно" : "неверно"}
           </span>
         </span>
-        {round.inspirationApplied ? (
-          <span className="rounded-full bg-emerald-400 px-2 py-1 text-xs font-bold text-slate-950">
-            {BATTLE_LABELS.inspiration}
-          </span>
-        ) : null}
         <span className="text-slate-200/35">·</span>
         <span>
-          Выжившая карта: <span className="font-mono">{round.survivorHpLeft}</span> HP
+          <span className="font-mono">{round.survivorHpLeft}</span> HP
         </span>
       </div>
 
       <button
         type="button"
         onClick={onNext}
-        className="mt-4 w-full rounded-xl bg-slate-800 px-4 py-3 font-semibold text-slate-50 hover:bg-slate-700"
+        className="mt-4 w-full rounded-xl bg-slate-800 px-4 py-2.5 font-semibold text-slate-50 hover:bg-slate-700"
       >
         {nextLabel}
       </button>

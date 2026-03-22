@@ -43,7 +43,7 @@ function CardPanel({
   return (
     <div
       className={[
-        "relative w-full max-w-[260px] overflow-hidden rounded-2xl border bg-slate-900/60 p-3 backdrop-blur sm:max-w-[280px] lg:max-w-[300px]",
+        "relative w-full max-w-[260px] overflow-hidden rounded-2xl border bg-slate-900/60 p-2.5 backdrop-blur sm:max-w-[280px] lg:max-w-[300px]",
         rarityTheme.glow,
         rarityTheme.frameFx,
         conditionClass,
@@ -76,7 +76,7 @@ function CardPanel({
         </div>
       ) : null}
 
-      <div className="rounded-2xl border border-white/10 bg-slate-950/45 p-2.5 backdrop-blur">
+      <div className="rounded-2xl border border-white/10 bg-slate-950/45 p-2 backdrop-blur">
         <div className="flex items-start justify-between gap-2">
           <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-300/65">
             {side === "player" ? "Игрок" : "Бот"}
@@ -116,13 +116,12 @@ function CardPanel({
 
       </div>
 
-      <div className="mt-2.5 flex flex-col gap-2.5">
+      <div className="mt-2 flex flex-col gap-2">
         <div
           className={[
-            "relative flex h-24 items-center justify-center overflow-hidden rounded-2xl border",
+            "relative flex h-20 items-center justify-center overflow-hidden rounded-2xl border sm:h-24",
             "bg-gradient-to-br",
             rarityTheme.gradient,
-            "sm:h-28",
           ].join(" ")}
           style={{ borderColor: "rgba(255,255,255,0.08)" }}
         >
@@ -138,10 +137,10 @@ function CardPanel({
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(255,255,255,0.18),transparent_55%)]" />
         </div>
 
-        <div className="rounded-2xl border border-white/10 bg-slate-950/45 px-3 py-3 text-center backdrop-blur">
+        <div className="rounded-2xl border border-white/10 bg-slate-950/45 px-3 py-2.5 text-center backdrop-blur">
           <div
             className={[
-              "text-xl font-extrabold leading-tight tracking-tight sm:text-2xl",
+              "text-lg font-extrabold leading-tight tracking-tight sm:text-xl",
               hideWord ? "tracking-[0.2em] text-slate-100/92" : "",
             ].join(" ")}
           >
@@ -153,11 +152,11 @@ function CardPanel({
         </div>
 
         <div className="grid grid-cols-2 gap-2">
-          <div className="rounded-xl bg-slate-950/60 px-3 py-2 backdrop-blur">
+          <div className="rounded-xl bg-slate-950/60 px-3 py-1.5 backdrop-blur">
             <div className="text-[10px] uppercase tracking-wider text-slate-400">ATK</div>
             <div className="text-base font-extrabold text-slate-50">{card.atk}</div>
           </div>
-          <div className="rounded-xl bg-slate-950/60 px-3 py-2 backdrop-blur">
+          <div className="rounded-xl bg-slate-950/60 px-3 py-1.5 backdrop-blur">
             <div className="text-right text-[10px] uppercase tracking-wider text-slate-400">
               DEF
             </div>
@@ -187,7 +186,7 @@ export function BattleArena({
   hidePlayerWord?: boolean;
 }) {
   return (
-    <div className="flex w-full flex-col items-center justify-center gap-4 sm:gap-6 lg:flex-row">
+    <div className="flex w-full flex-col items-center justify-center gap-3 sm:gap-4 lg:flex-row">
       <CardPanel
         side="player"
         card={playerCard}
@@ -196,7 +195,7 @@ export function BattleArena({
         inspiration={playerInspired}
         hideWord={hidePlayerWord}
       />
-      <div className="text-xl font-extrabold tracking-tight text-slate-200/70 sm:text-2xl">
+      <div className="text-lg font-extrabold tracking-tight text-slate-200/70 sm:text-xl">
         {vsLabel ?? "VS"}
       </div>
       <CardPanel side="bot" card={botCard} hp={botHp} maxHp={botCard.hp} />

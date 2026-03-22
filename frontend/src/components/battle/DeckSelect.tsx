@@ -43,9 +43,6 @@ export function DeckSelect({ onStart }: Props) {
     const bestPerWord = Array.from(groups.values())
       .map((group) =>
         group.sort((a, b) => {
-          const ca = condPriority[a.card.condition] ?? 2;
-          const cb = condPriority[b.card.condition] ?? 2;
-          if (cb !== ca) return cb - ca;
           const pa = a.card.atk + a.card.def;
           const pb = b.card.atk + b.card.def;
           if (pb !== pa) return pb - pa;

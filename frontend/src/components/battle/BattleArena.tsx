@@ -1,7 +1,7 @@
 import type { BattleCardPublic } from "../../api/battle";
 import { getCardImageUrl } from "../../utils/cardImage";
 import { getRarityTheme, getTypeTheme } from "../../styles/card-themes";
-import { BATTLE_LABELS, CONDITION_LABELS, TYPE_LABELS, label } from "../../shared/labels";
+import { CONDITION_LABELS, TYPE_LABELS, label } from "../../shared/labels";
 import { useTiltEffect } from "../../hooks/useTiltEffect";
 
 const hpColor = (hp: number, maxHp: number) => {
@@ -66,6 +66,16 @@ function CardPanel({
         />
       ) : null}
 
+      {inspiration ? (
+        <div
+          className="pointer-events-none absolute right-2 top-2 z-20 inline-flex items-center gap-1 rounded-full border border-emerald-300/35 bg-emerald-400/90 px-2.5 py-1 text-[10px] font-extrabold text-slate-950 shadow-lg shadow-emerald-950/30 backdrop-blur"
+          title="Inspiration +15%"
+        >
+          <span>✦</span>
+          <span>+15%</span>
+        </div>
+      ) : null}
+
       <div className="rounded-2xl border border-white/10 bg-slate-950/45 p-2.5 backdrop-blur">
         <div className="flex items-start justify-between gap-2">
           <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-300/65">
@@ -104,12 +114,6 @@ function CardPanel({
           </div>
         </div>
 
-        {inspiration ? (
-          <div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-emerald-400 px-2 py-1 text-[10px] font-bold text-slate-950">
-            <span>⚔</span>
-            <span>{BATTLE_LABELS.inspiration} +15%</span>
-          </div>
-        ) : null}
       </div>
 
       <div className="mt-2.5 flex flex-col gap-2.5">

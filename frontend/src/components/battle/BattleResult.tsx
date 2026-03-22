@@ -84,7 +84,7 @@ export function BattleResult({
     <div className="flex flex-col gap-6">
       <div className="rounded-2xl border border-slate-800/60 bg-slate-900/20 p-6">
         <div className="text-2xl font-extrabold tracking-tight">
-          {result.winner === "player" ? "Победа!" : "Поражение"}
+          {result.winner === "player" ? "Победа" : "Поражение"} {result.playerWins}:{result.botWins}
         </div>
         <div className="mt-3 text-sm text-slate-200/80">
           Правильных ответов: <span className="font-mono">{result.rewards.correctAnswers}</span>{" "}

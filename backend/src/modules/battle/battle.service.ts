@@ -9,7 +9,6 @@ import { generateCardFromPool } from "../cards/cards.generator.js";
 import { addDust } from "../player/player.service.js";
 import { generateQuiz, isQuizAnswerCorrect, type Quiz } from "../quiz/index.js";
 import {
-  getWordProgress,
   getWordProgressMap,
   recordCorrectReview,
   type WordProgressState,
@@ -98,34 +97,6 @@ const buildPlayerBattleCard = async (
   };
 };
 
-const regenerateQuiz = async (card: BattleCard, playerId: string): Promise<Quiz> => {
-  const refreshed = await prisma.card.findUnique({
-    where: { id: card.id },
-    include: { word: true },
-  });
-
-  if (!refreshed || refreshed.playerId !== playerId) {
-    return card.quiz;
-  }
-
-  const progress = await getWordProgress(playerId, refreshed.wordId);
-  const quiz = await generateQuiz({
-    word: refreshed.word.word,
-    translationRu: refreshed.word.translationRu,
-    quizCorrect: refreshed.word.quizCorrect,
-    quizOptions: refreshed.word.quizOptions,
-    masteryProgress: progress?.masteryProgress ?? 0,
-    isEvolved: refreshed.isEvolved,
-    evolutionData: refreshed.word.evolutionData,
-    wordType: refreshed.word.type,
-    rarity: refreshed.word.rarity,
-    language: refreshed.word.language,
-  });
-
-  card.quiz = quiz;
-  return quiz;
-};
-
 const toRoundCard = (card: BattleCard): RoundResult["playerCard"] => {
   const { quiz, ...rest } = card;
   return {
@@ -176,9 +147,9 @@ export const startBattle = async (playerId: string, cardIds: string[]): Promise<
     botCards,
     playerPos: 0,
     botPos: 0,
-    playerHpLeft: playerCards[0].hp,
-    botHpLeft: botCards[0].hp,
     currentRound: 1,
+    playerWins: 0,
+    botWins: 0,
     rounds: [],
     correctStreak: 0,
     maxStreak: 0,
@@ -241,8 +212,8 @@ export const answerRound = async (playerId: string, params: {
   const combat = simulateCombat({
     player: playerCard,
     bot: botCard,
-    playerHp: state.playerHpLeft,
-    botHp: state.botHpLeft,
+    playerHp: playerCard.hp,
+    botHp: botCard.hp,
     inspirationApplied,
   });
 
@@ -261,39 +232,27 @@ export const answerRound = async (playerId: string, params: {
   state.rounds.push(round);
 
   if (combat.winner === "player") {
+    state.playerWins += 1;
     state.defeatedBotRarities.push(botCard.rarity);
-    state.playerHpLeft = combat.survivorHpLeft;
-    state.botPos += 1;
-    if (state.botPos < state.botCards.length) {
-      state.botHpLeft = state.botCards[state.botPos].hp;
-    } else {
-      state.botHpLeft = 0;
-    }
   } else {
-    state.botHpLeft = combat.survivorHpLeft;
-    state.playerPos += 1;
-    if (state.playerPos < state.playerCards.length) {
-      state.playerHpLeft = state.playerCards[state.playerPos].hp;
-    } else {
-      state.playerHpLeft = 0;
-    }
+    state.botWins += 1;
   }
+
+  state.playerPos += 1;
+  state.botPos += 1;
+  state.currentRound += 1;
 
   const finished =
-    state.playerPos >= state.playerCards.length || state.botPos >= state.botCards.length;
+    state.currentRound > 5 ||
+    state.playerPos >= state.playerCards.length ||
+    state.botPos >= state.botCards.length;
+
   if (!finished) {
-    let nextQuiz = toPublicQuiz(state.playerCards[state.playerPos].quiz);
-    if (combat.winner === "player") {
-      nextQuiz = toPublicQuiz(
-        await regenerateQuiz(state.playerCards[state.playerPos], state.playerId),
-      );
-    }
-    state.currentRound += 1;
     await setState(state);
-    return { round, nextQuiz };
+    return { round };
   }
 
-  const winner: "player" | "bot" = state.botPos >= state.botCards.length ? "player" : "bot";
+  const winner: "player" | "bot" = state.playerWins > state.botWins ? "player" : "bot";
 
   const dustFromBots =
     winner === "player"
@@ -309,6 +268,8 @@ export const answerRound = async (playerId: string, params: {
     id: state.id,
     rounds: state.rounds,
     winner,
+    playerWins: state.playerWins,
+    botWins: state.botWins,
     rewards: {
       dust: state.dustFromAnswers + dustFromBots,
       bonusCard,

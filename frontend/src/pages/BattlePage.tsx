@@ -9,7 +9,6 @@ import { QuizPhase } from "../components/battle/QuizPhase";
 import { RoundResult } from "../components/battle/RoundResult";
 import { BattleResult } from "../components/battle/BattleResult";
 import { usePlayer } from "../contexts/PlayerContext";
-import type { QuizData } from "../types/quiz";
 
 type Phase = "deck" | "quiz" | "combat" | "roundResult" | "battleResult";
 type QuizFeedback = {
@@ -24,11 +23,11 @@ export function BattlePage() {
   const { refresh: refreshPlayer } = usePlayer();
   const [phase, setPhase] = useState<Phase>("deck");
   const [startData, setStartData] = useState<BattleStartResponse | null>(null);
-  const [currentQuiz, setCurrentQuiz] = useState<QuizData | null>(null);
-  const [nextQuiz, setNextQuiz] = useState<QuizData | null>(null);
   const [roundNumber, setRoundNumber] = useState(1);
   const [playerPos, setPlayerPos] = useState(0);
   const [botPos, setBotPos] = useState(0);
+  const [playerWins, setPlayerWins] = useState(0);
+  const [botWins, setBotWins] = useState(0);
   const [playerHp, setPlayerHp] = useState(0);
   const [botHp, setBotHp] = useState(0);
   const [submitting, setSubmitting] = useState(false);
@@ -60,14 +59,16 @@ export function BattlePage() {
     return startData.botCards[botPos] ?? null;
   }, [startData, botPos]);
 
+  const currentQuiz = playerCard?.quiz ?? null;
+
   const reset = () => {
     setPhase("deck");
     setStartData(null);
-    setCurrentQuiz(null);
-    setNextQuiz(null);
     setRoundNumber(1);
     setPlayerPos(0);
     setBotPos(0);
+    setPlayerWins(0);
+    setBotWins(0);
     setPlayerHp(0);
     setBotHp(0);
     setSubmitting(false);
@@ -80,15 +81,15 @@ export function BattlePage() {
     setError(null);
     setSubmitting(true);
     setQuizFeedback(null);
-    setCurrentQuiz(null);
-    setNextQuiz(null);
+    setLastAnswer(null);
     try {
       const data = await startBattle(cardIds);
       setStartData(data);
-      setCurrentQuiz(data.rounds[0]?.quiz ?? data.playerCards[0]?.quiz ?? null);
       setRoundNumber(1);
       setPlayerPos(0);
       setBotPos(0);
+      setPlayerWins(0);
+      setBotWins(0);
       setPlayerHp(data.playerCards[0]?.hp ?? 0);
       setBotHp(data.botCards[0]?.hp ?? 0);
       setPhase("quiz");
@@ -106,12 +107,16 @@ export function BattlePage() {
     try {
       const res = await answerBattle({ battleId: startData.battleId, roundNumber, answer });
       setLastAnswer(res);
-      setNextQuiz(res.nextQuiz ?? null);
       setQuizFeedback({
         selectedAnswer: answer,
         correctAnswer: res.round.correctAnswer,
         isCorrect: res.round.quizCorrect,
       });
+      if (res.round.winner === "player") {
+        setPlayerWins((value) => value + 1);
+      } else {
+        setBotWins((value) => value + 1);
+      }
       setPhase("quiz");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Unknown error");
@@ -131,29 +136,16 @@ export function BattlePage() {
   const onNext = () => {
     if (!startData || !lastAnswer) return;
     if (lastAnswer.battleResult) {
-      setNextQuiz(null);
       setPhase("battleResult");
       return;
     }
 
-    const winner = lastAnswer.round.winner;
-    const survivorHp = lastAnswer.round.survivorHpLeft;
-    let nextPlayerPos = playerPos;
-
-    if (winner === "player") {
-      const nextBotPos = botPos + 1;
-      setBotPos(nextBotPos);
-      setBotHp(startData.botCards[nextBotPos]?.hp ?? 0);
-      setPlayerHp(survivorHp);
-    } else {
-      nextPlayerPos = playerPos + 1;
-      setPlayerPos(nextPlayerPos);
-      setPlayerHp(startData.playerCards[nextPlayerPos]?.hp ?? 0);
-      setBotHp(survivorHp);
-    }
-
-    setCurrentQuiz(nextQuiz ?? startData.playerCards[nextPlayerPos]?.quiz ?? null);
-    setNextQuiz(null);
+    const nextPlayerPos = playerPos + 1;
+    const nextBotPos = botPos + 1;
+    setPlayerPos(nextPlayerPos);
+    setBotPos(nextBotPos);
+    setPlayerHp(startData.playerCards[nextPlayerPos]?.hp ?? 0);
+    setBotHp(startData.botCards[nextBotPos]?.hp ?? 0);
     setQuizFeedback(null);
     setRoundNumber((v) => v + 1);
     setPhase("quiz");
@@ -165,7 +157,9 @@ export function BattlePage() {
         <div className="flex flex-col gap-2">
           <h1 className="text-3xl font-extrabold tracking-tight">Бой</h1>
           <div className="text-sm text-slate-200/70">
-            Раунд: <span className="font-mono">{roundNumber}</span>
+            Раунд <span className="font-mono">{Math.min(roundNumber, 5)}/5</span>
+            <span className="mx-2 text-slate-200/35">·</span>
+            Счёт <span className="font-mono">{playerWins}:{botWins}</span>
           </div>
         </div>
         {phase !== "deck" ? (

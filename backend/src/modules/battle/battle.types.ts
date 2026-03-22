@@ -52,6 +52,8 @@ export type BattleResult = {
   id: string;
   rounds: RoundResult[];
   winner: "player" | "bot";
+  playerWins: number;
+  botWins: number;
   rewards: BattleRewards;
 };
 
@@ -71,7 +73,6 @@ export type BattleStartResponse = {
 
 export type BattleAnswerResponse = {
   round: RoundResult;
-  nextQuiz?: QuizPublic;
   battleResult?: BattleResult;
 };
 
@@ -82,9 +83,9 @@ export type BattleState = {
   botCards: BattleCard[];
   playerPos: number;
   botPos: number;
-  playerHpLeft: number;
-  botHpLeft: number;
   currentRound: number;
+  playerWins: number;
+  botWins: number;
   rounds: RoundResult[];
   correctStreak: number;
   maxStreak: number;

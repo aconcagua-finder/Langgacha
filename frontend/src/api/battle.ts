@@ -59,12 +59,13 @@ export type BattleResult = {
   id: string;
   rounds: RoundResult[];
   winner: "player" | "bot";
+  playerWins: number;
+  botWins: number;
   rewards: BattleRewards;
 };
 
 export type BattleAnswerResponse = {
   round: RoundResult;
-  nextQuiz?: QuizData;
   battleResult?: BattleResult;
 };
 

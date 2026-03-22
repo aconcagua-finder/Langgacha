@@ -26,18 +26,18 @@ export function DeckSelect({ onStart }: Props) {
   const byId = useMemo(() => new Map(cards.map((c) => [c.id, c])), [cards]);
 
   const autoSelect = () => {
-    const condRank: Record<string, number> = {
-      Brilliant: 3,
+    const condPriority: Record<string, number> = {
+      Deteriorated: 4,
+      Worn: 3,
       Normal: 2,
-      Worn: 1,
-      Deteriorated: 0,
+      Brilliant: 1,
     };
 
     const sorted = cards
       .map((card) => ({ card, r: Math.random() }))
       .sort((a, b) => {
-        const ca = condRank[a.card.condition] ?? 2;
-        const cb = condRank[b.card.condition] ?? 2;
+        const ca = condPriority[a.card.condition] ?? 2;
+        const cb = condPriority[b.card.condition] ?? 2;
         if (cb !== ca) return cb - ca;
         const pa = a.card.atk + a.card.def;
         const pb = b.card.atk + b.card.def;
@@ -46,9 +46,18 @@ export function DeckSelect({ onStart }: Props) {
       })
       .map((x) => x.card);
 
-    const top = sorted.slice(0, 5);
-    setSelectedIds(top.map((c) => c.id));
-    setSelectedById(Object.fromEntries(top.map((c) => [c.id, c])));
+    const seenWords = new Set<string>();
+    const selected: GeneratedCard[] = [];
+
+    for (const card of sorted) {
+      if (seenWords.has(card.word)) continue;
+      seenWords.add(card.word);
+      selected.push(card);
+      if (selected.length >= 5) break;
+    }
+
+    setSelectedIds(selected.map((card) => card.id));
+    setSelectedById(Object.fromEntries(selected.map((card) => [card.id, card])));
   };
 
   useEffect(() => {

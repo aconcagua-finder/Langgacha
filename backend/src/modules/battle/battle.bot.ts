@@ -19,6 +19,9 @@ const rarityToRank: Record<string, number> = {
   SSR: 4,
 };
 
+const SLOT_TARGET_MIN_FACTOR = 0.85;
+const SLOT_TARGET_MAX_FACTOR = 1.15;
+
 const buildBotCard = async (word: Word): Promise<BattleCard> => {
   const rarity = word.rarity as Rarity;
   const rawAtk = rollStat(rarity, word.baseAtk);
@@ -53,17 +56,23 @@ const buildBotCard = async (word: Word): Promise<BattleCard> => {
   };
 };
 
-export const generateBotDeck = async (playerCards: BattleCard[]): Promise<BattleCard[]> => {
-  const totalPlayerPower = playerCards.reduce((sum, c) => sum + (c.atk + c.def), 0);
-  const target = totalPlayerPower * (0.8 + Math.random() * 0.4);
+const scaleCardToTargetPower = (card: BattleCard, targetPower: number): BattleCard => {
+  const currentPower = card.atk + card.def;
+  if (currentPower <= 0) {
+    const atk = Math.max(1, Math.round(targetPower / 2));
+    const def = Math.max(1, targetPower - atk);
+    return { ...card, atk, def, hp: computeHp(def) };
+  }
 
+  const scale = targetPower / currentPower;
+  const atk = Math.max(1, Math.round(card.atk * scale));
+  const def = Math.max(1, Math.round(card.def * scale));
+  return { ...card, atk, def, hp: computeHp(def) };
+};
+
+export const generateBotDeck = async (playerCards: BattleCard[]): Promise<BattleCard[]> => {
   const pool = await prisma.word.findMany();
   if (pool.length < 5) throw new Error("Not enough words in pool to generate bot deck.");
-
-  const avgRank =
-    playerCards.reduce((sum, c) => sum + (rarityToRank[c.rarity] ?? 0), 0) /
-    playerCards.length;
-  const baseRank = Math.max(0, Math.min(4, Math.round(avgRank)));
 
   const byRarity = new Map<Rarity, Word[]>();
   for (const r of RARITY_ORDER) byRarity.set(r, []);
@@ -103,20 +112,24 @@ export const generateBotDeck = async (playerCards: BattleCard[]): Promise<Battle
   };
 
   const offsets = [-1, 0, 1] as const;
-  const botWordChoices = Array.from({ length: 5 }, () => {
-    const offset = offsets[Math.floor(Math.random() * offsets.length)] ?? 0;
-    const targetRank = Math.max(0, Math.min(4, baseRank + offset));
-    const rarity = pickClosestRarity(targetRank);
-    return buildBotCard(pickWordForRarity(rarity));
-  });
-  const botCards = await Promise.all(botWordChoices);
+  return Promise.all(
+    playerCards.map(async (playerCard) => {
+      const playerRank = rarityToRank[playerCard.rarity] ?? 0;
+      const offset = offsets[Math.floor(Math.random() * offsets.length)] ?? 0;
+      const targetRank = Math.max(0, Math.min(4, playerRank + offset));
+      const rarity = pickClosestRarity(targetRank);
+      const botCard = await buildBotCard(pickWordForRarity(rarity));
+      const playerPower = playerCard.atk + playerCard.def;
+      const targetPower = Math.max(
+        2,
+        Math.round(
+          playerPower *
+            (SLOT_TARGET_MIN_FACTOR +
+              Math.random() * (SLOT_TARGET_MAX_FACTOR - SLOT_TARGET_MIN_FACTOR)),
+        ),
+      );
 
-  const currentTotal = botCards.reduce((sum, c) => sum + (c.atk + c.def), 0);
-  const scale = currentTotal > 0 ? target / currentTotal : 1;
-
-  return botCards.map((c) => {
-    const atk = Math.max(1, Math.round(c.atk * scale));
-    const def = Math.max(1, Math.round(c.def * scale));
-    return { ...c, atk, def, hp: computeHp(def) };
-  });
+      return scaleCardToTargetPower(botCard, targetPower);
+    }),
+  );
 };

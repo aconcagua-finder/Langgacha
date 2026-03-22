@@ -43,7 +43,7 @@ function CardPanel({
   return (
     <div
       className={[
-        "relative w-full max-w-[220px] overflow-hidden rounded-2xl border bg-slate-900/60 p-3 backdrop-blur sm:max-w-[228px]",
+        "relative w-full max-w-[260px] overflow-hidden rounded-2xl border bg-slate-900/60 p-3 backdrop-blur sm:max-w-[280px] lg:max-w-[300px]",
         rarityTheme.glow,
         rarityTheme.frameFx,
         conditionClass,

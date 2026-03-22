@@ -1,3 +1,4 @@
+import { battleStore } from "../../db/redis.js";
 import { prisma } from "../../db/prisma.js";
 import { computeConditionFromReview } from "../../shared/condition.js";
 import {
@@ -10,6 +11,7 @@ import {
 } from "../../shared/constants.js";
 import { applyConditionModifier, computeDamage, computeHp } from "../../shared/combat.js";
 import { mapCardToDto } from "../cards/cards.generator.js";
+import { generateQuiz, type Quiz } from "../quiz/index.js";
 import {
   getWordProgressMap,
   recordCorrectReview,
@@ -19,9 +21,15 @@ import { generateRaidBoss } from "./raid.boss.js";
 import type { NextRaidCard, RaidAttackResult, RaidStatus } from "./raid.types.js";
 
 const todayUtc = (): string => new Date().toISOString().slice(0, 10);
+const RAID_QUIZ_TTL_SECONDS = 60 * 10;
 
-const questionForWord = (word: string): string => `Как переводится «${word}»?`;
 const normalizeAnswer = (s: string): string => s.trim().toLowerCase();
+const raidQuizKey = (playerId: string, cardId: string): string => `raid:quiz:${playerId}:${cardId}`;
+
+const toPublicQuiz = (quiz: Quiz): NextRaidCard["quiz"] => {
+  const { correctAnswer: _ca, ...rest } = quiz;
+  return rest;
+};
 
 const conditionRank: Record<string, number> = {
   Deteriorated: 0,
@@ -113,17 +121,33 @@ export const getNextCard = async (playerId: string): Promise<NextRaidCard | null
   const chosen = prepared[0]?.card;
   if (!chosen) return null;
 
+  const chosenProgress = wordProgressMap.get(chosen.wordId) ?? null;
   const dto = await mapCardToDto(chosen, {
     playerId,
-    progress: wordProgressMap.get(chosen.wordId) ?? null,
+    progress: chosenProgress,
   });
+  const quiz = await generateQuiz({
+    word: chosen.word.word,
+    translationRu: chosen.word.translationRu,
+    quizCorrect: chosen.word.quizCorrect,
+    quizOptions: chosen.word.quizOptions,
+    masteryProgress: chosenProgress?.masteryProgress ?? 0,
+    isEvolved: chosen.isEvolved,
+    evolutionData: chosen.word.evolutionData,
+    wordType: chosen.word.type,
+    rarity: chosen.word.rarity,
+    language: chosen.word.language,
+  });
+
+  await battleStore.set(
+    raidQuizKey(playerId, chosen.id),
+    quiz.correctAnswer,
+    RAID_QUIZ_TTL_SECONDS,
+  );
 
   return {
     card: dto,
-    quiz: {
-      question: questionForWord(dto.word),
-      options: chosen.word.quizOptions,
-    },
+    quiz: toPublicQuiz(quiz),
   };
 };
 
@@ -133,8 +157,10 @@ export const attackBoss = async (
   answer: string,
 ): Promise<RaidAttackResult> => {
   const raidDay = await getOrCreateTodayRaidDay(playerId);
+  const quizKey = raidQuizKey(playerId, cardId);
+  const savedCorrectAnswer = await battleStore.get(quizKey);
 
-  return prisma.$transaction(async (tx) => {
+  const result = await prisma.$transaction(async (tx) => {
     const raid = await tx.raidDay.findUnique({ where: { id: raidDay.id } });
     if (!raid) throw new Error("Raid not found.");
     if (raid.defeated) throw new Error("Raid is already defeated.");
@@ -156,8 +182,8 @@ export const attackBoss = async (
     });
     if (!card || card.playerId !== playerId) throw new Error("Card not found.");
 
-    const quizCorrect =
-      normalizeAnswer(answer) === normalizeAnswer(card.word.quizCorrect);
+    const correctAnswer = savedCorrectAnswer ?? card.word.quizCorrect;
+    const quizCorrect = normalizeAnswer(answer) === normalizeAnswer(correctAnswer);
     const inspirationApplied = quizCorrect;
 
     const wordProgress = await tx.wordProgress.findUnique({
@@ -269,4 +295,7 @@ export const attackBoss = async (
 
     return result;
   });
+
+  await battleStore.del(quizKey);
+  return result;
 };

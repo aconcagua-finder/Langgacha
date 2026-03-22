@@ -1,5 +1,6 @@
 import { API_URL } from "./config";
 import type { GeneratedCard } from "../types/card";
+import type { QuizData } from "../types/quiz";
 import { apiFetch } from "./fetcher";
 
 export type BattleCardPublic = {
@@ -11,7 +12,7 @@ export type BattleCardPublic = {
   def: number;
   hp: number;
   condition: string;
-  quizOptions: string[];
+  quiz: QuizData;
 };
 
 export type BattleStartResponse = {
@@ -22,7 +23,7 @@ export type BattleStartResponse = {
     roundNumber: number;
     playerCard: BattleCardPublic;
     botCard: BattleCardPublic;
-    quiz: { question: string; options: string[] };
+    quiz: QuizData;
   }>;
 };
 

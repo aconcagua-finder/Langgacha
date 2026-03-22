@@ -1,4 +1,5 @@
 import type { GeneratedCardDto } from "../cards/cards.types.js";
+import type { Quiz, QuizPublic } from "../quiz/quiz.types.js";
 
 export type BattleCard = {
   id: string;
@@ -10,11 +11,16 @@ export type BattleCard = {
   def: number;
   hp: number;
   condition: string;
-  quizCorrect: string;
-  quizOptions: string[];
+  quiz: Quiz;
 };
 
-export type BattleCardPublic = Omit<BattleCard, "quizCorrect" | "translationRu">;
+export type BattleCardPublic = Omit<BattleCard, "translationRu" | "quiz"> & {
+  quiz: QuizPublic;
+};
+
+export type BattleCardResult = Omit<BattleCard, "quiz"> & {
+  quiz: QuizPublic;
+};
 
 export type CombatTick = {
   attacker: "player" | "bot";
@@ -24,8 +30,8 @@ export type CombatTick = {
 
 export type RoundResult = {
   roundNumber: number;
-  playerCard: Omit<BattleCard, "quizCorrect">;
-  botCard: Omit<BattleCard, "quizCorrect">;
+  playerCard: BattleCardResult;
+  botCard: BattleCardResult;
   quizCorrect: boolean;
   inspirationApplied: boolean;
   combatLog: CombatTick[];
@@ -51,10 +57,7 @@ export type BattleStartRound = {
   roundNumber: number;
   playerCard: BattleCardPublic;
   botCard: BattleCardPublic;
-  quiz: {
-    question: string;
-    options: string[];
-  };
+  quiz: QuizPublic;
 };
 
 export type BattleStartResponse = {

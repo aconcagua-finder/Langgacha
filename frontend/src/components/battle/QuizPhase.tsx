@@ -1,11 +1,14 @@
+import type { QuizType } from "../../types/quiz";
+
 type Props = {
+  type: QuizType;
   question: string;
   options: string[];
   disabled?: boolean;
   onPick: (answer: string) => void;
 };
 
-export function QuizPhase({ question, options, disabled, onPick }: Props) {
+export function QuizPhase({ type: _type, question, options, disabled, onPick }: Props) {
   return (
     <div className="w-full rounded-2xl border border-slate-800/60 bg-slate-900/20 p-5">
       <div className="text-sm text-slate-200/80">{question}</div>
@@ -25,4 +28,3 @@ export function QuizPhase({ question, options, disabled, onPick }: Props) {
     </div>
   );
 }
-

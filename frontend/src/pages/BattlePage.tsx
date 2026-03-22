@@ -12,8 +12,6 @@ import { usePlayer } from "../contexts/PlayerContext";
 
 type Phase = "deck" | "quiz" | "combat" | "roundResult" | "battleResult";
 
-const questionForWord = (word: string) => `Как переводится «${word}»?`;
-
 export function BattlePage() {
   const { refresh: refreshPlayer } = usePlayer();
   const [phase, setPhase] = useState<Phase>("deck");
@@ -41,13 +39,7 @@ export function BattlePage() {
     return startData.botCards[botPos] ?? null;
   }, [startData, botPos]);
 
-  const quizQuestion = useMemo(() => {
-    if (!playerCard) return "";
-    if (roundNumber === 1) return startData?.rounds?.[0]?.quiz?.question ?? questionForWord(playerCard.word);
-    return questionForWord(playerCard.word);
-  }, [playerCard, startData]);
-
-  const quizOptions = useMemo(() => playerCard?.quizOptions ?? [], [playerCard]);
+  const currentQuiz = playerCard?.quiz ?? startData?.rounds?.[0]?.quiz ?? null;
 
   const reset = () => {
     setPhase("deck");
@@ -159,7 +151,7 @@ export function BattlePage() {
 
       {phase !== "deck" && playerCard && botCard ? (
         <section className="flex flex-col gap-6">
-          {phase === "quiz" ? (
+          {phase === "quiz" && currentQuiz ? (
             <>
               <BattleArena
                 playerCard={playerCard}
@@ -169,8 +161,9 @@ export function BattlePage() {
                 vsLabel="Раунд"
               />
               <QuizPhase
-                question={quizQuestion}
-                options={quizOptions}
+                type={currentQuiz.type}
+                question={currentQuiz.question}
+                options={currentQuiz.options}
                 disabled={submitting}
                 onPick={onPickAnswer}
               />

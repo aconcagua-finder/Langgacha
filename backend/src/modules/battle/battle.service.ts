@@ -7,6 +7,7 @@ import { prisma } from "../../db/prisma.js";
 import { computeConditionFromReview } from "../../shared/condition.js";
 import { generateCardFromPool } from "../cards/cards.generator.js";
 import { addDust } from "../player/player.service.js";
+import { generateQuiz, type Quiz } from "../quiz/index.js";
 import {
   getWordProgressMap,
   recordCorrectReview,
@@ -27,12 +28,18 @@ import type {
 
 const battleKey = (id: string) => `battle:${id}`;
 
-const toPublicCard = (card: BattleCard): BattleCardPublic => {
-  const { quizCorrect: _qc, translationRu: _tr, ...rest } = card;
+const toPublicQuiz = (quiz: Quiz): BattleCardPublic["quiz"] => {
+  const { correctAnswer: _ca, ...rest } = quiz;
   return rest;
 };
 
-const questionForWord = (word: string): string => `Как переводится «${word}»?`;
+const toPublicCard = (card: BattleCard): BattleCardPublic => {
+  const { quiz, translationRu: _tr, ...rest } = card;
+  return {
+    ...rest,
+    quiz: toPublicQuiz(quiz),
+  };
+};
 
 const parseState = (raw: string): BattleState => JSON.parse(raw) as BattleState;
 const stringifyState = (state: BattleState): string => JSON.stringify(state);
@@ -55,14 +62,26 @@ const delState = async (battleId: string): Promise<void> => {
   await battleStore.del(battleKey(battleId));
 };
 
-const buildPlayerBattleCard = (
+const buildPlayerBattleCard = async (
   card: Card & { word: Word },
   progressMap: Map<string, WordProgressState>,
-): BattleCard => {
+): Promise<BattleCard> => {
   const progress = progressMap.get(card.wordId) ?? null;
   const condition = computeConditionFromReview(progress?.lastReviewedAt ?? null);
   const atk = applyConditionModifier(card.atk, condition);
   const def = applyConditionModifier(card.def, condition);
+  const quiz = await generateQuiz({
+    word: card.word.word,
+    translationRu: card.word.translationRu,
+    quizCorrect: card.word.quizCorrect,
+    quizOptions: card.word.quizOptions,
+    masteryProgress: progress?.masteryProgress ?? 0,
+    isEvolved: card.isEvolved,
+    evolutionData: card.word.evolutionData,
+    wordType: card.word.type,
+    rarity: card.word.rarity,
+    language: card.word.language,
+  });
   return {
     id: card.id,
     word: card.word.word,
@@ -73,17 +92,18 @@ const buildPlayerBattleCard = (
     def,
     hp: computeHp(def),
     condition,
-    quizCorrect: card.word.quizCorrect,
-    quizOptions: card.word.quizOptions,
+    quiz,
   };
 };
 
 const normalizeAnswer = (s: string): string => s.trim().toLowerCase();
 
-const stripQuizCorrect = (card: BattleCard): Omit<BattleCard, "quizCorrect"> => {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { quizCorrect, ...rest } = card;
-  return rest;
+const toRoundCard = (card: BattleCard): RoundResult["playerCard"] => {
+  const { quiz, ...rest } = card;
+  return {
+    ...rest,
+    quiz: toPublicQuiz(quiz),
+  };
 };
 
 const onCorrectAnswer = async (cardId: string, playerId: string): Promise<void> => {
@@ -117,7 +137,7 @@ export const startBattle = async (playerId: string, cardIds: string[]): Promise<
     playerId,
     ordered.map((card) => card!.wordId),
   );
-  const playerCards = ordered.map((c) => buildPlayerBattleCard(c!, progressMap));
+  const playerCards = await Promise.all(ordered.map((c) => buildPlayerBattleCard(c!, progressMap)));
   const botCards = await generateBotDeck(playerCards);
 
   const battleId = randomUUID();
@@ -145,10 +165,7 @@ export const startBattle = async (playerId: string, cardIds: string[]): Promise<
     roundNumber: 1,
     playerCard: toPublicCard(playerCards[0]),
     botCard: toPublicCard(botCards[0]),
-    quiz: {
-      question: questionForWord(playerCards[0].word),
-      options: playerCards[0].quizOptions,
-    },
+    quiz: toPublicQuiz(playerCards[0].quiz),
   };
 
   return {
@@ -176,7 +193,7 @@ export const answerRound = async (playerId: string, params: {
   if (!playerCard || !botCard) throw new Error("Battle is already finished.");
 
   const quizCorrect =
-    normalizeAnswer(params.answer) === normalizeAnswer(playerCard.quizCorrect);
+    normalizeAnswer(params.answer) === normalizeAnswer(playerCard.quiz.correctAnswer);
 
   let inspirationApplied = false;
   if (quizCorrect) {
@@ -200,8 +217,8 @@ export const answerRound = async (playerId: string, params: {
 
   const round: RoundResult = {
     roundNumber: state.currentRound,
-    playerCard: stripQuizCorrect(playerCard),
-    botCard: stripQuizCorrect(botCard),
+    playerCard: toRoundCard(playerCard),
+    botCard: toRoundCard(botCard),
     quizCorrect,
     inspirationApplied,
     combatLog: combat.log,

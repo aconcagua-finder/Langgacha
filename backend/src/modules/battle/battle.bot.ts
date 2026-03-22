@@ -5,6 +5,7 @@ import type { Word } from "@prisma/client";
 import { prisma } from "../../db/prisma.js";
 import { rollStat, type Rarity } from "../../shared/constants.js";
 import { rollCondition } from "../cards/cards.generator.js";
+import { generateQuiz } from "../quiz/index.js";
 import { applyConditionModifier, computeHp } from "./battle.combat.js";
 import type { BattleCard } from "./battle.types.js";
 
@@ -18,13 +19,25 @@ const rarityToRank: Record<string, number> = {
   SSR: 4,
 };
 
-const buildBotCard = (word: Word): BattleCard => {
+const buildBotCard = async (word: Word): Promise<BattleCard> => {
   const rarity = word.rarity as Rarity;
   const rawAtk = rollStat(rarity, word.baseAtk);
   const rawDef = rollStat(rarity, word.baseDef);
   const condition = rollCondition();
   const atk = applyConditionModifier(rawAtk, condition);
   const def = applyConditionModifier(rawDef, condition);
+  const quiz = await generateQuiz({
+    word: word.word,
+    translationRu: word.translationRu,
+    quizCorrect: word.quizCorrect,
+    quizOptions: word.quizOptions,
+    masteryProgress: 0,
+    isEvolved: false,
+    evolutionData: word.evolutionData,
+    wordType: word.type,
+    rarity: word.rarity,
+    language: word.language,
+  });
   return {
     id: `bot:${randomUUID()}`,
     word: word.word,
@@ -35,8 +48,7 @@ const buildBotCard = (word: Word): BattleCard => {
     def,
     hp: computeHp(def),
     condition,
-    quizCorrect: word.quizCorrect,
-    quizOptions: word.quizOptions,
+    quiz,
   };
 };
 
@@ -90,12 +102,13 @@ export const generateBotDeck = async (playerCards: BattleCard[]): Promise<Battle
   };
 
   const offsets = [-1, 0, 1] as const;
-  const botCards = Array.from({ length: 5 }, () => {
+  const botWordChoices = Array.from({ length: 5 }, () => {
     const offset = offsets[Math.floor(Math.random() * offsets.length)] ?? 0;
     const targetRank = Math.max(0, Math.min(4, baseRank + offset));
     const rarity = pickClosestRarity(targetRank);
     return buildBotCard(pickWordForRarity(rarity));
   });
+  const botCards = await Promise.all(botWordChoices);
 
   const currentTotal = botCards.reduce((sum, c) => sum + (c.atk + c.def), 0);
   const scale = currentTotal > 0 ? target / currentTotal : 1;

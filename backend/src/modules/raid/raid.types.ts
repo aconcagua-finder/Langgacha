@@ -1,3 +1,5 @@
+import type { QuizPublic } from "../quiz/quiz.types.js";
+
 export type RaidStatus = {
   id: string;
   date: string;
@@ -33,10 +35,7 @@ export type NextRaidCard = {
     canEvolve: boolean;
     isEvolved: boolean;
   };
-  quiz: {
-    question: string;
-    options: string[];
-  };
+  quiz: QuizPublic;
 };
 
 export type RaidAttackResult = {

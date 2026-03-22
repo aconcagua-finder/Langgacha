@@ -1,4 +1,5 @@
 import type { GeneratedCard } from "../types/card";
+import type { QuizData } from "../types/quiz";
 
 import { API_URL } from "./config";
 import { apiFetch } from "./fetcher";
@@ -22,7 +23,7 @@ export type RaidStatus = {
 
 export type NextRaidCard = {
   card: GeneratedCard;
-  quiz: { question: string; options: string[] };
+  quiz: QuizData;
 };
 
 export type RaidAttackResult = {

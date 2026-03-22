@@ -35,10 +35,10 @@ const warnFallbackOnce = (reason: string) => {
 export const battleStore = {
   ttlSeconds: TTL_SECONDS,
 
-  async set(key: string, rawJson: string): Promise<void> {
+  async set(key: string, rawJson: string, ttlSeconds = TTL_SECONDS): Promise<void> {
     if (redis) {
       try {
-        await redis.set(key, rawJson, "EX", TTL_SECONDS);
+        await redis.set(key, rawJson, "EX", ttlSeconds);
         return;
       } catch {
         warnFallbackOnce("set failed");
@@ -46,7 +46,7 @@ export const battleStore = {
       }
     }
 
-    inMemory.set(key, { value: rawJson, expiresAt: Date.now() + TTL_SECONDS * 1000 });
+    inMemory.set(key, { value: rawJson, expiresAt: Date.now() + ttlSeconds * 1000 });
   },
 
   async get(key: string): Promise<string | null> {

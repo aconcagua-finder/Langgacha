@@ -33,28 +33,37 @@ export function DeckSelect({ onStart }: Props) {
       Brilliant: 1,
     };
 
-    const sorted = cards
-      .map((card) => ({ card, r: Math.random() }))
+    const groups = new Map<string, Array<{ card: GeneratedCard; random: number }>>();
+    for (const card of cards) {
+      const group = groups.get(card.word) ?? [];
+      group.push({ card, random: Math.random() });
+      groups.set(card.word, group);
+    }
+
+    const bestPerWord = Array.from(groups.values())
+      .map((group) =>
+        group.sort((a, b) => {
+          const ca = condPriority[a.card.condition] ?? 2;
+          const cb = condPriority[b.card.condition] ?? 2;
+          if (cb !== ca) return cb - ca;
+          const pa = a.card.atk + a.card.def;
+          const pb = b.card.atk + b.card.def;
+          if (pb !== pa) return pb - pa;
+          return b.random - a.random;
+        })[0],
+      )
+      .filter((entry): entry is { card: GeneratedCard; random: number } => Boolean(entry));
+
+    const selected = bestPerWord
+      .map(({ card }) => ({ card, random: Math.random() }))
       .sort((a, b) => {
         const ca = condPriority[a.card.condition] ?? 2;
         const cb = condPriority[b.card.condition] ?? 2;
         if (cb !== ca) return cb - ca;
-        const pa = a.card.atk + a.card.def;
-        const pb = b.card.atk + b.card.def;
-        if (pb !== pa) return pb - pa;
-        return b.r - a.r;
+        return b.random - a.random;
       })
-      .map((x) => x.card);
-
-    const seenWords = new Set<string>();
-    const selected: GeneratedCard[] = [];
-
-    for (const card of sorted) {
-      if (seenWords.has(card.word)) continue;
-      seenWords.add(card.word);
-      selected.push(card);
-      if (selected.length >= 5) break;
-    }
+      .slice(0, 5)
+      .map(({ card }) => card);
 
     setSelectedIds(selected.map((card) => card.id));
     setSelectedById(Object.fromEntries(selected.map((card) => [card.id, card])));

@@ -1,8 +1,14 @@
 import { applyConditionModifier, computeDamage, computeHp } from "../../shared/combat.js";
-import { INSPIRATION_BONUS } from "../../shared/constants.js";
+import { INSPIRATION_BONUS, RANDOMIZATION_FACTOR } from "../../shared/constants.js";
 import type { BattleCard, CombatTick } from "./battle.types.js";
 
 export { applyConditionModifier, computeDamage, computeHp };
+
+const rollCombatDamage = (baseDamage: number): number => {
+  const minDamage = Math.max(1, Math.floor(baseDamage * (1 - RANDOMIZATION_FACTOR)));
+  const maxDamage = Math.max(minDamage, Math.ceil(baseDamage * (1 + RANDOMIZATION_FACTOR)));
+  return Math.floor(Math.random() * (maxDamage - minDamage + 1)) + minDamage;
+};
 
 export const simulateCombat = (params: {
   player: Pick<BattleCard, "atk" | "def" | "hp">;
@@ -23,12 +29,14 @@ export const simulateCombat = (params: {
   let attacker: "player" | "bot" = "player";
   while (playerHp > 0 && botHp > 0) {
     if (attacker === "player") {
-      const damage = computeDamage(playerAtk, params.bot.def, params.bot.hp);
+      const damage = rollCombatDamage(computeDamage(playerAtk, params.bot.def, params.bot.hp));
       botHp = Math.round(botHp - damage);
       log.push({ attacker: "player", damage, targetHpAfter: Math.max(0, botHp) });
       attacker = "bot";
     } else {
-      const damage = computeDamage(params.bot.atk, params.player.def, params.player.hp);
+      const damage = rollCombatDamage(
+        computeDamage(params.bot.atk, params.player.def, params.player.hp),
+      );
       playerHp = Math.round(playerHp - damage);
       log.push({ attacker: "bot", damage, targetHpAfter: Math.max(0, playerHp) });
       attacker = "player";

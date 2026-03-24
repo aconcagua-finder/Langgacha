@@ -64,6 +64,7 @@ export const BOOSTER_SIZE = 7;
 export const PITY_THRESHOLD = 10;
 
 export const DEF_SCALING_FACTOR = 200;
+export const BATTLE_DECK_SIZE = 10;
 
 export const RAID_BOSS_HP_MULTIPLIER = 9;
 export const RAID_BOSS_ATK_SCALE = 2;

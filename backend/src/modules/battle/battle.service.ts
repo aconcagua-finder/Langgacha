@@ -5,6 +5,7 @@ import type { Card, Word } from "@prisma/client";
 import { battleStore } from "../../db/redis.js";
 import { prisma } from "../../db/prisma.js";
 import { computeConditionFromReview } from "../../shared/condition.js";
+import { BATTLE_DECK_SIZE } from "../../shared/constants.js";
 import { generateCardFromPool } from "../cards/cards.generator.js";
 import { addDust } from "../player/player.service.js";
 import { generateQuiz, isQuizAnswerCorrect, type Quiz } from "../quiz/index.js";
@@ -115,18 +116,22 @@ const onCorrectAnswer = async (cardId: string, playerId: string): Promise<void> 
 };
 
 export const startBattle = async (playerId: string, cardIds: string[]): Promise<BattleStartResponse> => {
-  if (!Array.isArray(cardIds) || cardIds.length !== 5) {
-    throw new Error("cardIds must contain exactly 5 ids.");
+  if (
+    !Array.isArray(cardIds) ||
+    cardIds.length < 1 ||
+    cardIds.length > BATTLE_DECK_SIZE
+  ) {
+    throw new Error(`cardIds must contain between 1 and ${BATTLE_DECK_SIZE} ids.`);
   }
   const unique = new Set(cardIds);
-  if (unique.size !== 5) throw new Error("cardIds must not contain duplicates.");
+  if (unique.size !== cardIds.length) throw new Error("cardIds must not contain duplicates.");
 
   const cards = await prisma.card.findMany({
     where: { id: { in: cardIds }, playerId },
     include: { word: true },
   });
 
-  if (cards.length !== 5) throw new Error("Some cards were not found.");
+  if (cards.length !== cardIds.length) throw new Error("Some cards were not found.");
 
   const byId = new Map(cards.map((c) => [c.id, c]));
   const ordered = cardIds.map((id) => byId.get(id));
@@ -243,7 +248,7 @@ export const answerRound = async (playerId: string, params: {
   state.currentRound += 1;
 
   const finished =
-    state.currentRound > 5 ||
+    state.currentRound > BATTLE_DECK_SIZE ||
     state.playerPos >= state.playerCards.length ||
     state.botPos >= state.botCards.length;
 

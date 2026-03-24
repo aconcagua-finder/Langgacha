@@ -13,11 +13,12 @@ function percentDelta(multiplier: number): string {
 function GuideSection({ title, children }: { title: string; children: ReactNode }) {
   const [open, setOpen] = useState(false);
   const panelId = useId();
+
   return (
     <div className="overflow-hidden rounded-2xl border border-slate-800/60 bg-slate-900/20">
       <button
         type="button"
-        onClick={() => setOpen((v) => !v)}
+        onClick={() => setOpen((value) => !value)}
         className="flex h-12 w-full items-center justify-between gap-4 px-4 text-left text-base font-semibold text-slate-50 hover:bg-slate-950/20"
         aria-expanded={open}
         aria-controls={panelId}
@@ -34,7 +35,7 @@ function GuideSection({ title, children }: { title: string; children: ReactNode 
   );
 }
 
-export function GuidePage() {
+export function GuideContent() {
   const { config } = useConfig();
   if (!config) return null;
 
@@ -44,7 +45,7 @@ export function GuidePage() {
   const conditionModifiers = config.conditionModifiers;
 
   return (
-    <main className="mx-auto flex min-h-[calc(100vh-64px)] max-w-5xl flex-col gap-8 px-6 py-10">
+    <div className="flex flex-col gap-8">
       <header className="flex flex-col gap-2">
         <h1 className="text-3xl font-extrabold tracking-tight">Гайд</h1>
         <p className="text-sm text-slate-200/70">
@@ -58,8 +59,8 @@ export function GuidePage() {
             <li>LangGacha — карточная гача-игра для изучения иностранных языков.</li>
             <li>Открывай бустеры → собирай карты → сражайся → учи слова.</li>
             <li>
-              Цель: освоить слова (до <span className="font-mono">{config.masteryMax}</span> правильных ответов на карту) и побеждать рейд-босса
-              каждый день.
+              Цель: освоить слова (до <span className="font-mono">{config.masteryMax}</span>{" "}
+              правильных ответов на карту) и побеждать рейд-босса каждый день.
             </li>
           </ul>
         </GuideSection>
@@ -70,16 +71,21 @@ export function GuidePage() {
             <li>
               <span className="font-semibold">Рарность:</span>{" "}
               <span className="font-mono">
-                {rarityOrder.map((r) => `${r} ${rarityChances[r] ?? 0}%`).join(" · ")}
+                {rarityOrder.map((rarity) => `${rarity} ${rarityChances[rarity] ?? 0}%`).join(" · ")}
               </span>
               .
             </li>
             <li>
-              <span className="font-semibold">Статы:</span> <span className="font-mono">ATK</span> (сила атаки) и{" "}
+              <span className="font-semibold">Статы:</span>{" "}
+              <span className="font-mono">ATK</span> (сила атаки) и{" "}
               <span className="font-mono">DEF</span> (защита) — случайные в диапазоне рарности.
             </li>
             <li>
-              <span className="font-semibold">Типы:</span> {Object.keys(TYPE_LABELS).map((t) => label(TYPE_LABELS, t)).join(", ")}.
+              <span className="font-semibold">Типы:</span>{" "}
+              {Object.keys(TYPE_LABELS)
+                .map((type) => label(TYPE_LABELS, type))
+                .join(", ")}
+              .
             </li>
           </ul>
         </GuideSection>
@@ -105,7 +111,8 @@ export function GuidePage() {
           <ul className="list-disc space-y-1 pl-5">
             <li>Ответь правильно на вопрос о слове в бою → +1 к прогрессу.</li>
             <li>
-              <span className="font-mono">{config.masteryMax}</span> правильных ответов → карта «Освоена».
+              <span className="font-mono">{config.masteryMax}</span> правильных ответов → карта
+              «Освоена».
             </li>
             <li>Освоенные карты влияют на уровень и открытие новых рарностей.</li>
           </ul>
@@ -122,23 +129,30 @@ export function GuidePage() {
             </li>
             <li>Гарантия: минимум 1 карта UC+ в каждом бустере.</li>
             <li>
-              Pity-система: каждые <span className="font-mono">{config.pityThreshold}</span> бустеров без SR+ → гарантированная SR+ карта.
+              Pity-система: каждые <span className="font-mono">{config.pityThreshold}</span>{" "}
+              бустеров без SR+ → гарантированная SR+ карта.
             </li>
           </ul>
         </GuideSection>
 
         <GuideSection title="Бой (PvE)">
           <ul className="list-disc space-y-1 pl-5">
-            <li>Выбери 5 карт из коллекции (или нажми «Авто»).</li>
+            <li>
+              Перед стартом игра автоматически собирает колоду до{" "}
+              <span className="font-mono">{config.battleDeckSize}</span> карт.
+            </li>
+            <li>Приоритет у ветхих и изношенных карт, а дубликаты слова схлопываются в один сильнейший экземпляр.</li>
             <li>Перед каждым раундом — вопрос: переведи слово на карте.</li>
             <li>
-              Правильный ответ → «Воодушевление»: <span className="font-mono">+{Math.round(config.inspirationBonus * 100)}%</span> к{" "}
+              Правильный ответ → «Воодушевление»:{" "}
+              <span className="font-mono">+{Math.round(config.inspirationBonus * 100)}%</span> к{" "}
               <span className="font-mono">ATK</span>.
             </li>
-            <li>Карты сражаются по очереди: проигравший выбывает, победитель несёт оставшееся HP в следующий раунд.</li>
+            <li>Если карт меньше полного лимита, бой всё равно стартует с доступной колодой.</li>
             <li>
-              Стрик: <span className="font-mono">{config.streakThreshold}+</span> правильных ответов подряд →{" "}
-              <span className="font-mono">×{config.streakMultiplier}</span> к награде Пыли.
+              Стрик: <span className="font-mono">{config.streakThreshold}+</span> правильных
+              ответов подряд → <span className="font-mono">×{config.streakMultiplier}</span> к
+              награде Пыли.
             </li>
           </ul>
         </GuideSection>
@@ -147,11 +161,13 @@ export function GuidePage() {
           <ul className="list-disc space-y-1 pl-5">
             <li>Ежедневный мощный босс.</li>
             <li>
-              Используешь до <span className="font-mono">{config.raidMaxCards}</span> карт: карта бьёт босса, босс бьёт карту — обмен ударами до смерти одного.
+              Используешь до <span className="font-mono">{config.raidMaxCards}</span> карт: карта
+              бьёт босса, босс бьёт карту — обмен ударами до смерти одного.
             </li>
             <li>Карты могут погибнуть — это нормально, отправляй следующую.</li>
             <li>
-              Победа → <span className="font-mono">{config.raidVictoryDust}</span> Пыль + <span className="font-mono">{config.raidVictoryBoosters}</span> бустер.
+              Победа → <span className="font-mono">{config.raidVictoryDust}</span> Пыль +{" "}
+              <span className="font-mono">{config.raidVictoryBoosters}</span> бустер.
             </li>
             <li>Приоритет: забытые и слабые карты идут первыми — тренируешь то, что знаешь хуже.</li>
           </ul>
@@ -159,40 +175,47 @@ export function GuidePage() {
 
         <GuideSection title="Пыль и крафт">
           <ul className="list-disc space-y-1 pl-5">
-            <li>
-              Пыль — валюта. Получаешь из боёв, рейда и распыления карт.
-            </li>
+            <li>Пыль — валюта. Получаешь из боёв, рейда и распыления карт.</li>
             <li>
               <span className="font-semibold">Распыление:</span> уничтожь карту → получи Пыль{" "}
               <span className="font-mono">
-                ({rarityOrder.map((r) => `${r}: ${config.dustPerDisintegrate[r] ?? 0}`).join(", ")})
+                ({rarityOrder.map((rarity) => `${rarity}: ${config.dustPerDisintegrate[rarity] ?? 0}`).join(", ")})
               </span>
               .
             </li>
             <li>
               <span className="font-semibold">Крафт:</span> создай карту нужной рарности за Пыль{" "}
-              <span className="font-mono">({rarityOrder.map((r) => `${r}: ${config.dustPerCraft[r] ?? 0}`).join(", ")})</span>. Лимит:{" "}
-              <span className="font-mono">{config.craftsPerDay}</span> крафт в день.
+              <span className="font-mono">
+                ({rarityOrder.map((rarity) => `${rarity}: ${config.dustPerCraft[rarity] ?? 0}`).join(", ")})
+              </span>
+              . Лимит: <span className="font-mono">{config.craftsPerDay}</span> крафт в день.
             </li>
           </ul>
         </GuideSection>
 
         <GuideSection title="Прогрессия">
           <div className="space-y-2">
-            <div>
-              Уровни открываются по количеству освоенных карт (Dominada):
-            </div>
+            <div>Уровни открываются по количеству освоенных карт (Dominada):</div>
             <ul className="list-disc space-y-1 pl-5">
-              {config.progressionLevels.map((lvl) => (
-                <li key={lvl.name}>
-                  {label(LEVEL_LABELS, lvl.name)} (<span className="font-mono">{lvl.minDominated}</span>) →{" "}
-                  <span className="font-mono">{lvl.rarities.join(", ")}</span>
+              {config.progressionLevels.map((level) => (
+                <li key={level.name}>
+                  {label(LEVEL_LABELS, level.name)} (
+                  <span className="font-mono">{level.minDominated}</span>) →{" "}
+                  <span className="font-mono">{level.rarities.join(", ")}</span>
                 </li>
               ))}
             </ul>
           </div>
         </GuideSection>
       </section>
+    </div>
+  );
+}
+
+export function GuidePage() {
+  return (
+    <main className="mx-auto flex min-h-[calc(100vh-64px)] max-w-5xl flex-col px-6 py-10">
+      <GuideContent />
     </main>
   );
 }

@@ -1,6 +1,7 @@
 import type { FastifyPluginAsync } from "fastify";
 
 import {
+  BATTLE_DECK_SIZE,
   BOOSTER_RECHARGE_MS,
   BOOSTER_SIZE,
   CONDITION_MODIFIERS,
@@ -32,6 +33,7 @@ export const configRoutes: FastifyPluginAsync = async (app) => {
       streakThreshold: STREAK_THRESHOLD,
       streakMultiplier: STREAK_MULTIPLIER,
       defScalingFactor: DEF_SCALING_FACTOR,
+      battleDeckSize: BATTLE_DECK_SIZE,
       maxBoosters: MAX_BOOSTERS,
       boosterRechargeMs: BOOSTER_RECHARGE_MS,
       boosterSize: BOOSTER_SIZE,

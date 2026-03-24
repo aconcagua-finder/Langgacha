@@ -6,6 +6,10 @@ import { usePlayer } from "../contexts/PlayerContext";
 import { getRarityTheme } from "../styles/card-themes";
 import { CardFace } from "../components/card/CardFace";
 
+type CraftPageProps = {
+  embedded?: boolean;
+};
+
 const RARITIES = ["C", "UC", "R", "SR", "SSR"] as const;
 
 const formatHms = (seconds: number): string => {
@@ -15,7 +19,7 @@ const formatHms = (seconds: number): string => {
   return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
 };
 
-export function CraftPage() {
+export function CraftPage({ embedded = false }: CraftPageProps) {
   const { player, refresh } = usePlayer();
   const [status, setStatus] = useState<CraftStatus | null>(null);
   const [selected, setSelected] = useState<string>("C");
@@ -103,8 +107,8 @@ export function CraftPage() {
     }
   };
 
-  return (
-    <main className="mx-auto flex min-h-[calc(100vh-64px)] max-w-5xl flex-col gap-8 px-6 py-10">
+  const content = (
+    <>
       <header className="flex flex-col gap-2">
         <h1 className="text-3xl font-extrabold tracking-tight">Крафт</h1>
         <div className="text-sm text-slate-200/70">Выбери рарность и создай карту</div>
@@ -245,6 +249,16 @@ export function CraftPage() {
           </div>
         </section>
       ) : null}
+    </>
+  );
+
+  if (embedded) {
+    return <section className="flex flex-col gap-8">{content}</section>;
+  }
+
+  return (
+    <main className="mx-auto flex min-h-[calc(100vh-64px)] max-w-5xl flex-col gap-8 px-6 py-10">
+      {content}
     </main>
   );
 }

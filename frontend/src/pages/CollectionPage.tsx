@@ -1,20 +1,22 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 
 import { disintegrateCard, listCards, type ListCardsSort } from "../api/cards";
 import { evolveCard } from "../api/evolution";
-import type { GeneratedCard } from "../types/card";
-import { CardModal } from "../components/collection/CardModal";
 import { CardGroupModal } from "../components/collection/CardGroupModal";
+import { CardModal } from "../components/collection/CardModal";
 import { CollectionFilters } from "../components/collection/CollectionFilters";
 import { CollectionGrid } from "../components/collection/CollectionGrid";
 import { CollectionMiniGrid } from "../components/collection/CollectionMiniGrid";
 import { CollectionTable } from "../components/collection/CollectionTable";
-import { groupCards } from "../utils/groupCards";
-import type { CardGroup } from "../utils/groupCards";
+import { SegmentedTabs } from "../components/ui/SegmentedTabs";
+import { Tooltip } from "../components/ui/Tooltip";
 import { usePlayer } from "../contexts/PlayerContext";
 import { LEVEL_LABELS, TOOLTIPS, label } from "../shared/labels";
-import { Tooltip } from "../components/ui/Tooltip";
+import type { GeneratedCard } from "../types/card";
+import type { CardGroup } from "../utils/groupCards";
+import { groupCards } from "../utils/groupCards";
+import { CraftPage } from "./CraftPage";
 
 const VIEW_MODE_OPTIONS = [
   { value: "full", icon: "🃏", label: "Карты" },
@@ -22,7 +24,7 @@ const VIEW_MODE_OPTIONS = [
   { value: "table", icon: "☰", label: "Список" },
 ] as const;
 
-export function CollectionPage() {
+function CollectionCardsTab() {
   const { player, refresh: refreshPlayer } = usePlayer();
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
   const [selectedRarities, setSelectedRarities] = useState<string[]>([]);
@@ -78,7 +80,7 @@ export function CollectionPage() {
   const onDisintegrate = async (cardId: string) => {
     try {
       const res = await disintegrateCard(cardId);
-      setCards((prev) => prev.filter((c) => c.id !== cardId));
+      setCards((prev) => prev.filter((card) => card.id !== cardId));
       setToast(`+${res.dustGained} Пыль`);
       window.setTimeout(() => setToast(null), 1800);
       await refreshPlayer();
@@ -113,17 +115,12 @@ export function CollectionPage() {
 
   return (
     <>
-      <main
-        className={[
-          "mx-auto flex min-h-[calc(100vh-64px)] max-w-5xl flex-col gap-6 px-6 py-10",
-        ].join(" ")}
-      >
-        <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+      <section className="flex flex-col gap-6">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div className="flex flex-col gap-2">
-            <h1 className="text-3xl font-extrabold tracking-tight">Коллекция</h1>
             <div className="text-sm text-slate-200/70">
-              Всего карт: <span className="font-mono">{cards.length}</span> · Уникальных
-              слов: <span className="font-mono">{uniqueWords}</span>
+              Всего карт: <span className="font-mono">{cards.length}</span> · Уникальных слов:{" "}
+              <span className="font-mono">{uniqueWords}</span>
             </div>
           </div>
 
@@ -147,7 +144,7 @@ export function CollectionPage() {
               </button>
             ))}
           </div>
-        </header>
+        </div>
 
         {toast ? (
           <div className="rounded-xl border border-emerald-400/30 bg-emerald-400/10 px-4 py-3 text-sm font-semibold text-emerald-100">
@@ -215,30 +212,30 @@ export function CollectionPage() {
           </div>
         ) : (
           <>
-            {viewMode === "full" && (
+            {viewMode === "full" ? (
               <CollectionGrid
                 groups={groups}
-                onOpenCard={(c) => setModalCard(c)}
-                onOpenGroup={(g) => setModalGroup(g)}
+                onOpenCard={(card) => setModalCard(card)}
+                onOpenGroup={(group) => setModalGroup(group)}
               />
-            )}
-            {viewMode === "mini" && (
+            ) : null}
+            {viewMode === "mini" ? (
               <CollectionMiniGrid
                 groups={groups}
-                onOpenCard={(c) => setModalCard(c)}
-                onOpenGroup={(g) => setModalGroup(g)}
+                onOpenCard={(card) => setModalCard(card)}
+                onOpenGroup={(group) => setModalGroup(group)}
               />
-            )}
-            {viewMode === "table" && (
+            ) : null}
+            {viewMode === "table" ? (
               <CollectionTable
                 groups={groups}
-                onOpenCard={(c) => setModalCard(c)}
-                onOpenGroup={(g) => setModalGroup(g)}
+                onOpenCard={(card) => setModalCard(card)}
+                onOpenGroup={(group) => setModalGroup(group)}
               />
-            )}
+            ) : null}
           </>
         )}
-      </main>
+      </section>
 
       <CardModal
         card={modalCard}
@@ -253,5 +250,36 @@ export function CollectionPage() {
         onEvolve={onEvolve}
       />
     </>
+  );
+}
+
+export function CollectionPage() {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const activeTab = location.pathname.endsWith("/craft") ? "craft" : "cards";
+
+  return (
+    <main className="mx-auto flex min-h-[calc(100vh-64px)] max-w-5xl flex-col gap-6 px-6 py-6 sm:py-8">
+      <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div className="flex flex-col gap-2">
+          <h1 className="text-3xl font-extrabold tracking-tight text-slate-50">Коллекция</h1>
+          <p className="text-sm text-slate-200/70">
+            {activeTab === "cards"
+              ? "Карты, фильтры и прогресс игрока в одном месте."
+              : "Создавай карту нужной рарности, не выходя из коллекции."}
+          </p>
+        </div>
+
+        <SegmentedTabs
+          activeKey={activeTab}
+          tabs={[
+            { key: "cards", label: "Карты", onSelect: () => navigate("/collection") },
+            { key: "craft", label: "Крафт", onSelect: () => navigate("/collection/craft") },
+          ]}
+        />
+      </header>
+
+      {activeTab === "cards" ? <CollectionCardsTab /> : <CraftPage embedded />}
+    </main>
   );
 }

@@ -3,7 +3,7 @@ import { randomUUID } from "node:crypto";
 import type { Word } from "@prisma/client";
 
 import { prisma } from "../../db/prisma.js";
-import { rollStat, type Rarity } from "../../shared/constants.js";
+import { BATTLE_DECK_SIZE, rollStat, type Rarity } from "../../shared/constants.js";
 import { rollCondition } from "../cards/cards.generator.js";
 import { generateQuiz } from "../quiz/index.js";
 import { applyConditionModifier, computeHp } from "./battle.combat.js";
@@ -72,7 +72,11 @@ const scaleCardToTargetPower = (card: BattleCard, targetPower: number): BattleCa
 
 export const generateBotDeck = async (playerCards: BattleCard[]): Promise<BattleCard[]> => {
   const pool = await prisma.word.findMany();
-  if (pool.length < 5) throw new Error("Not enough words in pool to generate bot deck.");
+  if (pool.length < 1) throw new Error("Not enough words in pool to generate bot deck.");
+  if (playerCards.length < 1) throw new Error("Player deck must contain at least 1 card.");
+  if (playerCards.length > BATTLE_DECK_SIZE) {
+    throw new Error(`Player deck must not exceed ${BATTLE_DECK_SIZE} cards.`);
+  }
 
   const byRarity = new Map<Rarity, Word[]>();
   for (const r of RARITY_ORDER) byRarity.set(r, []);

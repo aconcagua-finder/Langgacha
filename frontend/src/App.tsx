@@ -5,12 +5,9 @@ import { PlayerProvider } from "./contexts/PlayerContext";
 import { useAuth } from "./contexts/AuthContext";
 import { useConfig } from "./contexts/ConfigContext";
 import { AuthPage } from "./pages/AuthPage";
+import { BattlesPage } from "./pages/BattlesPage";
 import { BoosterPage } from "./pages/BoosterPage";
-import { BattlePage } from "./pages/BattlePage";
-import { RaidPage } from "./pages/RaidPage";
 import { CollectionPage } from "./pages/CollectionPage";
-import { CraftPage } from "./pages/CraftPage";
-import { GuidePage } from "./pages/GuidePage";
 
 export default function App() {
   const { loading: configLoading, error: configError } = useConfig();
@@ -47,11 +44,13 @@ export default function App() {
         <TopNav />
         <Routes>
           <Route path="/" element={<BoosterPage />} />
+          <Route path="/battles" element={<BattlesPage />} />
           <Route path="/collection" element={<CollectionPage />} />
-          <Route path="/battle" element={<BattlePage />} />
-          <Route path="/raid" element={<RaidPage />} />
-          <Route path="/craft" element={<CraftPage />} />
-          <Route path="/guide" element={<GuidePage />} />
+          <Route path="/collection/craft" element={<CollectionPage />} />
+          <Route path="/battle" element={<Navigate to="/battles" replace />} />
+          <Route path="/raid" element={<Navigate to="/battles?tab=raid" replace />} />
+          <Route path="/craft" element={<Navigate to="/collection/craft" replace />} />
+          <Route path="/guide" element={<Navigate to="/?guide=1" replace />} />
           <Route path="/login" element={<Navigate to="/" replace />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

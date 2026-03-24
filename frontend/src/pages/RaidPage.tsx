@@ -13,6 +13,10 @@ import { CardMini } from "../components/card/CardMini";
 import { getRarityTheme, getTypeTheme } from "../styles/card-themes";
 import { RARITY_LABELS, TYPE_LABELS, label } from "../shared/labels";
 
+type RaidPageProps = {
+  embedded?: boolean;
+};
+
 type Phase = "overview" | "quiz" | "result";
 type QuizFeedback = {
   selectedAnswer: string;
@@ -95,7 +99,7 @@ function BossCard({ status }: { status: RaidStatus }) {
   );
 }
 
-export function RaidPage() {
+export function RaidPage({ embedded = false }: RaidPageProps) {
   const [phase, setPhase] = useState<Phase>("overview");
   const [status, setStatus] = useState<RaidStatus | null>(null);
   const [nextCard, setNextCard] = useState<NextRaidCard | null>(null);
@@ -188,8 +192,8 @@ export function RaidPage() {
     }
   };
 
-  return (
-    <main className="mx-auto flex min-h-[calc(100vh-64px)] max-w-5xl flex-col gap-8 px-6 py-10">
+  const content = (
+    <>
       <header className="flex flex-col gap-2">
         <h1 className="text-3xl font-extrabold tracking-tight">Рейд дня</h1>
         {status ? (
@@ -370,6 +374,16 @@ export function RaidPage() {
           </div>
         </section>
       ) : null}
+    </>
+  );
+
+  if (embedded) {
+    return <section className="flex flex-col gap-8">{content}</section>;
+  }
+
+  return (
+    <main className="mx-auto flex min-h-[calc(100vh-64px)] max-w-5xl flex-col gap-8 px-6 py-10">
+      {content}
     </main>
   );
 }

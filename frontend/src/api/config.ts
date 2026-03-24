@@ -10,6 +10,7 @@ export type GameConfig = {
   streakThreshold: number;
   streakMultiplier: number;
   defScalingFactor: number;
+  battleDeckSize: number;
   maxBoosters: number;
   boosterRechargeMs: number;
   boosterSize: number;

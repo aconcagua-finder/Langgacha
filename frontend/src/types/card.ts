@@ -14,7 +14,9 @@ export type GeneratedCard = {
   hint: string;
   tags: string[];
   condition: CardCondition;
-  masteryProgress: number;
+  wordLevel: number;
+  wordXp: number;
+  wordXpForNext: number;
   canEvolve: boolean;
   isEvolved: boolean;
 };

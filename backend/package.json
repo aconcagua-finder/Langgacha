@@ -3,7 +3,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "tsx watch src/server.ts",
+    "dev": "sh -c 'trap \"kill 0\" EXIT; npm run dev:prisma & npm run dev:server'",
+    "dev:server": "tsx watch src/server.ts",
+    "dev:prisma": "tsx scripts/watch-prisma.ts",
     "build": "npm run prisma:generate && tsc -p tsconfig.json",
     "start": "node dist/server.js",
     "prisma:generate": "prisma generate --schema src/db/prisma/schema.prisma",

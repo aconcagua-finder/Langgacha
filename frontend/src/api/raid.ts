@@ -8,6 +8,7 @@ export type RaidStatus = {
   id: string;
   date: string;
   bossWord: string;
+  bossTranslationRu: string;
   bossHp: number;
   currentHp: number;
   bossAtk: number;
@@ -39,6 +40,16 @@ export type RaidAttackResult = {
   cardSurvived: boolean;
   bossDefeated: boolean;
   dustEarned: number;
+  wordXpGain: {
+    wordId: string;
+    word: string;
+    xpGained: number;
+    oldLevel: number;
+    newLevel: number;
+    leveledUp: boolean;
+    xpInCurrentLevel: number;
+    xpForNextLevel: number;
+  } | null;
   victoryDust?: number;
   victoryBoosters?: number;
 };

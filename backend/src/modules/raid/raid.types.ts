@@ -1,9 +1,11 @@
+import type { GeneratedCardDto } from "../cards/cards.types.js";
 import type { QuizPublic } from "../quiz/quiz.types.js";
 
 export type RaidStatus = {
   id: string;
   date: string;
   bossWord: string;
+  bossTranslationRu: string;
   bossHp: number;
   currentHp: number;
   bossAtk: number;
@@ -18,24 +20,19 @@ export type RaidStatus = {
 };
 
 export type NextRaidCard = {
-  card: {
-    id: string;
-    word: string;
-    translationRu: string;
-    type: string;
-    rarity: string;
-    atk: number;
-    def: number;
-    colorido: number;
-    flavorText: string;
-    hint: string;
-    tags: string[];
-    condition: string;
-    masteryProgress: number;
-    canEvolve: boolean;
-    isEvolved: boolean;
-  };
+  card: GeneratedCardDto;
   quiz: QuizPublic;
+};
+
+export type RaidWordXpGain = {
+  wordId: string;
+  word: string;
+  xpGained: number;
+  oldLevel: number;
+  newLevel: number;
+  leveledUp: boolean;
+  xpInCurrentLevel: number;
+  xpForNextLevel: number;
 };
 
 export type RaidAttackResult = {
@@ -51,6 +48,7 @@ export type RaidAttackResult = {
   cardSurvived: boolean;
   bossDefeated: boolean;
   dustEarned: number;
+  wordXpGain: RaidWordXpGain | null;
   victoryDust?: number;
   victoryBoosters?: number;
 };

@@ -48,7 +48,7 @@ export default function App() {
           <Route path="/collection" element={<CollectionPage />} />
           <Route path="/collection/craft" element={<CollectionPage />} />
           <Route path="/battle" element={<Navigate to="/battles" replace />} />
-          <Route path="/raid" element={<Navigate to="/battles?tab=raid" replace />} />
+          <Route path="/raid" element={<Navigate to="/battles" replace />} />
           <Route path="/craft" element={<Navigate to="/collection/craft" replace />} />
           <Route path="/guide" element={<Navigate to="/?guide=1" replace />} />
           <Route path="/login" element={<Navigate to="/" replace />} />

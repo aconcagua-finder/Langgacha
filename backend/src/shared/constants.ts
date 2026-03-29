@@ -87,14 +87,111 @@ export const DUST_PER_CRAFT: Record<string, number> = {
 
 export const STARTING_DUST = 100;
 export const CRAFTS_PER_DAY = 1;
-export const MASTERY_MAX = 5;
+export const WORD_LEVEL_MAX = 30;
+export const WORD_EVOLUTION_LEVEL = 15;
+export const WORD_COLLECTION_WIDTH_LEVEL_THRESHOLD = 5;
 
-export const PROGRESSION_LEVELS = [
-  { name: "Beginner", minDominated: 0, rarities: ["C"] },
-  { name: "Elementary", minDominated: 30, rarities: ["C", "UC"] },
-  { name: "Intermediate", minDominated: 80, rarities: ["C", "UC", "R"] },
-  { name: "Advanced", minDominated: 150, rarities: ["C", "UC", "R", "SR"] },
-  { name: "Master", minDominated: 250, rarities: ["C", "UC", "R", "SR", "SSR"] },
+export const WORD_XP_PER_LEVEL: Record<number, number> = {
+  1: 25,
+  2: 25,
+  3: 25,
+  4: 25,
+  5: 25,
+  6: 40,
+  7: 40,
+  8: 40,
+  9: 40,
+  10: 40,
+  11: 60,
+  12: 60,
+  13: 60,
+  14: 60,
+  15: 60,
+  16: 90,
+  17: 90,
+  18: 90,
+  19: 90,
+  20: 90,
+  21: 130,
+  22: 130,
+  23: 130,
+  24: 130,
+  25: 130,
+  26: 180,
+  27: 180,
+  28: 180,
+  29: 180,
+  30: 180,
+};
+
+export const WORD_REVIEW_INTERVAL_DAYS: Record<number, number> = {
+  0: 1,
+  1: 1,
+  2: 1,
+  3: 1,
+  4: 1,
+  5: 1,
+  6: 3,
+  7: 3,
+  8: 3,
+  9: 3,
+  10: 3,
+  11: 7,
+  12: 7,
+  13: 7,
+  14: 7,
+  15: 7,
+  16: 14,
+  17: 14,
+  18: 14,
+  19: 14,
+  20: 14,
+  21: 30,
+  22: 30,
+  23: 30,
+  24: 30,
+  25: 30,
+  26: 60,
+  27: 60,
+  28: 60,
+  29: 60,
+  30: 60,
+};
+
+export const WORD_XP_BASE = 10;
+export const WORD_XP_TYPING_BONUS = 5;
+export const WORD_XP_REVERSE_BONUS = 3;
+export const WORD_XP_OVERDUE_BONUS = 5;
+export const WORD_XP_VARIANCE = 2;
+
+export const WORD_XP_DECAY_RATE = 0.05;
+export const WORD_XP_DECAY_GRACE_MULTIPLIER = 2;
+
+export const COLLECTION_LEVELS = [
+  { name: "A1", gachaName: "Bronze", minWords: 25, minAvgLevel: 5, rarities: ["C"] },
+  { name: "A1+", gachaName: "Silver", minWords: 45, minAvgLevel: 8, rarities: ["C", "UC"] },
+  { name: "A2", gachaName: "Gold", minWords: 70, minAvgLevel: 10, rarities: ["C", "UC", "R"] },
+  {
+    name: "A2+",
+    gachaName: "Platinum",
+    minWords: 100,
+    minAvgLevel: 12,
+    rarities: ["C", "UC", "R"],
+  },
+  {
+    name: "B1",
+    gachaName: "Diamond",
+    minWords: 150,
+    minAvgLevel: 15,
+    rarities: ["C", "UC", "R", "SR"],
+  },
+  {
+    name: "B1+",
+    gachaName: "Master",
+    minWords: 200,
+    minAvgLevel: 18,
+    rarities: ["C", "UC", "R", "SR", "SSR"],
+  },
 ] as const;
 
 export const clamp = (value: number, min: number, max: number): number =>

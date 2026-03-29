@@ -11,8 +11,9 @@ import { CollectionMiniGrid } from "../components/collection/CollectionMiniGrid"
 import { CollectionTable } from "../components/collection/CollectionTable";
 import { SegmentedTabs } from "../components/ui/SegmentedTabs";
 import { Tooltip } from "../components/ui/Tooltip";
+import { useConfig } from "../contexts/ConfigContext";
 import { usePlayer } from "../contexts/PlayerContext";
-import { LEVEL_LABELS, TOOLTIPS, label } from "../shared/labels";
+import { TOOLTIPS } from "../shared/labels";
 import type { GeneratedCard } from "../types/card";
 import type { CardGroup } from "../utils/groupCards";
 import { groupCards } from "../utils/groupCards";
@@ -25,6 +26,7 @@ const VIEW_MODE_OPTIONS = [
 ] as const;
 
 function CollectionCardsTab() {
+  const { config } = useConfig();
   const { player, refresh: refreshPlayer } = usePlayer();
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
   const [selectedRarities, setSelectedRarities] = useState<string[]>([]);
@@ -108,10 +110,17 @@ function CollectionCardsTab() {
     }
   };
 
-  const progressPct =
-    player && player.nextLevel
-      ? Math.min(100, Math.round((player.progressToNext / player.progressNeeded) * 100))
+  const widthPct =
+    player && player.wordsWidthNeeded > 0
+      ? Math.min(100, Math.round((player.wordsWidth / player.wordsWidthNeeded) * 100))
       : 100;
+  const avgLevelPct =
+    player && player.avgWordLevelNeeded > 0
+      ? Math.min(100, Math.round((player.avgWordLevel / player.avgWordLevelNeeded) * 100))
+      : 100;
+  const nextCollection = player?.nextCollectionLevel
+    ? config?.collectionLevels.find((level) => level.name === player.nextCollectionLevel) ?? null
+    : null;
 
   return (
     <>
@@ -155,31 +164,57 @@ function CollectionCardsTab() {
         {player ? (
           <div className="rounded-2xl border border-slate-800/60 bg-slate-900/20 p-4">
             <div className="flex flex-wrap items-center justify-between gap-3">
-              <div className="text-sm text-slate-200/80">
-                Уровень: <span className="font-mono">{label(LEVEL_LABELS, player.level)}</span>
-                {player.nextLevel ? (
-                  <>
-                    {" "}
-                    →{" "}
-                    <span className="font-mono">{label(LEVEL_LABELS, player.nextLevel)}</span>
-                  </>
-                ) : null}
+              <div>
+                <div className="text-lg font-extrabold tracking-tight text-slate-50">
+                  {player.collectionLevel} {player.collectionGachaName} Collector
+                </div>
+                <div className="mt-1 text-xs text-slate-200/60">
+                  Total XP: <span className="font-mono">{player.totalCollectionXp}</span>
+                </div>
               </div>
-              <div className="text-sm text-slate-200/70">
-                Освоено:{" "}
-                <span className="font-mono">
-                  {player.progressToNext}/{player.progressNeeded}
-                </span>
+              <div className="text-xs text-slate-200/60">
+                Доступные рарности:{" "}
+                <span className="font-mono">{player.unlockedRarities.join(", ")}</span>
               </div>
             </div>
-            <Tooltip text={TOOLTIPS.levelProgress}>
-              <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-slate-950/40">
-                <div className="h-full bg-sky-400" style={{ width: `${progressPct}%` }} />
-              </div>
-            </Tooltip>
-            <div className="mt-2 text-xs text-slate-200/60">
-              Доступные рарности:{" "}
-              <span className="font-mono">{player.unlockedRarities.join(", ")}</span>
+            <div className="mt-4 grid gap-4 sm:grid-cols-2">
+              <Tooltip text={TOOLTIPS.levelProgress}>
+                <div className="rounded-2xl border border-slate-800/60 bg-slate-950/35 p-4">
+                  <div className="flex items-center justify-between gap-3 text-sm text-slate-200/80">
+                    <span>Слова</span>
+                    <span className="font-mono">
+                      {player.wordsWidth}/{player.wordsWidthNeeded}
+                    </span>
+                  </div>
+                  <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-950/50">
+                    <div
+                      className="h-full bg-sky-400"
+                      style={{ width: `${widthPct}%` }}
+                    />
+                  </div>
+                </div>
+              </Tooltip>
+              <Tooltip text={TOOLTIPS.levelProgress}>
+                <div className="rounded-2xl border border-slate-800/60 bg-slate-950/35 p-4">
+                  <div className="flex items-center justify-between gap-3 text-sm text-slate-200/80">
+                    <span>Глубина</span>
+                    <span className="font-mono">
+                      Avg Lv {player.avgWordLevel}/{player.avgWordLevelNeeded}
+                    </span>
+                  </div>
+                  <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-950/50">
+                    <div
+                      className="h-full bg-violet-400"
+                      style={{ width: `${avgLevelPct}%` }}
+                    />
+                  </div>
+                </div>
+              </Tooltip>
+            </div>
+            <div className="mt-3 text-sm text-slate-200/70">
+              {nextCollection
+                ? `→ Следующий: ${nextCollection.name} ${nextCollection.gachaName} Collector`
+                : "Достигнут максимальный коллекционный ранг"}
             </div>
           </div>
         ) : null}

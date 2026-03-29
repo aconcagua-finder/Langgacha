@@ -1,9 +1,4 @@
-export type PlayerLevelName =
-  | "Beginner"
-  | "Elementary"
-  | "Intermediate"
-  | "Advanced"
-  | "Master";
+export type PlayerCollectionLevelName = "A1" | "A1+" | "A2" | "A2+" | "B1" | "B1+";
 
 export type PlayerDto = {
   id: string;
@@ -14,10 +9,13 @@ export type PlayerDto = {
   craftAvailable: boolean;
   nextCraftAt: string | null;
   pityCounter: number;
-  dominatedCount: number;
-  level: PlayerLevelName;
-  nextLevel: PlayerLevelName | null;
-  progressToNext: number;
-  progressNeeded: number;
+  collectionLevel: PlayerCollectionLevelName;
+  collectionGachaName: string;
+  nextCollectionLevel: PlayerCollectionLevelName | null;
+  wordsWidth: number;
+  wordsWidthNeeded: number;
+  avgWordLevel: number;
+  avgWordLevelNeeded: number;
+  totalCollectionXp: number;
   unlockedRarities: string[];
 };

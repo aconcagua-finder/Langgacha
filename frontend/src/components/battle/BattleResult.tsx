@@ -2,6 +2,10 @@ import { Link } from "react-router-dom";
 
 import type { BattleResult as BattleResultType } from "../../api/battle";
 import { BATTLE_LABELS } from "../../shared/labels";
+import {
+  getWordProgressPercent,
+  getWordProgressTheme,
+} from "../../shared/wordProgress";
 import { getRarityTheme, getTypeTheme } from "../../styles/card-themes";
 import { getCardImageUrl } from "../../utils/cardImage";
 import { CardBack } from "../card/CardBack";
@@ -74,6 +78,52 @@ function RoundCardPreview({
   );
 }
 
+function WordXpRow({
+  gain,
+}: {
+  gain: BattleResultType["rewards"]["wordXpGains"][number];
+}) {
+  const progressTheme = getWordProgressTheme(gain.newLevel);
+  const progressPct = getWordProgressPercent(gain.xpInCurrentLevel, gain.xpForNextLevel);
+
+  return (
+    <div
+      className={[
+        "rounded-2xl border px-4 py-3 transition-colors",
+        gain.leveledUp
+          ? "border-emerald-400/30 bg-emerald-500/10"
+          : "border-slate-800/60 bg-slate-950/20",
+      ].join(" ")}
+    >
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <span className="text-base">🔤</span>
+          <div className="text-sm font-semibold text-slate-50">{gain.word}</div>
+        </div>
+        <div className="text-xs font-mono text-slate-200/75">
+          {gain.leveledUp ? `Lv ${gain.oldLevel} → ${gain.newLevel}` : `Lv ${gain.newLevel}`}
+        </div>
+      </div>
+
+      <div className="mt-3 overflow-hidden rounded-full bg-slate-950/60">
+        <div
+          className={["h-2 transition-[width] duration-300", progressTheme.bar].join(" ")}
+          style={{ width: `${progressPct}%` }}
+        />
+      </div>
+
+      <div className="mt-2 flex items-center justify-between gap-3 text-xs text-slate-200/70">
+        <span className="font-mono">+{gain.xpGained} XP</span>
+        <span className="font-mono">
+          {gain.xpForNextLevel > 0
+            ? `${gain.xpInCurrentLevel}/${gain.xpForNextLevel}`
+            : "MAX"}
+        </span>
+      </div>
+    </div>
+  );
+}
+
 export function BattleResult({
   result,
   onAgain,
@@ -103,6 +153,17 @@ export function BattleResult({
             front={<CardFace card={result.rewards.bonusCard} tilt={false} />}
             back={<CardBack card={result.rewards.bonusCard} />}
           />
+        </div>
+      ) : null}
+
+      {result.rewards.wordXpGains.length ? (
+        <div className="rounded-2xl border border-slate-800/60 bg-slate-900/20 p-5">
+          <div className="text-sm font-semibold text-slate-200/80">Прогресс слов</div>
+          <div className="mt-3 flex flex-col gap-3">
+            {result.rewards.wordXpGains.map((gain) => (
+              <WordXpRow key={gain.wordId} gain={gain} />
+            ))}
+          </div>
         </div>
       ) : null}
 
@@ -163,7 +224,7 @@ export function BattleResult({
         <button
           type="button"
           onClick={onAgain}
-          className="rounded-xl bg-sky-500 px-4 py-3 font-semibold text-slate-950 hover:bg-sky-400"
+          className="btn-primary px-4 py-3 font-semibold"
         >
           Ещё бой
         </button>

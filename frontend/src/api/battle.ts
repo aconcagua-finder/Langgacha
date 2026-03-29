@@ -53,6 +53,18 @@ export type BattleRewards = {
   bonusCard: GeneratedCard | null;
   correctAnswers: number;
   streak: number;
+  wordXpGains: WordXpGain[];
+};
+
+export type WordXpGain = {
+  wordId: string;
+  word: string;
+  xpGained: number;
+  oldLevel: number;
+  newLevel: number;
+  leveledUp: boolean;
+  xpInCurrentLevel: number;
+  xpForNextLevel: number;
 };
 
 export type BattleResult = {

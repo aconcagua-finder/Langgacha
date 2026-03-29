@@ -34,8 +34,13 @@ const toDto = (
   flavorText: card.word.flavorText,
   hint: card.word.hint,
   tags: card.word.tags,
-  condition: computeConditionFromReview(progress?.lastReviewedAt ?? null) as CardCondition,
-  masteryProgress: progress?.masteryProgress ?? 0,
+  condition: computeConditionFromReview(
+    progress?.lastReviewedAt ?? null,
+    progress?.level ?? 0,
+  ) as CardCondition,
+  wordLevel: progress?.level ?? 0,
+  wordXp: progress?.xpInCurrentLevel ?? 0,
+  wordXpForNext: progress?.xpForNextLevel ?? 25,
   canEvolve: card.word.canEvolve,
   isEvolved: card.isEvolved,
 });

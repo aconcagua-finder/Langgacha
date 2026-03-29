@@ -4,8 +4,8 @@ export type EvolutionStatus = {
   cardId: string;
   canEvolve: boolean;
   reason: string | null;
-  masteryProgress: number;
-  requiredMastery: number;
+  wordLevel: number;
+  requiredWordLevel: number;
   dustCost: number;
   dustAvailable: number;
   enoughDust: boolean;

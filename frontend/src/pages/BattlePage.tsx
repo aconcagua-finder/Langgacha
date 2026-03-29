@@ -8,7 +8,6 @@ import { BattleResult } from "../components/battle/BattleResult";
 import { CombatPhase } from "../components/battle/CombatPhase";
 import { QuizPhase } from "../components/battle/QuizPhase";
 import { RoundResult } from "../components/battle/RoundResult";
-import { CardMini } from "../components/card/CardMini";
 import { useConfig } from "../contexts/ConfigContext";
 import { usePlayer } from "../contexts/PlayerContext";
 import type { GeneratedCard } from "../types/card";
@@ -16,6 +15,7 @@ import { autoSelectBattleCards } from "../utils/autoSelectBattleCards";
 
 type BattlePageProps = {
   embedded?: boolean;
+  onOverviewChange?: (isOverview: boolean) => void;
 };
 
 type Phase = "overview" | "quiz" | "combat" | "roundResult" | "battleResult";
@@ -28,7 +28,108 @@ type QuizFeedback = {
 const QUIZ_AUTO_ADVANCE_MS = 1500;
 const DEFAULT_BATTLE_DECK_SIZE = 10;
 
-export function BattlePage({ embedded = false }: BattlePageProps) {
+function BattleModeIcon() {
+  return <div className="text-2xl leading-none">⚔</div>;
+}
+
+function BattleOverviewCard({
+  battleDeckSize,
+  selectedCount,
+  uniqueWords,
+  collectionCount,
+  cardsLoading,
+  canStartBattle,
+  submitting,
+  error,
+  onStart,
+}: {
+  battleDeckSize: number;
+  selectedCount: number;
+  uniqueWords: number;
+  collectionCount: number;
+  cardsLoading: boolean;
+  canStartBattle: boolean;
+  submitting: boolean;
+  error: string | null;
+  onStart: () => void;
+}) {
+  const deckToneClass = "border-slate-700/40 bg-slate-950/45 text-slate-200/70";
+
+  return (
+    <section className="relative flex h-full flex-col overflow-hidden rounded-[2rem] border border-slate-800/60 bg-slate-950/55 p-6 shadow-2xl shadow-slate-950/30">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(248,113,113,0.18),transparent_32%),radial-gradient(circle_at_bottom_right,rgba(251,191,36,0.14),transparent_34%)]" />
+
+      <div className="relative flex h-full flex-col gap-4">
+        <header className="flex items-start gap-4">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-rose-400/20 bg-rose-400/10 text-rose-100 shadow-lg shadow-rose-950/20">
+            <BattleModeIcon />
+          </div>
+          <div className="min-w-0">
+            <h2 className="text-2xl font-extrabold tracking-tight text-slate-50">Бой</h2>
+            <p className="mt-1 text-sm leading-relaxed text-slate-200/70">
+              Автоподбор собирает колоду из карт, которые стоит повторить прямо сейчас.
+              Каждый раунд начинается с квиза: правильный ответ усиливает атаку.
+            </p>
+          </div>
+        </header>
+
+        {error ? (
+          <div className="rounded-2xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-100">
+            {error}
+          </div>
+        ) : null}
+
+        <div
+          className={["rounded-xl border px-4 py-3", deckToneClass].join(" ")}
+        >
+          {cardsLoading ? (
+            <div className="text-sm text-slate-200/70">Подбираю колоду…</div>
+          ) : (
+            <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-slate-200/70">
+              <div>
+                Колода{" "}
+                <span className="font-mono font-bold text-slate-50">
+                  {selectedCount}/{battleDeckSize}
+                </span>
+              </div>
+              <div>
+                Уникальных слов{" "}
+                <span className="font-mono font-bold text-slate-50">{uniqueWords}</span>
+              </div>
+              <div>
+                В коллекции{" "}
+                <span className="font-mono font-bold text-slate-50">{collectionCount}</span>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {!cardsLoading && selectedCount === 0 ? (
+          <div className="rounded-xl border border-slate-700/40 bg-slate-950/45 px-4 py-2.5 text-sm text-slate-200/70">
+            Коллекция пуста. Сначала открой бустер.
+          </div>
+        ) : !cardsLoading && selectedCount < battleDeckSize ? (
+          <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-2.5 text-sm text-amber-50">
+            Бой начнётся с текущим набором карт.
+          </div>
+        ) : null}
+
+        <div className="mt-auto flex justify-end">
+          <button
+            type="button"
+            onClick={onStart}
+            disabled={!canStartBattle}
+            className="btn-primary w-full sm:w-auto"
+          >
+            {submitting ? "Подбираю колоду…" : "Начать бой"}
+          </button>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+export function BattlePage({ embedded = false, onOverviewChange }: BattlePageProps) {
   const { config } = useConfig();
   const { refresh: refreshPlayer } = usePlayer();
   const battleDeckSize = config?.battleDeckSize ?? DEFAULT_BATTLE_DECK_SIZE;
@@ -48,6 +149,10 @@ export function BattlePage({ embedded = false }: BattlePageProps) {
   const [error, setError] = useState<string | null>(null);
   const [lastAnswer, setLastAnswer] = useState<BattleAnswerResponse | null>(null);
   const [quizFeedback, setQuizFeedback] = useState<QuizFeedback | null>(null);
+
+  useEffect(() => {
+    onOverviewChange?.(phase === "overview");
+  }, [phase, onOverviewChange]);
 
   const loadCards = useCallback(async () => {
     setCardsLoading(true);
@@ -203,33 +308,37 @@ export function BattlePage({ embedded = false }: BattlePageProps) {
     setPhase("quiz");
   };
 
-  const content = (
-    <>
-      <header className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex min-w-0 flex-wrap items-center gap-2 text-sm text-slate-200/70">
-          <h2 className="text-xl font-extrabold tracking-tight text-slate-50">Бой</h2>
-          <span className="text-slate-200/35">·</span>
-          {phase === "overview" ? (
+  const content =
+    phase === "overview" ? (
+      <BattleOverviewCard
+        battleDeckSize={battleDeckSize}
+        selectedCount={autoSelectedCards.length}
+        uniqueWords={uniqueWords}
+        collectionCount={collectionCards.length}
+        cardsLoading={cardsLoading}
+        canStartBattle={canStartBattle}
+        submitting={submitting}
+        error={error}
+        onStart={() => void onStart()}
+      />
+    ) : (
+      <>
+        <header className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex min-w-0 flex-wrap items-center gap-2 text-sm text-slate-200/70">
+            <h2 className="text-xl font-extrabold tracking-tight text-slate-50">Бой</h2>
+            <span className="text-slate-200/35">·</span>
             <span>
-              Автоподбор до <span className="font-mono">{battleDeckSize}</span> карт
+              Раунд{" "}
+              <span className="font-mono">
+                {Math.min(roundNumber, battleDeckSize)}/{battleDeckSize}
+              </span>
             </span>
-          ) : (
-            <>
-              <span>
-                Раунд{" "}
-                <span className="font-mono">
-                  {Math.min(roundNumber, battleDeckSize)}/{battleDeckSize}
-                </span>
-              </span>
-              <span className="text-slate-200/35">·</span>
-              <span>
-                Счёт <span className="font-mono">{playerWins}:{botWins}</span>
-              </span>
-            </>
-          )}
-        </div>
+            <span className="text-slate-200/35">·</span>
+            <span>
+              Счёт <span className="font-mono">{playerWins}:{botWins}</span>
+            </span>
+          </div>
 
-        {phase !== "overview" ? (
           <button
             type="button"
             onClick={reset}
@@ -237,156 +346,75 @@ export function BattlePage({ embedded = false }: BattlePageProps) {
           >
             Сбросить
           </button>
-        ) : null}
-      </header>
+        </header>
 
-      {error ? (
-        <div className="rounded-xl border border-rose-500/30 bg-rose-500/10 p-4 text-sm text-rose-100">
-          {error}
-        </div>
-      ) : null}
-
-      {phase === "overview" ? (
-        <section className="flex flex-col gap-4">
-          <div className="rounded-2xl border border-slate-800/60 bg-slate-900/20 p-5">
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-              <div className="space-y-3">
-                <div>
-                  <div className="text-lg font-extrabold text-slate-50">Автоподбор колоды</div>
-                  <p className="mt-1 max-w-2xl text-sm text-slate-200/70">
-                    В бой идут забытые карты в первую очередь. Для каждого слова берётся один,
-                    самый сильный экземпляр, затем колода добирается по приоритету состояния.
-                  </p>
-                </div>
-
-                <div className="grid gap-3 text-sm text-slate-200/80 sm:grid-cols-3">
-                  <div className="rounded-xl bg-slate-950/40 px-4 py-3">
-                    В коллекции: <span className="font-mono">{collectionCards.length}</span>
-                  </div>
-                  <div className="rounded-xl bg-slate-950/40 px-4 py-3">
-                    Уникальных слов: <span className="font-mono">{uniqueWords}</span>
-                  </div>
-                  <div className="rounded-xl bg-slate-950/40 px-4 py-3">
-                    В колоде:{" "}
-                    <span className="font-mono">
-                      {autoSelectedCards.length}/{battleDeckSize}
-                    </span>
-                  </div>
-                </div>
-
-                {autoSelectedCards.length > 0 && autoSelectedCards.length < battleDeckSize ? (
-                  <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-50">
-                    Карт меньше {battleDeckSize}, поэтому бой начнётся с тем, что уже есть в
-                    коллекции.
-                  </div>
-                ) : null}
-              </div>
-
-              <div className="flex flex-wrap items-center gap-2 lg:justify-end">
-                <button
-                  type="button"
-                  onClick={() => void loadCards()}
-                  disabled={cardsLoading || submitting}
-                  className="rounded-xl border border-slate-800/60 bg-slate-950/40 px-4 py-3 text-sm font-semibold text-slate-200/80 hover:bg-slate-900/60 disabled:opacity-60"
-                >
-                  {cardsLoading ? "Загружаю…" : "Обновить коллекцию"}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => void onStart()}
-                  disabled={!canStartBattle}
-                  className="rounded-xl bg-sky-500 px-5 py-3 text-sm font-extrabold text-slate-950 hover:bg-sky-400 disabled:opacity-60 disabled:hover:bg-sky-500"
-                >
-                  {submitting ? "Подбираю колоду…" : "Начать бой"}
-                </button>
-              </div>
-            </div>
+        {error ? (
+          <div className="rounded-xl border border-rose-500/30 bg-rose-500/10 p-4 text-sm text-rose-100">
+            {error}
           </div>
+        ) : null}
 
-          {cardsLoading ? (
-            <div className="text-sm text-slate-200/70">Загружаю коллекцию…</div>
-          ) : autoSelectedCards.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-slate-700/70 bg-slate-900/20 p-10 text-sm text-slate-200/70">
-              Коллекция пуста. Сначала открой бустер, потом возвращайся в бой.
-            </div>
-          ) : (
-            <section className="flex flex-col gap-3">
-              <div className="text-xs font-semibold uppercase tracking-wide text-slate-200/60">
-                Автоподбор на следующий бой
-              </div>
-              <div className="grid place-items-center grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
-                {autoSelectedCards.map((card) => (
-                  <div key={card.id} className="w-full max-w-[200px]">
-                    <CardMini card={card} tilt={false} />
-                  </div>
-                ))}
-              </div>
-            </section>
-          )}
-        </section>
-      ) : null}
+        {playerCard && botCard ? (
+          <section className="flex flex-col gap-3">
+            {phase === "quiz" && currentQuiz ? (
+              <>
+                <BattleArena
+                  playerCard={playerCard}
+                  botCard={botCard}
+                  playerHp={playerHp}
+                  botHp={botHp}
+                  vsLabel="Раунд"
+                  hidePlayerWord={phase === "quiz" && !quizFeedback}
+                />
+                <QuizPhase
+                  type={currentQuiz.type}
+                  question={currentQuiz.question}
+                  options={currentQuiz.options}
+                  disabled={submitting}
+                  correctAnswer={quizFeedback?.correctAnswer}
+                  showResult={Boolean(quizFeedback)}
+                  selectedAnswer={quizFeedback?.selectedAnswer}
+                  resultCorrect={quizFeedback?.isCorrect}
+                  onContinue={
+                    quizFeedback && !quizFeedback.isCorrect && lastAnswer
+                      ? () => setPhase("combat")
+                      : undefined
+                  }
+                  onPick={onPickAnswer}
+                />
+              </>
+            ) : null}
 
-      {phase !== "overview" && playerCard && botCard ? (
-        <section className="flex flex-col gap-3">
-          {phase === "quiz" && currentQuiz ? (
-            <>
-              <BattleArena
+            {phase === "combat" && lastAnswer ? (
+              <CombatPhase
                 playerCard={playerCard}
                 botCard={botCard}
-                playerHp={playerHp}
-                botHp={botHp}
-                vsLabel="Раунд"
-                hidePlayerWord={phase === "quiz" && !quizFeedback}
+                initialPlayerHp={playerHp}
+                initialBotHp={botHp}
+                inspirationApplied={lastAnswer.round.inspirationApplied}
+                combatLog={lastAnswer.round.combatLog}
+                onDone={onCombatDone}
               />
-              <QuizPhase
-                type={currentQuiz.type}
-                question={currentQuiz.question}
-                options={currentQuiz.options}
-                disabled={submitting}
-                correctAnswer={quizFeedback?.correctAnswer}
-                showResult={Boolean(quizFeedback)}
-                selectedAnswer={quizFeedback?.selectedAnswer}
-                resultCorrect={quizFeedback?.isCorrect}
-                onContinue={
-                  quizFeedback && !quizFeedback.isCorrect && lastAnswer
-                    ? () => setPhase("combat")
-                    : undefined
-                }
-                onPick={onPickAnswer}
+            ) : null}
+
+            {phase === "roundResult" && lastAnswer ? (
+              <RoundResult
+                round={lastAnswer.round}
+                onNext={onNext}
+                nextLabel={lastAnswer.battleResult ? "К результатам" : "Следующий раунд"}
               />
-            </>
-          ) : null}
+            ) : null}
 
-          {phase === "combat" && lastAnswer ? (
-            <CombatPhase
-              playerCard={playerCard}
-              botCard={botCard}
-              initialPlayerHp={playerHp}
-              initialBotHp={botHp}
-              inspirationApplied={lastAnswer.round.inspirationApplied}
-              combatLog={lastAnswer.round.combatLog}
-              onDone={onCombatDone}
-            />
-          ) : null}
-
-          {phase === "roundResult" && lastAnswer ? (
-            <RoundResult
-              round={lastAnswer.round}
-              onNext={onNext}
-              nextLabel={lastAnswer.battleResult ? "К результатам" : "Следующий раунд"}
-            />
-          ) : null}
-
-          {phase === "battleResult" && lastAnswer?.battleResult ? (
-            <BattleResult result={lastAnswer.battleResult} onAgain={reset} />
-          ) : null}
-        </section>
-      ) : null}
-    </>
-  );
+            {phase === "battleResult" && lastAnswer?.battleResult ? (
+              <BattleResult result={lastAnswer.battleResult} onAgain={reset} />
+            ) : null}
+          </section>
+        ) : null}
+      </>
+    );
 
   if (embedded) {
-    return <section className="flex flex-col gap-4">{content}</section>;
+    return <section className="flex h-full flex-col gap-4">{content}</section>;
   }
 
   return (

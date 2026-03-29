@@ -6,7 +6,6 @@ import type { GeneratedCard } from "../types/card";
 import { BoosterPack } from "../components/booster/BoosterPack";
 import { BoosterRevealGrid } from "../components/booster/BoosterRevealGrid";
 import { usePlayer } from "../contexts/PlayerContext";
-import { LEVEL_LABELS, label } from "../shared/labels";
 import { useConfig } from "../contexts/ConfigContext";
 
 type Phase = "pack" | "revealing";
@@ -125,11 +124,11 @@ export function BoosterPage() {
         <h1 className="text-3xl font-extrabold tracking-tight">Бустер</h1>
         {player ? (
           <div className="text-sm text-slate-200/70">
-            Уровень: <span className="font-mono">{label(LEVEL_LABELS, player.level)}</span>{" "}
-            · Освоено:{" "}
+            Ранг:{" "}
             <span className="font-mono">
-              {player.progressToNext}/{player.progressNeeded}
+              {player.collectionLevel} {player.collectionGachaName}
             </span>
+            {" "}· Слова: <span className="font-mono">{player.wordsWidth}/{player.wordsWidthNeeded}</span>
           </div>
         ) : null}
         {boosterInfo ? (
@@ -178,19 +177,9 @@ export function BoosterPage() {
           onOpen={onOpen}
           disabled={loading || boosterInfo?.count === 0}
           disabledLabel={loading ? "Открываю…" : "Нет бустеров"}
-          level={player?.level ?? "Beginner"}
+          level={player?.collectionGachaName ?? "Bronze"}
           cardCount={config?.boosterSize}
-          packName={
-            player?.level === "Elementary"
-              ? "Пак Повседневного"
-              : player?.level === "Intermediate"
-                ? "Пак Уличного"
-                : player?.level === "Advanced"
-                  ? "Пак Литературного"
-                  : player?.level === "Master"
-                    ? "Пак Легендарного"
-                    : "Пак Новичка"
-          }
+          packName={`${player?.collectionGachaName ?? "Bronze"} Pack`}
         />
       ) : null}
 
@@ -203,12 +192,7 @@ export function BoosterPage() {
               type="button"
               onClick={onOpen}
               disabled={!allRevealed || loading || boosterInfo?.count === 0}
-              className={[
-                "rounded-xl px-5 py-3 text-sm font-extrabold transition-colors",
-                allRevealed && !loading && (boosterInfo?.count ?? 0) > 0
-                  ? "bg-sky-500 text-slate-950 hover:bg-sky-400"
-                  : "bg-slate-800 text-slate-400",
-              ].join(" ")}
+              className="btn-primary"
             >
               {loading
                 ? "Открываю…"

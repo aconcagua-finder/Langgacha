@@ -71,6 +71,7 @@ export const generateRaidBoss = async (date: string, playerId?: string) => {
     data: {
       date,
       bossWord: word.word,
+      bossTranslationRu: word.translationRu,
       bossHp,
       currentHp: bossHp,
       bossAtk,

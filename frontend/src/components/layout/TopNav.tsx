@@ -8,7 +8,7 @@ import { Tooltip } from "../ui/Tooltip";
 import { GuideDrawer } from "./GuideDrawer";
 
 const NAV_ITEMS = [
-  { to: "/", label: "Бустер", end: true },
+  { to: "/", label: "Бустеры", end: true },
   { to: "/battles", label: "Бои", end: false },
   { to: "/collection", label: "Коллекция", end: false },
 ] as const;
@@ -28,6 +28,7 @@ export function TopNav() {
   const { player } = usePlayer();
   const { user, logout } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
 
   const guideOpen = useMemo(() => {
     const params = new URLSearchParams(location.search);
@@ -70,19 +71,31 @@ export function TopNav() {
   }, [menuOpen]);
 
   useEffect(() => {
+    if (!userMenuOpen) return undefined;
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setUserMenuOpen(false);
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [userMenuOpen]);
+
+  useEffect(() => {
     setMenuOpen(false);
+    setUserMenuOpen(false);
   }, [location.pathname, location.search]);
 
   return (
     <>
       <header className="sticky top-0 z-30 border-b border-slate-800/60 bg-slate-950/80 backdrop-blur">
-        <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-3">
-          <div className="flex items-center gap-3">
+        <div className="relative mx-auto flex max-w-5xl items-center justify-between px-6 py-3">
+          <div className="z-10 flex items-center gap-3">
             <div className="text-lg font-extrabold tracking-tight">LangGacha</div>
             <div className="hidden text-xs text-slate-200/60 sm:block">Prototype</div>
           </div>
 
-          <nav className="hidden items-center gap-2 sm:flex">
+          <nav className="absolute left-1/2 top-1/2 hidden -translate-x-1/2 -translate-y-1/2 items-center gap-2 sm:flex">
             {NAV_ITEMS.map((item) => (
               <NavLink key={item.to} to={item.to} className={linkClassName} end={item.end}>
                 {item.label}
@@ -90,7 +103,7 @@ export function TopNav() {
             ))}
           </nav>
 
-          <div className="flex items-center gap-2">
+          <div className="z-10 flex items-center gap-2">
             <div className="flex items-center gap-2 sm:hidden">
               <Tooltip text={TOOLTIPS.dust}>
                 <div className="flex h-11 items-center gap-2 rounded-lg border border-slate-800/60 bg-slate-950/40 px-3 text-xs font-extrabold text-slate-200/80">
@@ -122,7 +135,6 @@ export function TopNav() {
                 <div className="flex items-center gap-2">
                   <span>✨</span>
                   <span className="font-mono">{player?.dust ?? "—"}</span>
-                  <span>Пыль</span>
                 </div>
               </Tooltip>
 
@@ -135,17 +147,51 @@ export function TopNav() {
                 ?
               </button>
 
-              <div className="flex items-center gap-2">
-                <span className="hidden text-xs text-slate-200/60 sm:block">
-                  {user?.username ?? "—"}
-                </span>
+              <div className="relative">
                 <button
                   type="button"
-                  onClick={logout}
-                  className="rounded-lg border border-slate-800/60 bg-slate-950/40 px-3 py-2 text-xs font-extrabold text-slate-200/80 hover:bg-slate-900/60"
+                  onClick={() => setUserMenuOpen((prev) => !prev)}
+                  className="flex items-center gap-2 rounded-lg border border-slate-800/60 bg-slate-950/40 px-3 py-2 text-xs font-semibold text-slate-200/80 transition-colors hover:bg-slate-900/60"
+                  aria-haspopup="menu"
+                  aria-expanded={userMenuOpen}
                 >
-                  Выйти
+                  <span>{user?.username ?? "—"}</span>
+                  <svg
+                    className="h-3.5 w-3.5 text-slate-200/50"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                    aria-hidden="true"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
                 </button>
+
+                {userMenuOpen ? (
+                  <>
+                    <div
+                      className="fixed inset-0 z-40"
+                      onClick={() => setUserMenuOpen(false)}
+                      aria-hidden="true"
+                    />
+
+                    <div className="absolute right-0 top-full z-50 mt-2 min-w-[160px] rounded-xl border border-slate-800/60 bg-slate-950/95 p-1.5 shadow-2xl backdrop-blur">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setUserMenuOpen(false);
+                          logout();
+                        }}
+                        className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-sm text-slate-200/80 transition-colors hover:bg-slate-800/60"
+                      >
+                        Выйти
+                      </button>
+                    </div>
+                  </>
+                ) : null}
               </div>
             </div>
           </div>
@@ -211,7 +257,7 @@ export function TopNav() {
                     {user?.username ?? "—"}
                   </div>
                   <div className="mt-0.5 text-xs text-slate-200/60">
-                    Пыль: <span className="font-mono">{player?.dust ?? "—"}</span>
+                    ✨ <span className="font-mono">{player?.dust ?? "—"}</span>
                   </div>
                 </div>
                 <button

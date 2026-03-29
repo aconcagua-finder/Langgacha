@@ -10,8 +10,9 @@ import { generateCardFromPool } from "../cards/cards.generator.js";
 import { addDust } from "../player/player.service.js";
 import { generateQuiz, isQuizAnswerCorrect, type Quiz } from "../quiz/index.js";
 import {
+  awardWordXp,
   getWordProgressMap,
-  recordCorrectReview,
+  type WordXpAwardResult,
   type WordProgressState,
 } from "../word-progress/word-progress.service.js";
 import { applyConditionModifier, computeHp, simulateCombat } from "./battle.combat.js";
@@ -25,6 +26,7 @@ import type {
   BattleStartResponse,
   BattleState,
   RoundResult,
+  WordXpGain,
 } from "./battle.types.js";
 
 const battleKey = (id: string) => `battle:${id}`;
@@ -35,7 +37,7 @@ const toPublicQuiz = (quiz: Quiz): BattleCardPublic["quiz"] => {
 };
 
 const toPublicCard = (card: BattleCard): BattleCardPublic => {
-  const { quiz, translationRu: _tr, ...rest } = card;
+  const { quiz, translationRu: _tr, wordId: _wordId, ...rest } = card;
   return {
     ...rest,
     quiz: toPublicQuiz(quiz),
@@ -68,7 +70,7 @@ const buildPlayerBattleCard = async (
   progressMap: Map<string, WordProgressState>,
 ): Promise<BattleCard> => {
   const progress = progressMap.get(card.wordId) ?? null;
-  const condition = computeConditionFromReview(progress?.lastReviewedAt ?? null);
+  const condition = computeConditionFromReview(progress?.lastReviewedAt ?? null, progress?.level ?? 0);
   const atk = applyConditionModifier(card.atk, condition);
   const def = applyConditionModifier(card.def, condition);
   const quiz = await generateQuiz({
@@ -76,7 +78,7 @@ const buildPlayerBattleCard = async (
     translationRu: card.word.translationRu,
     quizCorrect: card.word.quizCorrect,
     quizOptions: card.word.quizOptions,
-    masteryProgress: progress?.masteryProgress ?? 0,
+    wordLevel: progress?.level ?? 0,
     isEvolved: card.isEvolved,
     evolutionData: card.word.evolutionData,
     wordType: card.word.type,
@@ -85,6 +87,7 @@ const buildPlayerBattleCard = async (
   });
   return {
     id: card.id,
+    wordId: card.wordId,
     conceptKey: card.word.conceptKey,
     word: card.word.word,
     translationRu: card.word.translationRu,
@@ -99,20 +102,38 @@ const buildPlayerBattleCard = async (
 };
 
 const toRoundCard = (card: BattleCard): RoundResult["playerCard"] => {
-  const { quiz, ...rest } = card;
+  const { quiz, wordId: _wordId, ...rest } = card;
   return {
     ...rest,
     quiz: toPublicQuiz(quiz),
   };
 };
 
-const onCorrectAnswer = async (cardId: string, playerId: string): Promise<void> => {
-  const existing = await prisma.card.findUnique({
-    where: { id: cardId },
-    select: { wordId: true },
-  });
-  if (!existing) return;
-  await recordCorrectReview(playerId, existing.wordId);
+const toWordXpGain = (
+  card: BattleCard,
+  result: WordXpAwardResult,
+): WordXpGain => ({
+  wordId: card.wordId,
+  word: card.word,
+  xpGained: result.xpGained,
+  oldLevel: result.oldLevel,
+  newLevel: result.newLevel,
+  leveledUp: result.leveledUp,
+  xpInCurrentLevel: result.xpInCurrentLevel,
+  xpForNextLevel: result.xpForNextLevel,
+});
+
+const mergeWordXpGain = (gains: WordXpGain[], nextGain: WordXpGain): WordXpGain[] => {
+  const existing = gains.find((gain) => gain.wordId === nextGain.wordId);
+  if (!existing) return [...gains, nextGain];
+
+  existing.xpGained += nextGain.xpGained;
+  existing.newLevel = nextGain.newLevel;
+  existing.leveledUp = existing.leveledUp || nextGain.leveledUp;
+  existing.xpInCurrentLevel = nextGain.xpInCurrentLevel;
+  existing.xpForNextLevel = nextGain.xpForNextLevel;
+
+  return gains;
 };
 
 export const startBattle = async (playerId: string, cardIds: string[]): Promise<BattleStartResponse> => {
@@ -161,6 +182,7 @@ export const startBattle = async (playerId: string, cardIds: string[]): Promise<
     totalCorrect: 0,
     dustFromAnswers: 0,
     defeatedBotRarities: [],
+    wordXpGains: [],
   };
 
   await setState(state);
@@ -209,7 +231,11 @@ export const answerRound = async (playerId: string, params: {
     state.correctStreak += 1;
     state.maxStreak = Math.max(state.maxStreak, state.correctStreak);
     state.dustFromAnswers += applyAnswerReward({ correctStreak: state.correctStreak });
-    await onCorrectAnswer(playerCard.id, state.playerId);
+    const xpResult = await awardWordXp(state.playerId, playerCard.wordId, {
+      quizType: playerCard.quiz.type,
+      wasOverdue: playerCard.condition === "Worn" || playerCard.condition === "Deteriorated",
+    });
+    state.wordXpGains = mergeWordXpGain(state.wordXpGains, toWordXpGain(playerCard, xpResult));
   } else {
     state.correctStreak = 0;
   }
@@ -280,6 +306,7 @@ export const answerRound = async (playerId: string, params: {
       bonusCard,
       correctAnswers: state.totalCorrect,
       streak: state.maxStreak,
+      wordXpGains: state.wordXpGains,
     },
   };
 

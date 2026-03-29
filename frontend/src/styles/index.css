@@ -2,6 +2,12 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer components {
+  .btn-primary {
+    @apply inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-violet-600 via-indigo-600 to-sky-500 px-5 py-3 text-sm font-extrabold text-white shadow-lg shadow-indigo-950/35 transition-all duration-200 hover:from-violet-500 hover:via-indigo-500 hover:to-sky-400 hover:shadow-xl hover:shadow-violet-600/25 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:from-violet-600 disabled:hover:via-indigo-600 disabled:hover:to-sky-500 disabled:hover:shadow-lg;
+  }
+}
+
 .card-perspective {
   perspective: 1200px;
 }

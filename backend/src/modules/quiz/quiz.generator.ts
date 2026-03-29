@@ -7,7 +7,7 @@ type GenerateQuizParams = {
   translationRu: string;
   quizCorrect: string;
   quizOptions: string[];
-  masteryProgress: number;
+  wordLevel: number;
   isEvolved: boolean;
   evolutionData?: unknown | null;
   wordType?: string;
@@ -34,24 +34,24 @@ const shuffle = <T>(items: T[]): T[] => {
   return next;
 };
 
-const pickQuizType = (masteryProgress: number): QuizType => {
-  if (masteryProgress <= 0) return "translate";
+const pickQuizType = (wordLevel: number): QuizType => {
+  if (wordLevel <= 1) return "translate";
   const roll = Math.random();
-  if (masteryProgress === 1) {
+  if (wordLevel <= 5) {
     return roll < 0.7 ? "translate" : "reverse";
   }
-  if (masteryProgress === 2) {
-    if (roll < 0.3) return "translate";
-    if (roll < 0.9) return "reverse";
+  if (wordLevel <= 10) {
+    if (roll < 0.25) return "translate";
+    if (roll < 0.85) return "reverse";
     return "typing";
   }
-  if (masteryProgress === 3) {
-    if (roll < 0.2) return "translate";
-    if (roll < 0.7) return "reverse";
+  if (wordLevel <= 20) {
+    if (roll < 0.15) return "translate";
+    if (roll < 0.6) return "reverse";
     return "typing";
   }
   if (roll < 0.1) return "translate";
-  if (roll < 0.5) return "reverse";
+  if (roll < 0.45) return "reverse";
   return "typing";
 };
 
@@ -144,7 +144,7 @@ const buildReverseQuiz = async (params: GenerateQuizParams): Promise<Quiz | null
 };
 
 export const generateQuiz = async (params: GenerateQuizParams): Promise<Quiz> => {
-  const selectedType = pickQuizType(params.masteryProgress);
+  const selectedType = pickQuizType(params.wordLevel);
   if (selectedType === "typing") {
     return buildTypingQuiz(params);
   }

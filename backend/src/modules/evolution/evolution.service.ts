@@ -1,5 +1,5 @@
 import { prisma } from "../../db/prisma.js";
-import { DUST_PER_CRAFT, MASTERY_MAX } from "../../shared/constants.js";
+import { DUST_PER_CRAFT, WORD_EVOLUTION_LEVEL } from "../../shared/constants.js";
 import { mapCardToDto } from "../cards/cards.generator.js";
 import { getWordProgress } from "../word-progress/word-progress.service.js";
 
@@ -18,13 +18,13 @@ const getOwnedCard = async (playerId: string, cardId: string) => {
 const getStatusReason = (params: {
   wordCanEvolve: boolean;
   isEvolved: boolean;
-  masteryProgress: number;
+  wordLevel: number;
   dustAvailable: number;
   dustCost: number;
 }): string | null => {
   if (!params.wordCanEvolve) return "This card cannot evolve.";
   if (params.isEvolved) return "This card is already evolved.";
-  if (params.masteryProgress < MASTERY_MAX) return "Word mastery is not maxed.";
+  if (params.wordLevel < WORD_EVOLUTION_LEVEL) return "Word level is too low.";
   if (params.dustAvailable < params.dustCost) return "Not enough Dust.";
   return null;
 };
@@ -44,14 +44,14 @@ export const getEvolutionStatus = async (
   if (!player) throw new Error("Player not found.");
 
   const progress = await getWordProgress(playerId, card.wordId);
-  const masteryProgress = progress?.masteryProgress ?? 0;
+  const wordLevel = progress?.level ?? 0;
   const dustCost = DUST_PER_CRAFT[card.word.rarity] ?? 0;
   const dustAvailable = player.dust;
   const enoughDust = dustAvailable >= dustCost;
   const reason = getStatusReason({
     wordCanEvolve: card.word.canEvolve,
     isEvolved: card.isEvolved,
-    masteryProgress,
+    wordLevel,
     dustAvailable,
     dustCost,
   });
@@ -60,8 +60,8 @@ export const getEvolutionStatus = async (
     cardId: card.id,
     canEvolve: reason === null,
     reason,
-    masteryProgress,
-    requiredMastery: MASTERY_MAX,
+    wordLevel,
+    requiredWordLevel: WORD_EVOLUTION_LEVEL,
     dustCost,
     dustAvailable,
     enoughDust,
@@ -90,8 +90,8 @@ export const evolveCard = async (
       }).then(async (owned) => {
         if (!owned || owned.playerId !== playerId) return null;
         return tx.wordProgress.findUnique({
-          where: { playerId_wordId: { playerId, wordId: owned.wordId } },
-          select: { masteryProgress: true, lastReviewedAt: true },
+        where: { playerId_wordId: { playerId, wordId: owned.wordId } },
+          select: { xp: true, level: true, lastReviewedAt: true, lastDecayAt: true },
         });
       }),
     ]);
@@ -103,7 +103,7 @@ export const evolveCard = async (
     const reason = getStatusReason({
       wordCanEvolve: card.word.canEvolve,
       isEvolved: card.isEvolved,
-      masteryProgress: progress?.masteryProgress ?? 0,
+      wordLevel: progress?.level ?? 0,
       dustAvailable: player.dust,
       dustCost,
     });
@@ -126,19 +126,7 @@ export const evolveCard = async (
       include: { word: true },
     });
 
-    await tx.wordProgress.update({
-      where: { playerId_wordId: { playerId, wordId: card.wordId } },
-      data: { masteryProgress: 0 },
-    });
-
-    const dto = await mapCardToDto(updatedCard, {
-      playerId,
-      db: tx,
-      progress: {
-        masteryProgress: 0,
-        lastReviewedAt: progress?.lastReviewedAt ?? null,
-      },
-    });
+    const dto = await mapCardToDto(updatedCard, { playerId, db: tx });
 
     return {
       card: dto,

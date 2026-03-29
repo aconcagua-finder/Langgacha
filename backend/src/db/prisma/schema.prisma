@@ -77,8 +77,10 @@ model WordProgress {
   player          Player   @relation(fields: [playerId], references: [id])
   wordId          String
   word            Word     @relation(fields: [wordId], references: [id])
-  masteryProgress Int      @default(0)
-  lastReviewedAt  DateTime @default(now())
+  xp              Int      @default(0)
+  level           Int      @default(0)
+  lastReviewedAt  DateTime?
+  lastDecayAt     DateTime?
 
   @@unique([playerId, wordId])
 }
@@ -96,6 +98,7 @@ model RaidDay {
   id            String   @id @default(uuid())
   date          String   @unique
   bossWord      String
+  bossTranslationRu String @default("")
   bossHp        Int
   currentHp     Int
   bossAtk       Int

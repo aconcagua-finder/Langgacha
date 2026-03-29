@@ -3,6 +3,7 @@ import type { Quiz, QuizPublic } from "../quiz/quiz.types.js";
 
 export type BattleCard = {
   id: string;
+  wordId: string;
   conceptKey?: string | null;
   word: string;
   translationRu: string;
@@ -15,11 +16,11 @@ export type BattleCard = {
   quiz: Quiz;
 };
 
-export type BattleCardPublic = Omit<BattleCard, "translationRu" | "quiz"> & {
+export type BattleCardPublic = Omit<BattleCard, "wordId" | "translationRu" | "quiz"> & {
   quiz: QuizPublic;
 };
 
-export type BattleCardResult = Omit<BattleCard, "quiz"> & {
+export type BattleCardResult = Omit<BattleCard, "wordId" | "quiz"> & {
   quiz: QuizPublic;
 };
 
@@ -46,6 +47,18 @@ export type BattleRewards = {
   bonusCard: GeneratedCardDto | null;
   correctAnswers: number;
   streak: number;
+  wordXpGains: WordXpGain[];
+};
+
+export type WordXpGain = {
+  wordId: string;
+  word: string;
+  xpGained: number;
+  oldLevel: number;
+  newLevel: number;
+  leveledUp: boolean;
+  xpInCurrentLevel: number;
+  xpForNextLevel: number;
 };
 
 export type BattleResult = {
@@ -92,4 +105,5 @@ export type BattleState = {
   totalCorrect: number;
   dustFromAnswers: number;
   defeatedBotRarities: string[];
+  wordXpGains: WordXpGain[];
 };

@@ -79,10 +79,10 @@ export function ConfirmDialog({
             type="button"
             onClick={onConfirm}
             className={[
-              "rounded-xl px-4 py-3 text-sm font-semibold",
+              "px-4 py-3 text-sm font-semibold",
               danger
                 ? "border border-rose-500/30 bg-rose-500/10 text-rose-100 hover:bg-rose-500/15"
-                : "bg-sky-500 text-slate-950 hover:bg-sky-400",
+                : "btn-primary",
             ].join(" ")}
           >
             {confirmLabel}

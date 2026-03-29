@@ -1,7 +1,6 @@
 import type { GeneratedCard } from "../../types/card";
 import { getRarityTheme, getTypeTheme } from "../../styles/card-themes";
 import { useTiltEffect } from "../../hooks/useTiltEffect";
-import { useConfig } from "../../contexts/ConfigContext";
 import { getCardImageUrl } from "../../utils/cardImage";
 import {
   BATTLE_LABELS,
@@ -11,13 +10,12 @@ import {
   TYPE_LABELS,
   label,
 } from "../../shared/labels";
+import {
+  getWordProgressPercent,
+  getWordProgressTheme,
+  isWordMastered,
+} from "../../shared/wordProgress";
 import { Tooltip } from "../ui/Tooltip";
-
-const masteryDots = (progress: number, total: number) => {
-  return Array.from({ length: total }, (_, i) => (i < progress ? "●" : "○")).join(
-    "",
-  );
-};
 
 const conditionEmoji: Record<string, string> = {
   Brilliant: "✨",
@@ -48,9 +46,11 @@ export function CardMini({
   tilt?: boolean;
   selected?: boolean;
 }) {
-  const { config } = useConfig();
   const typeTheme = getTypeTheme(card.type);
   const rarityTheme = getRarityTheme(card.rarity);
+  const progressTheme = getWordProgressTheme(card.wordLevel);
+  const progressPct = getWordProgressPercent(card.wordXp, card.wordXpForNext);
+  const mastered = isWordMastered(card.wordLevel);
   const sz = sizeClass[size];
   const conditionClass =
     card.condition === "Deteriorated"
@@ -71,7 +71,6 @@ export function CardMini({
 
   const compact = size === "booster";
   const tiltFx = useTiltEffect({ enabled: tilt });
-  const masteryMax = config?.masteryMax ?? 5;
   return (
     <div
       className={[
@@ -102,11 +101,21 @@ export function CardMini({
           }}
         />
       ) : null}
-      {card.masteryProgress >= masteryMax ? (
-        <div className="pointer-events-none absolute right-2 top-10 z-10 rounded-lg bg-emerald-400/90 px-2 py-1 text-[10px] font-extrabold tracking-wide text-slate-950 shadow-lg">
-          ✓ {BATTLE_LABELS.mastered}
+      <div className="pointer-events-none absolute right-2 top-10 z-10 flex flex-col items-end gap-1">
+        <div
+          className={[
+            "rounded-full border px-2 py-1 text-[10px] font-extrabold shadow-lg shadow-slate-950/35",
+            progressTheme.badge,
+          ].join(" ")}
+        >
+          Lv {card.wordLevel}
         </div>
-      ) : null}
+        {mastered && !compact ? (
+          <div className="rounded-full bg-yellow-300/90 px-2 py-1 text-[9px] font-black tracking-[0.18em] text-slate-950">
+            {BATTLE_LABELS.mastered}
+          </div>
+        ) : null}
+      </div>
       <div className="h-2 w-full" style={{ backgroundColor: rarityTheme.badge }} />
 
       <div className={["flex flex-1 flex-col", compact ? "gap-2 p-2 sm:gap-2.5 sm:p-3" : "gap-3 p-4"].join(" ")}>
@@ -191,6 +200,14 @@ export function CardMini({
               <span>DEF {card.def}</span>
             </Tooltip>
           </div>
+          <Tooltip text={TOOLTIPS.wordProgress(card.wordLevel, card.wordXp, card.wordXpForNext)}>
+            <div className="mt-2 overflow-hidden rounded-full bg-slate-950/60">
+              <div
+                className={["h-1.5 transition-[width] duration-300", progressTheme.bar].join(" ")}
+                style={{ width: `${progressPct}%` }}
+              />
+            </div>
+          </Tooltip>
           {compact ? null : (
             <div className="mt-2 flex items-center justify-between">
               <Tooltip text={conditionTooltip}>
@@ -201,8 +218,10 @@ export function CardMini({
                   </span>
                 </div>
               </Tooltip>
-              <Tooltip text={TOOLTIPS.mastery(card.masteryProgress, masteryMax)}>
-                <div className="font-mono">{masteryDots(card.masteryProgress, masteryMax)}</div>
+              <Tooltip text={TOOLTIPS.wordProgress(card.wordLevel, card.wordXp, card.wordXpForNext)}>
+                <div className="font-mono">
+                  {mastered ? "MAX" : `${card.wordXp}/${card.wordXpForNext}`}
+                </div>
               </Tooltip>
             </div>
           )}

@@ -18,8 +18,10 @@ import {
   type QuizType,
 } from "../quiz/index.js";
 import {
+  awardWordXp,
   getWordProgressMap,
-  recordCorrectReview,
+  type WordXpAwardResult,
+  type WordProgressState,
 } from "../word-progress/word-progress.service.js";
 
 import { generateRaidBoss } from "./raid.boss.js";
@@ -41,6 +43,21 @@ const conditionRank: Record<string, number> = {
   Normal: 2,
   Brilliant: 3,
 };
+
+const toWordXpGain = (
+  wordId: string,
+  word: string,
+  result: WordXpAwardResult,
+): RaidAttackResult["wordXpGain"] => ({
+  wordId,
+  word,
+  xpGained: result.xpGained,
+  oldLevel: result.oldLevel,
+  newLevel: result.newLevel,
+  leveledUp: result.leveledUp,
+  xpInCurrentLevel: result.xpInCurrentLevel,
+  xpForNextLevel: result.xpForNextLevel,
+});
 
 type StoredRaidQuiz = {
   type: QuizType;
@@ -74,7 +91,21 @@ const parseStoredRaidQuiz = (raw: string | null): StoredRaidQuiz | null => {
 const getOrCreateTodayRaidDay = async (playerId?: string) => {
   const date = todayUtc();
   const existing = await prisma.raidDay.findUnique({ where: { date } });
-  if (existing) return existing;
+  if (existing) {
+    if (!existing.bossTranslationRu) {
+      const word = await prisma.word.findFirst({
+        where: { word: existing.bossWord },
+        select: { translationRu: true },
+      });
+      if (word?.translationRu) {
+        return prisma.raidDay.update({
+          where: { id: existing.id },
+          data: { bossTranslationRu: word.translationRu },
+        });
+      }
+    }
+    return existing;
+  }
   return generateRaidBoss(date, playerId);
 };
 
@@ -94,6 +125,7 @@ export const getTodayRaid = async (playerId: string): Promise<RaidStatus> => {
     id: raidDay.id,
     date: raidDay.date,
     bossWord: raidDay.bossWord,
+    bossTranslationRu: raidDay.bossTranslationRu,
     bossHp: raidDay.bossHp,
     currentHp: raidDay.currentHp,
     bossAtk: raidDay.bossAtk,
@@ -139,15 +171,15 @@ export const getNextCard = async (playerId: string): Promise<NextRaidCard | null
 
   const prepared = cards.map((c) => {
     const progress = wordProgressMap.get(c.wordId) ?? null;
-    const condition = computeConditionFromReview(progress?.lastReviewedAt ?? null);
+    const condition = computeConditionFromReview(progress?.lastReviewedAt ?? null, progress?.level ?? 0);
     const rank = conditionRank[condition] ?? 2;
-    const mastery = progress?.masteryProgress ?? 0;
-    return { card: c, rank, mastery, r: Math.random() };
+    const wordLevel = progress?.level ?? 0;
+    return { card: c, rank, wordLevel, r: Math.random() };
   });
 
   prepared.sort((a, b) => {
     if (a.rank !== b.rank) return a.rank - b.rank;
-    if (a.mastery !== b.mastery) return a.mastery - b.mastery;
+    if (a.wordLevel !== b.wordLevel) return a.wordLevel - b.wordLevel;
     return a.r - b.r;
   });
 
@@ -164,7 +196,7 @@ export const getNextCard = async (playerId: string): Promise<NextRaidCard | null
     translationRu: chosen.word.translationRu,
     quizCorrect: chosen.word.quizCorrect,
     quizOptions: chosen.word.quizOptions,
-    masteryProgress: chosenProgress?.masteryProgress ?? 0,
+    wordLevel: chosenProgress?.level ?? 0,
     isEvolved: chosen.isEvolved,
     evolutionData: chosen.word.evolutionData,
     wordType: chosen.word.type,
@@ -225,10 +257,20 @@ export const attackBoss = async (
 
     const wordProgress = await tx.wordProgress.findUnique({
       where: { playerId_wordId: { playerId, wordId: card.wordId } },
-      select: { masteryProgress: true, lastReviewedAt: true },
+      select: {
+        playerId: true,
+        wordId: true,
+        xp: true,
+        level: true,
+        lastReviewedAt: true,
+        lastDecayAt: true,
+      },
     });
 
-    const effectiveCondition = computeConditionFromReview(wordProgress?.lastReviewedAt ?? null);
+    const effectiveCondition = computeConditionFromReview(
+      wordProgress?.lastReviewedAt ?? null,
+      wordProgress?.level ?? 0,
+    );
     const effectiveAtkBase = applyConditionModifier(card.atk, effectiveCondition);
     const effectiveDef = applyConditionModifier(card.def, effectiveCondition);
     const effectiveAtk = inspirationApplied
@@ -265,10 +307,23 @@ export const attackBoss = async (
     const bossDefeated = bossCurrentHp <= 0;
 
     const now = new Date();
-
-    if (quizCorrect) {
-      await recordCorrectReview(playerId, card.wordId, tx, now);
-    }
+    const wordXpGain = quizCorrect
+      ? toWordXpGain(
+          card.wordId,
+          card.word.word,
+          await awardWordXp(
+            playerId,
+            card.wordId,
+            {
+              quizType,
+              wasOverdue:
+                effectiveCondition === "Worn" || effectiveCondition === "Deteriorated",
+            },
+            tx,
+            now,
+          ),
+        )
+      : null;
 
     await tx.raidAttack.create({
       data: {
@@ -326,6 +381,7 @@ export const attackBoss = async (
       cardSurvived,
       bossDefeated,
       dustEarned,
+      wordXpGain,
       ...(bossDefeated
         ? { victoryDust: RAID_VICTORY_DUST, victoryBoosters: RAID_VICTORY_BOOSTERS }
         : {}),

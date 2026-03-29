@@ -34,7 +34,7 @@ const buildBotCard = async (word: Word): Promise<BattleCard> => {
     translationRu: word.translationRu,
     quizCorrect: word.quizCorrect,
     quizOptions: word.quizOptions,
-    masteryProgress: 0,
+    wordLevel: 0,
     isEvolved: false,
     evolutionData: word.evolutionData,
     wordType: word.type,
@@ -43,6 +43,7 @@ const buildBotCard = async (word: Word): Promise<BattleCard> => {
   });
   return {
     id: `bot:${randomUUID()}`,
+    wordId: word.id,
     conceptKey: word.conceptKey,
     word: word.word,
     translationRu: word.translationRu,

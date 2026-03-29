@@ -216,7 +216,7 @@ export function CraftPage({ embedded = false }: CraftPageProps) {
             type="button"
             onClick={onCraft}
             disabled={!canCraftNow}
-            className="rounded-xl bg-sky-500 px-5 py-3 text-sm font-semibold text-slate-950 hover:bg-sky-400 disabled:opacity-60 disabled:hover:bg-sky-500"
+            className="btn-primary"
           >
             {loading ? "Создаю…" : "Создать карту"}
           </button>

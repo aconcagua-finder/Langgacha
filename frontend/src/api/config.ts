@@ -21,8 +21,16 @@ export type GameConfig = {
   dustPerDisintegrate: Record<string, number>;
   dustPerCraft: Record<string, number>;
   craftsPerDay: number;
-  masteryMax: number;
-  progressionLevels: Array<{ name: string; minDominated: number; rarities: string[] }>;
+  wordLevelMax: number;
+  wordEvolutionLevel: number;
+  wordCollectionWidthLevelThreshold: number;
+  collectionLevels: Array<{
+    name: string;
+    gachaName: string;
+    minWords: number;
+    minAvgLevel: number;
+    rarities: string[];
+  }>;
 };
 
 export const fetchConfig = async (): Promise<GameConfig> => {

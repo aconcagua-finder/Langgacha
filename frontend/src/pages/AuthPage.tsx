@@ -123,10 +123,7 @@ export function AuthPage() {
           <button
             type="submit"
             disabled={!canSubmit}
-            className={[
-              "mt-2 rounded-xl px-4 py-3 text-sm font-extrabold transition-colors",
-              canSubmit ? "bg-sky-500 text-slate-950 hover:bg-sky-400" : "bg-slate-800 text-slate-400",
-            ].join(" ")}
+            className="btn-primary mt-2"
           >
             {loading ? "Подождите…" : mode === "login" ? "Войти" : "Создать аккаунт"}
           </button>
@@ -139,4 +136,3 @@ export function AuthPage() {
     </main>
   );
 }
-

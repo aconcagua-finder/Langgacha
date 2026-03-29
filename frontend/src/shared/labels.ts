@@ -1,9 +1,10 @@
 export const LEVEL_LABELS: Record<string, string> = {
-  Beginner: "Начинающий",
-  Elementary: "Базовый",
-  Intermediate: "Средний",
-  Advanced: "Продвинутый",
-  Master: "Мастер",
+  A1: "A1",
+  "A1+": "A1+",
+  A2: "A2",
+  "A2+": "A2+",
+  B1: "B1",
+  "B1+": "B1+",
 };
 
 export const CONDITION_LABELS: Record<string, string> = {
@@ -46,10 +47,12 @@ export const TOOLTIPS = {
   conditionWorn: "Давно не использовалась, штраф к статам",
   conditionDeteriorated: "Сильно изношена, большой штраф к статам",
   evolved: "Эволюционированная карта: +20% к базовым статам",
-  mastery: (progress: number, masteryMax: number) =>
-    `Прогресс освоения: ${progress}/${masteryMax}. Ответь правильно в бою для прокачки`,
+  wordProgress: (level: number, wordXp: number, wordXpForNext: number) =>
+    wordXpForNext > 0
+      ? `Уровень слова: ${level}. Прогресс: ${wordXp}/${wordXpForNext} XP`
+      : `Уровень слова: ${level}. Слово достигло максимального уровня`,
   dust: "Валюта для крафта карт. Получай из боёв и распыления",
-  levelProgress: "Осваивай карты в боях для повышения уровня и открытия новых рарностей",
+  levelProgress: "Коллекционный ранг растёт от ширины словаря и среднего уровня слов",
 };
 
 export const DISINTEGRATE_COPY = {
@@ -65,6 +68,6 @@ export const EVOLVE_COPY = {
   title: "Эволюционировать карту?",
   confirm: "Эволюционировать",
   cancel: "Отмена",
-  description: (dustCost: number) =>
-    `Слово полностью освоено.\nСтоимость эволюции: ${dustCost} Пыль.\nКарта получит +20% к ATK и DEF, а мастерство слова сбросится.`,
+  description: (dustCost: number, requiredWordLevel: number) =>
+    `Нужен уровень слова ${requiredWordLevel}+.\nСтоимость эволюции: ${dustCost} Пыль.\nКарта получит +20% к ATK и DEF.`,
 };

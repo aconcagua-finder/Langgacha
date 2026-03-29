@@ -11,38 +11,45 @@ const LEVEL_THEMES: Record<
   string,
   { shell: string; halo: string; accent: string; icon: string; foil: string }
 > = {
-  Beginner: {
-    shell: "from-slate-300 via-slate-500 to-slate-950",
-    halo: "rgba(148,163,184,0.45)",
-    accent: "rgba(226,232,240,0.9)",
-    icon: "🌱",
-    foil: "from-slate-100/55 via-white/10 to-transparent",
-  },
-  Elementary: {
-    shell: "from-emerald-200 via-emerald-500 to-slate-950",
-    halo: "rgba(16,185,129,0.45)",
-    accent: "rgba(110,231,183,0.92)",
-    icon: "🪴",
-    foil: "from-emerald-100/55 via-white/10 to-transparent",
-  },
-  Intermediate: {
-    shell: "from-sky-200 via-sky-500 to-slate-950",
-    halo: "rgba(56,189,248,0.45)",
-    accent: "rgba(125,211,252,0.92)",
-    icon: "🔥",
-    foil: "from-sky-100/55 via-white/10 to-transparent",
-  },
-  Advanced: {
-    shell: "from-amber-200 via-amber-500 to-slate-950",
+  Bronze: {
+    shell: "from-orange-200 via-amber-500 to-slate-950",
     halo: "rgba(245,158,11,0.45)",
-    accent: "rgba(252,211,77,0.92)",
-    icon: "⚔️",
+    accent: "rgba(253,230,138,0.9)",
+    icon: "🪙",
     foil: "from-amber-100/55 via-white/10 to-transparent",
   },
+  Silver: {
+    shell: "from-slate-100 via-slate-400 to-slate-950",
+    halo: "rgba(203,213,225,0.45)",
+    accent: "rgba(241,245,249,0.92)",
+    icon: "🥈",
+    foil: "from-slate-100/55 via-white/10 to-transparent",
+  },
+  Gold: {
+    shell: "from-yellow-200 via-amber-500 to-slate-950",
+    halo: "rgba(250,204,21,0.48)",
+    accent: "rgba(254,240,138,0.92)",
+    icon: "🥇",
+    foil: "from-yellow-100/55 via-white/10 to-transparent",
+  },
+  Platinum: {
+    shell: "from-cyan-100 via-sky-400 to-slate-950",
+    halo: "rgba(34,211,238,0.45)",
+    accent: "rgba(165,243,252,0.92)",
+    icon: "💿",
+    foil: "from-cyan-100/55 via-white/10 to-transparent",
+  },
+  Diamond: {
+    shell: "from-sky-100 via-indigo-400 to-slate-950",
+    halo: "rgba(96,165,250,0.48)",
+    accent: "rgba(191,219,254,0.92)",
+    icon: "💎",
+    foil: "from-sky-100/55 via-white/10 to-transparent",
+  },
   Master: {
-    shell: "from-fuchsia-200 via-fuchsia-500 to-slate-950",
-    halo: "rgba(217,70,239,0.48)",
-    accent: "rgba(240,171,252,0.92)",
+    shell: "from-fuchsia-200 via-violet-500 to-slate-950",
+    halo: "rgba(192,132,252,0.48)",
+    accent: "rgba(233,213,255,0.92)",
     icon: "👑",
     foil: "from-fuchsia-100/55 via-white/10 to-transparent",
   },
@@ -116,11 +123,7 @@ export function BoosterPack({
         type="button"
         onClick={onOpen}
         disabled={disabled}
-        className={[
-          "w-full rounded-xl px-4 py-3 font-semibold",
-          "bg-sky-500 text-slate-950 hover:bg-sky-400",
-          "disabled:opacity-60 disabled:hover:bg-sky-500",
-        ].join(" ")}
+        className="btn-primary w-full"
       >
         {disabled ? disabledLabel ?? "Открываю…" : "Открыть бустер"}
       </button>

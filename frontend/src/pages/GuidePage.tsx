@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { useId, useState } from "react";
 
 import { useConfig } from "../contexts/ConfigContext";
-import { CONDITION_LABELS, LEVEL_LABELS, TYPE_LABELS, label } from "../shared/labels";
+import { CONDITION_LABELS, TYPE_LABELS, label } from "../shared/labels";
 
 function percentDelta(multiplier: number): string {
   const delta = Math.round((multiplier - 1) * 100);
@@ -59,8 +59,8 @@ export function GuideContent() {
             <li>LangGacha — карточная гача-игра для изучения иностранных языков.</li>
             <li>Открывай бустеры → собирай карты → сражайся → учи слова.</li>
             <li>
-              Цель: освоить слова (до <span className="font-mono">{config.masteryMax}</span>{" "}
-              правильных ответов на карту) и побеждать рейд-босса каждый день.
+              Цель: прокачивать слова до <span className="font-mono">Lv {config.wordLevelMax}</span>,
+              расширять коллекцию и побеждать рейд-босса каждый день.
             </li>
           </ul>
         </GuideSection>
@@ -107,14 +107,17 @@ export function GuideContent() {
           </ul>
         </GuideSection>
 
-        <GuideSection title="Освоение (Mastery)">
+        <GuideSection title="Word XP">
           <ul className="list-disc space-y-1 pl-5">
-            <li>Ответь правильно на вопрос о слове в бою → +1 к прогрессу.</li>
             <li>
-              <span className="font-mono">{config.masteryMax}</span> правильных ответов → карта
-              «Освоена».
+              Правильные ответы дают XP слова: translate, reverse и typing дают разный вклад.
             </li>
-            <li>Освоенные карты влияют на уровень и открытие новых рарностей.</li>
+            <li>
+              У каждого слова <span className="font-mono">30</span> уровней и собственный интервал
+              повторения.
+            </li>
+            <li>Если слово долго не повторять после grace-периода, XP внутри уровня постепенно снижается.</li>
+            <li>Эволюция открывается с <span className="font-mono">Lv {config.wordEvolutionLevel}</span>.</li>
           </ul>
         </GuideSection>
 
@@ -195,12 +198,18 @@ export function GuideContent() {
 
         <GuideSection title="Прогрессия">
           <div className="space-y-2">
-            <div>Уровни открываются по количеству освоенных карт (Dominada):</div>
+            <div>Коллекционный ранг зависит от ширины словаря и среднего уровня слов:</div>
             <ul className="list-disc space-y-1 pl-5">
-              {config.progressionLevels.map((level) => (
+              {config.collectionLevels.map((level) => (
                 <li key={level.name}>
-                  {label(LEVEL_LABELS, level.name)} (
-                  <span className="font-mono">{level.minDominated}</span>) →{" "}
+                  <span className="font-mono">
+                    {level.name} {level.gachaName}
+                  </span>{" "}
+                  (
+                  <span className="font-mono">
+                    {level.minWords} слов / Avg Lv {level.minAvgLevel}
+                  </span>
+                  ) →{" "}
                   <span className="font-mono">{level.rarities.join(", ")}</span>
                 </li>
               ))}

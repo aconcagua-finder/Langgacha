@@ -10,11 +10,14 @@ export type PlayerDto = {
   craftAvailable: boolean;
   nextCraftAt: string | null;
   pityCounter: number;
-  dominatedCount: number;
-  level: string;
-  nextLevel: string | null;
-  progressToNext: number;
-  progressNeeded: number;
+  collectionLevel: string;
+  collectionGachaName: string;
+  nextCollectionLevel: string | null;
+  wordsWidth: number;
+  wordsWidthNeeded: number;
+  avgWordLevel: number;
+  avgWordLevelNeeded: number;
+  totalCollectionXp: number;
   unlockedRarities: string[];
 };
 

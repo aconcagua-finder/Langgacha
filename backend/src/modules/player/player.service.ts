@@ -1,22 +1,58 @@
 import { prisma } from "../../db/prisma.js";
-import { PROGRESSION_LEVELS, STARTING_DUST } from "../../shared/constants.js";
+import {
+  COLLECTION_LEVELS,
+  STARTING_DUST,
+  WORD_COLLECTION_WIDTH_LEVEL_THRESHOLD,
+} from "../../shared/constants.js";
 import { publicBoosterInfo, rechargeAndGet } from "../boosters/boosters.recharge.js";
 import { getDailyAvailability } from "../craft/craft.time.js";
+import { applyDecayIfNeededToRecord } from "../word-progress/word-progress.decay.js";
+import { calculateLevelFromXp } from "../word-progress/word-progress.utils.js";
 
-import type { PlayerDto, PlayerLevelName } from "./player.types.js";
+import type { PlayerCollectionLevelName, PlayerDto } from "./player.types.js";
 
-type ProgressionLevel = (typeof PROGRESSION_LEVELS)[number];
+type CollectionLevel = (typeof COLLECTION_LEVELS)[number];
 
-const getLevel = (dominatedCount: number) => {
-  let current: ProgressionLevel = PROGRESSION_LEVELS[0];
-  for (const level of PROGRESSION_LEVELS) {
-    if (dominatedCount >= level.minDominated) current = level;
-  }
+const getCollectionProgress = (progressRecords: Array<{ xp: number; level: number }>) => {
+  const normalized = progressRecords.map((record) => ({
+    xp: record.xp,
+    level: calculateLevelFromXp(record.xp).level,
+  }));
+  const qualified = normalized.filter(
+    (record) => record.level >= WORD_COLLECTION_WIDTH_LEVEL_THRESHOLD,
+  );
+  const wordsWidth = qualified.length;
+  const avgWordLevel = qualified.length
+    ? Number(
+        (
+          qualified.reduce((sum, record) => sum + record.level, 0) / qualified.length
+        ).toFixed(1),
+      )
+    : 0;
+  const totalCollectionXp = normalized.reduce((sum, record) => sum + record.xp, 0);
 
-  const idx = PROGRESSION_LEVELS.findIndex((l) => l.name === current.name);
-  const next = idx >= 0 && idx + 1 < PROGRESSION_LEVELS.length ? PROGRESSION_LEVELS[idx + 1] : null;
+  const achievedIndex = COLLECTION_LEVELS.reduce((best, level, index) => {
+    if (wordsWidth >= level.minWords && avgWordLevel >= level.minAvgLevel) {
+      return index;
+    }
+    return best;
+  }, -1);
 
-  return { current, next };
+  const current = COLLECTION_LEVELS[Math.max(0, achievedIndex)] ?? COLLECTION_LEVELS[0];
+  const next =
+    achievedIndex < 0
+      ? COLLECTION_LEVELS[0]
+      : COLLECTION_LEVELS[achievedIndex + 1] ?? null;
+
+  return {
+    current,
+    next,
+    wordsWidth,
+    wordsWidthNeeded: next?.minWords ?? wordsWidth,
+    avgWordLevel,
+    avgWordLevelNeeded: next?.minAvgLevel ?? avgWordLevel,
+    totalCollectionXp,
+  };
 };
 
 export const getOrCreateDefaultPlayer = async () => {
@@ -44,19 +80,33 @@ export const getPlayerDto = async (playerId: string): Promise<PlayerDto> => {
   const player = await prisma.player.findUnique({ where: { id: playerId } });
   if (!player) throw new Error("Player not found.");
 
-  const boosterStatus = await rechargeAndGet(playerId);
+  const [boosterStatus, progressRecords] = await Promise.all([
+    rechargeAndGet(playerId),
+    prisma.wordProgress.findMany({
+      where: { playerId },
+      select: {
+        playerId: true,
+        wordId: true,
+        xp: true,
+        level: true,
+        lastReviewedAt: true,
+        lastDecayAt: true,
+      },
+    }),
+  ]);
+
+  const now = new Date();
+  const decayedProgress = await Promise.all(
+    progressRecords.map((record) => applyDecayIfNeededToRecord(record, prisma, now)),
+  );
+
   const boosterInfo = publicBoosterInfo(boosterStatus);
   const craftAvailability = getDailyAvailability(player.lastCraftAt ?? null);
-
-  const dominatedCount = await prisma.wordProgress.count({
-    where: { playerId, masteryProgress: { gte: 5 } },
-  });
-
-  const { current, next } = getLevel(dominatedCount);
-  const level = current.name as PlayerLevelName;
-  const nextLevel = next?.name ? (next.name as PlayerLevelName) : null;
-  const progressToNext = dominatedCount;
-  const progressNeeded = next?.minDominated ?? dominatedCount;
+  const collectionProgress = getCollectionProgress(decayedProgress);
+  const collectionLevel = currentLevelName(collectionProgress.current);
+  const nextCollectionLevel = collectionProgress.next
+    ? currentLevelName(collectionProgress.next)
+    : null;
 
   return {
     id: playerId,
@@ -67,14 +117,20 @@ export const getPlayerDto = async (playerId: string): Promise<PlayerDto> => {
     craftAvailable: craftAvailability.available,
     nextCraftAt: craftAvailability.nextAt,
     pityCounter: player.pityCounter ?? 0,
-    dominatedCount,
-    level,
-    nextLevel,
-    progressToNext,
-    progressNeeded,
-    unlockedRarities: [...current.rarities],
+    collectionLevel,
+    collectionGachaName: collectionProgress.current.gachaName,
+    nextCollectionLevel,
+    wordsWidth: collectionProgress.wordsWidth,
+    wordsWidthNeeded: collectionProgress.wordsWidthNeeded,
+    avgWordLevel: collectionProgress.avgWordLevel,
+    avgWordLevelNeeded: collectionProgress.avgWordLevelNeeded,
+    totalCollectionXp: collectionProgress.totalCollectionXp,
+    unlockedRarities: [...collectionProgress.current.rarities],
   };
 };
+
+const currentLevelName = (level: CollectionLevel): PlayerCollectionLevelName =>
+  level.name as PlayerCollectionLevelName;
 
 export const getUnlockedRaritiesForPlayer = async (playerId: string): Promise<string[]> => {
   const dto = await getPlayerDto(playerId);

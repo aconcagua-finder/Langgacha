@@ -8,6 +8,11 @@ import { CardFlip } from "../card/CardFlip";
 import { ConfirmDialog } from "../ui/ConfirmDialog";
 import { DISINTEGRATE_COPY, EVOLVE_COPY } from "../../shared/labels";
 import { useConfig } from "../../contexts/ConfigContext";
+import {
+  getWordProgressPercent,
+  getWordProgressTheme,
+  WORD_EVOLUTION_LEVEL,
+} from "../../shared/wordProgress";
 
 type Props = {
   card: GeneratedCard | null;
@@ -45,13 +50,15 @@ export function CardModal({ card, onClose, onDisintegrate, onEvolve }: Props) {
 
   if (!card) return null;
 
-  const masteryMax = config?.masteryMax ?? 5;
+  const evolutionLevel = config?.wordEvolutionLevel ?? WORD_EVOLUTION_LEVEL;
   const dust = config?.dustPerDisintegrate?.[card.rarity] ?? 0;
   const danger = ["R", "SR", "SSR"].includes(card.rarity);
   const description = danger ? DISINTEGRATE_COPY.rare(dust) : DISINTEGRATE_COPY.common(dust);
   const canShowEvolveButton =
-    card.canEvolve && !card.isEvolved && card.masteryProgress >= masteryMax;
+    card.canEvolve && !card.isEvolved && card.wordLevel >= evolutionLevel;
   const busy = disintegrating || evolving;
+  const progressTheme = getWordProgressTheme(card.wordLevel);
+  const progressPct = getWordProgressPercent(card.wordXp, card.wordXpForNext);
 
   return (
     <div
@@ -63,8 +70,24 @@ export function CardModal({ card, onClose, onDisintegrate, onEvolve }: Props) {
       aria-modal="true"
     >
         <div className="flex flex-col items-center gap-4">
-          <div className={["rounded-2xl bg-slate-950 p-1", busy ? "disintegrating" : ""].join(" ")}>
+        <div className={["rounded-2xl bg-slate-950 p-1", busy ? "disintegrating" : ""].join(" ")}>
           <CardFlip front={<CardFace card={card} tilt={false} />} back={<CardBack card={card} />} />
+        </div>
+        <div className="w-full max-w-md rounded-2xl border border-slate-800/60 bg-slate-950/45 p-4 text-sm text-slate-200/80">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              Уровень слова: <span className="font-mono">Lv {card.wordLevel}</span>
+            </div>
+            <div className="font-mono text-slate-300">
+              {card.wordXpForNext > 0 ? `${card.wordXp}/${card.wordXpForNext} XP` : "MAX"}
+            </div>
+          </div>
+          <div className="mt-3 overflow-hidden rounded-full bg-slate-950/60">
+            <div
+              className={["h-2 transition-[width] duration-300", progressTheme.bar].join(" ")}
+              style={{ width: `${progressPct}%` }}
+            />
+          </div>
         </div>
         <div className="flex flex-wrap items-center justify-center gap-3">
           <button
@@ -92,7 +115,7 @@ export function CardModal({ card, onClose, onDisintegrate, onEvolve }: Props) {
                 }
               }}
               disabled={busy}
-              className="rounded-xl border border-sky-300/30 bg-sky-300/10 px-4 py-3 text-sm font-semibold text-sky-100 hover:bg-sky-300/15"
+              className="btn-primary px-4 py-3 text-sm font-semibold"
             >
               Эволюция
             </button>
@@ -138,7 +161,10 @@ export function CardModal({ card, onClose, onDisintegrate, onEvolve }: Props) {
       <ConfirmDialog
         open={evolveConfirmOpen}
         title={EVOLVE_COPY.title}
-        description={EVOLVE_COPY.description(evolutionStatus?.dustCost ?? 0)}
+        description={EVOLVE_COPY.description(
+          evolutionStatus?.dustCost ?? 0,
+          evolutionStatus?.requiredWordLevel ?? evolutionLevel,
+        )}
         confirmLabel={EVOLVE_COPY.confirm}
         cancelLabel={EVOLVE_COPY.cancel}
         onCancel={() => setEvolveConfirmOpen(false)}

@@ -24,6 +24,11 @@ model Word {
   canEvolve     Boolean  @default(false)
   imagePrompt   String?
 
+  // Content Foundation (Phase 2.18) — taxonomy & CEFR
+  cefrLevel     String?  // "A1" | "A2" | "B1" | "B2" | "C1" | "C2"
+  isCore        Boolean  @default(false)
+  dialect       String   @default("rioplatense")
+
   quizCorrect   String
   quizOptions   String[]
 
@@ -33,8 +38,42 @@ model Word {
 
   cards         Card[]
   wordProgress  WordProgress[]
+  wordThemes    WordTheme[]
 
   @@unique([language, word], name: "language_word")
+  @@index([cefrLevel])
+  @@index([isCore])
+}
+
+model Theme {
+  key          String   @id
+  nameRu       String
+  nameEs       String
+  domain       String   // "Everyday" | "City" | "Social" | "Travel" | "Work & Study" | "Expression"
+  cefrTier     String   // "A1" | "A2" | "B1" | "B2" | "C1" | "C2"
+  orderIndex   Int      @default(0)
+  emoji        String?
+  description  String?
+
+  createdAt    DateTime @default(now())
+
+  wordThemes   WordTheme[]
+
+  @@index([domain])
+  @@index([cefrTier])
+}
+
+model WordTheme {
+  wordId     String
+  themeKey   String
+  isPrimary  Boolean  @default(false)
+
+  word       Word     @relation(fields: [wordId], references: [id], onDelete: Cascade)
+  theme      Theme    @relation(fields: [themeKey], references: [key], onDelete: Cascade)
+
+  @@id([wordId, themeKey])
+  @@index([themeKey])
+  @@index([wordId])
 }
 
 model Card {

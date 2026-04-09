@@ -352,11 +352,20 @@ generateCardFromPool({
 
 | # | Задача | Статус | Файл |
 |---|--------|--------|------|
-| 2.1 | Prisma миграция: модели `Theme`, `WordTheme`, поля `cefrLevel`, `isCore`, `dialect` на Word. Сид таблицы `Theme` из `docs/taxonomy.md`. Миграция 150 существующих слов + 12 новых Core-глаголов. | ⚪ Pending | **TASK-050.md** (готов к запуску) |
-| 2.2 | Обновить `cards.generator.ts`: фильтр по `themeKey` и `cefrLevel`. | ⚪ Pending | TASK-050.md (часть 5.1) |
-| 2.3 | Обновить `boosters.service.ts`: выбор темы, тематические бустеры. | ⚪ Pending | TASK-050.md (часть 5.2) |
-| 2.4 | Обновить `quiz.generator.ts`: приоритет дистракторов по теме. | ⚪ Pending | TASK-050.md (часть 5.3) |
-| 2.5 | Обновить `player.service.ts` (TASK-048 coll. levels) — ширина по темам. | ⚪ Pending | TASK-050.md (часть 5.4) |
+| 2.1 | Prisma миграция: модели `Theme`, `WordTheme`, поля `cefrLevel`, `isCore`, `dialect` на Word. Сид 37 тем + 150 существующих слов + 12 новых Core-глаголов. | ✅ Done (2026-04-09) | TASK-050.md |
+| 2.2 | Обновить `cards.generator.ts`: фильтр по `themeKey`, `cefrMaxLevel`, `excludeCore`, `coreOnly`. | ✅ Done (2026-04-09) | TASK-050.md |
+| 2.3 | Обновить `boosters.service.ts`: выбор случайной темы из разблокированных, план core-слотов с BOOSTER_CORE_DROP_CHANCE=15%. | ✅ Done (2026-04-09) | TASK-050.md |
+| 2.4 | Обновить `quiz.generator.ts`: приоритет дистракторов sameThemeAndType > sameTheme > sameType > sameRarity > sameLanguage. | ✅ Done (2026-04-09) | TASK-050.md |
+| 2.5 | Обновить `player.service.ts`: unlockedThemes + cefrMaxLevel в PlayerDto, маппинг collectionLevel → cefrMax. | ✅ Done (2026-04-09) | TASK-050.md |
+
+**Итоги TASK-050:**
+- Schema: Word +{cefrLevel, isCore, dialect}, новые модели Theme и WordTheme (m2m)
+- Seed: 37 тем (13 A1 + 16 A2 + 8 B1), 162 слова (150 legacy + 12 core), 0 битых ссылок
+- Core: 27 слов (15 из legacy через taxonomy map + 12 новых базовых глаголов)
+- Все include { word: true } места обновлены на include { word: { include: { wordThemes: true } } }
+- Backend build OK, Frontend build OK, Prisma validate OK
+- Пустых тем осталось 4 (weather-seasons, hotel-stay, emergencies, idioms-body) — заполнятся в Этапе 5
+- Docker-миграция не запускалась в рамках TASK-050 (требует ручного запуска на рабочем стенде)
 
 ### Этап 3: Эталонная тема вручную
 
@@ -519,3 +528,4 @@ generateCardFromPool({
 | 2026-04-09 | Создание документа, версия 1.0 | Claude + Aleksei |
 | 2026-04-09 | TASK-049 завершён: `content-audit.md` (562 стр., ~32 критичных проблемы, 18 эталонных слов) и `taxonomy.md` (583 стр., 6 доменов, 32 темы). Этап 1 задачи 1.1 и 1.2 → ✅. Этап 5 раскрыт реальным списком из 32 тем с приоритетом A1/A2/B1. Раздел 12 (Открытые вопросы) обновлён реальными вопросами из аудита и таксономии. | Claude + субагенты |
 | 2026-04-09 | Ревью Aleksei пройдено (версия 1.1). Диалект зафиксирован как **Rioplatense** (раздел 5.6). Инструмент — только Claude Code, без внешних API (раздел 5.7). Core = флаг isCore. Раскладка 11 спорных слов утверждена. Правило мнемоник утверждено (только конкретные ассоциации, не описания). Правило регистров обновлено (voseo допустим в C). Критическая дыра A1 зафиксирована (12 базовых глаголов добавляются в TASK-050). Content-audit.md обновлён (отменена рекомендация "C без voseo"). TASK-050 и TASK-051 созданы как следующие шаги. | Claude + Aleksei |
+| 2026-04-09 | TASK-050 выполнен: Prisma schema с Theme/WordTheme/cefrLevel/isCore/dialect, seed-themes.ts (37 тем), seed-words-taxonomy.ts (150 legacy words mapped), seed-words-core.ts (12 core verbs: ser/estar/tener/haber/poder/vivir/trabajar/saber/conocer/dar/decir/gustar). Cards generator, boosters, quiz dispatchers и player service обновлены под таксономию. Backend и frontend собираются, taxonomy verify скрипт прошёл 0 ошибок. Docker seed — ждёт ручного запуска. | Claude |

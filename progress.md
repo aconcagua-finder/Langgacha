@@ -72,3 +72,31 @@ TASK-047 verification:
 - `frontend`: `npm run build` — OK.
 - Playwright snapshot `.playwright-cli/page-2026-03-24T23-50-09-388Z.yml` на `/battles` подтверждает обновлённую шапку: label `Бустеры`, центральный nav-block, desktop dust-chip без слова `Пыль` и user button вместо старой пары `username + Выйти`.
 - Wrapper в этом сеансе снова подвисал на интерактивном click по user-trigger, поэтому open-state dropdown без стабильного snapshot-артефакта не зафиксирован; сам dropdown, overlay, Escape-close и route-close проверены по коду и через зелёную сборку.
+
+TASK-049 content foundation analysis (2026-04-09):
+- `docs/content-plan.md` создан (v1.1 после ревью Aleksei) — главный план фазы 2.18
+- `docs/content-audit.md` создан — аудит 150 слов (~32 критичных проблемы, 18 эталонных)
+- `docs/taxonomy.md` создан — 6 доменов, 37 тем, 150 legacy слов разложены
+- Решения Aleksei зафиксированы: Rioplatense диалект (voseo ок везде), 11 спорных слов, Core как флаг, правило мнемоник, Expression блокируется до A2
+- `docs/tasks/TASK-049.md`, TASK-050.md, TASK-051.md созданы
+
+TASK-050 schema migration + content foundation (2026-04-09):
+- Prisma schema: +cefrLevel/isCore/dialect на Word, новые модели Theme (37 themes) и WordTheme (m2m с isPrimary)
+- Миграция `20260409173454_content_foundation_themes/migration.sql` (SQL, для истории; реальный push через `db:push`)
+- `scripts/seed-themes.ts` — 37 тем с orderIndex, 13 A1 (приоритет 1-15) + 16 A2 + 8 B1
+- `scripts/seed-words-taxonomy.ts` — маппинг 150 legacy conceptKey → {cefrLevel, isCore?, themes[]}, 0 пропусков
+- `scripts/seed-words-core.ts` — 12 новых базовых глаголов (ser/estar/tener/haber/poder/vivir/trabajar/saber/conocer/dar/decir/gustar) закрывают A1-gap из audit. Voseo в flavor, мнемоники по новому правилу (конкретные ассоциации)
+- `scripts/seed.ts` — upsert Theme → Word → rebuild WordTheme, валидация ключей, warn на unknown refs
+- `cards.generator.ts` — pickRandomWord добавлены themeKey / cefrMaxLevel / excludeCore / coreOnly + graceful fallback при пустой теме. toDto добавляет themes/primaryTheme/cefrLevel/isCore
+- Все точки `include: { word: true }` обновлены на `include: { word: { include: { wordThemes: true } } }` (cards.service, battle.service, battle.bot, evolution.service, raid.service)
+- `boosters.service.ts` — выбор случайной темы из player.unlockedThemes, per-slot core-plan (BOOSTER_CORE_DROP_CHANCE=15%, cap=2), обратно-совместимая сигнатура
+- `quiz.generator.ts` — distractor priority: sameThemeAndType > sameTheme > sameType > sameRarity > sameLanguage > any. Добавлена clearDistractorCache. wordThemes проброшен из battle/bot/raid
+- `player.service.ts` — PlayerDto +unlockedThemes +cefrMaxLevel, CEFR_MAX_BY_COLLECTION_LEVEL map
+- Frontend: `types/card.ts` и `api/player.ts` синхронизированы с backend DTO
+
+TASK-050 verification:
+- `backend`: `npm run build` — OK
+- `frontend`: `npm run build` — OK (300 kB bundle, 85 kB gzipped, 85 modules)
+- `prisma validate` — OK
+- Taxonomy verify script (одноразовый): 162 words, 150 legacy (все с taxonomy), 12 new, 27 core total, 0 битых theme refs, 4 пустых темы (заполнятся в Этапе 5)
+- Docker seed — не запускался в этой задаче, ждёт ручного запуска (порт 5432 на машине был занят другим проектом). Для применения миграции локально: `npm run db:setup` (в backend)

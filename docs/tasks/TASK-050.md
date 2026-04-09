@@ -2,9 +2,18 @@
 
 **Путь к файлу задачи:** `docs/tasks/TASK-050.md`
 **Родительский план:** `docs/content-plan.md` (ЭТАП 2, задачи 2.1–2.5)
-**Статус:** ⚪ Pending (ожидает начала)
+**Статус:** ✅ Done (2026-04-09)
 **Тип:** CODE + миграция БД + ручная раскладка данных
 **Блокеры:** TASK-049 завершён, решения Aleksei зафиксированы в content-plan.md § 12
+
+## Итоги выполнения
+
+- Schema: Word +{cefrLevel, isCore, dialect}, новые модели Theme (37) и WordTheme (m2m)
+- Seed: 37 тем, 162 слова (150 legacy + 12 core verbs), 0 битых ссылок
+- Все include-сайты Word-запросов обновлены на включение wordThemes
+- Backend build OK, Frontend build OK, Prisma validate OK
+- Docker seed: требует ручного запуска `npm run db:setup` на стенде (не запускалось из-за занятого порта 5432)
+- Подробности — `progress.md` раздел TASK-050 и `docs/content-plan.md` Этап 2
 
 > **Старые TASK-файлы удалены, потому что проверены и закрыты. НЕ восстанавливай их.**
 

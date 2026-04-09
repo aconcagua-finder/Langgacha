@@ -19,4 +19,10 @@ export type GeneratedCardDto = {
   wordXpForNext: number;
   canEvolve: boolean;
   isEvolved: boolean;
+
+  // Phase 2.18 Content Foundation fields
+  cefrLevel: string | null;
+  isCore: boolean;
+  themes: string[];        // all theme keys (primary + additional)
+  primaryTheme: string | null;
 };

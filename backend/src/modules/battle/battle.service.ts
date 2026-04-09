@@ -149,7 +149,7 @@ export const startBattle = async (playerId: string, cardIds: string[]): Promise<
 
   const cards = await prisma.card.findMany({
     where: { id: { in: cardIds }, playerId },
-    include: { word: true },
+    include: { word: { include: { wordThemes: true } } },
   });
 
   if (cards.length !== cardIds.length) throw new Error("Some cards were not found.");

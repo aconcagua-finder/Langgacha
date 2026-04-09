@@ -8,7 +8,7 @@ import type { EvolveResult, EvolutionStatus } from "./evolution.types.js";
 const getOwnedCard = async (playerId: string, cardId: string) => {
   const card = await prisma.card.findUnique({
     where: { id: cardId },
-    include: { word: true },
+    include: { word: { include: { wordThemes: true } } },
   });
 
   if (!card || card.playerId !== playerId) throw new Error("Card not found.");
@@ -78,7 +78,7 @@ export const evolveCard = async (
     const [card, player, progress] = await Promise.all([
       tx.card.findUnique({
         where: { id: cardId },
-        include: { word: true },
+        include: { word: { include: { wordThemes: true } } },
       }),
       tx.player.findUnique({
         where: { id: playerId },
@@ -123,7 +123,7 @@ export const evolveCard = async (
         atk: Math.round(card.atk * 1.2),
         def: Math.round(card.def * 1.2),
       },
-      include: { word: true },
+      include: { word: { include: { wordThemes: true } } },
     });
 
     const dto = await mapCardToDto(updatedCard, { playerId, db: tx });

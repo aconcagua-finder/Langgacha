@@ -159,7 +159,7 @@ export const getNextCard = async (playerId: string): Promise<NextRaidCard | null
       playerId,
       ...(usedIds.length ? { id: { notIn: usedIds } } : {}),
     },
-    include: { word: true },
+    include: { word: { include: { wordThemes: true } } },
   });
 
   if (!cards.length) return null;
@@ -246,7 +246,7 @@ export const attackBoss = async (
 
     const card = await tx.card.findUnique({
       where: { id: cardId },
-      include: { word: true },
+      include: { word: { include: { wordThemes: true } } },
     });
     if (!card || card.playerId !== playerId) throw new Error("Card not found.");
 

@@ -50,7 +50,7 @@ export const listCards = async (
   const cards = await prisma.card.findMany({
     where,
     orderBy,
-    include: { word: true },
+    include: { word: { include: { wordThemes: true } } },
   });
 
   if (sort === "rarity_desc") {
@@ -71,7 +71,7 @@ export const disintegrateCard = async (
 ): Promise<{ dustGained: number; totalDust: number }> => {
   const card = await prisma.card.findUnique({
     where: { id: cardId },
-    include: { word: true },
+    include: { word: { include: { wordThemes: true } } },
   });
 
   if (!card || card.playerId !== playerId) {

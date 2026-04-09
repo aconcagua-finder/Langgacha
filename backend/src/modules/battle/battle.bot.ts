@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 
-import type { Word } from "@prisma/client";
+import type { Word, WordTheme } from "@prisma/client";
 
 import { prisma } from "../../db/prisma.js";
 import { BATTLE_DECK_SIZE, rollStat, type Rarity } from "../../shared/constants.js";
@@ -8,6 +8,8 @@ import { rollCondition } from "../cards/cards.generator.js";
 import { generateQuiz } from "../quiz/index.js";
 import { applyConditionModifier, computeHp } from "./battle.combat.js";
 import type { BattleCard } from "./battle.types.js";
+
+type BotWord = Word & { wordThemes: WordTheme[] };
 
 const RARITY_ORDER: Rarity[] = ["C", "UC", "R", "SR", "SSR"];
 
@@ -22,13 +24,14 @@ const rarityToRank: Record<string, number> = {
 const SLOT_TARGET_MIN_FACTOR = 0.85;
 const SLOT_TARGET_MAX_FACTOR = 1.15;
 
-const buildBotCard = async (word: Word): Promise<BattleCard> => {
+const buildBotCard = async (word: BotWord): Promise<BattleCard> => {
   const rarity = word.rarity as Rarity;
   const rawAtk = rollStat(rarity, word.baseAtk);
   const rawDef = rollStat(rarity, word.baseDef);
   const condition = rollCondition();
   const atk = applyConditionModifier(rawAtk, condition);
   const def = applyConditionModifier(rawDef, condition);
+  const wordThemeKeys = word.wordThemes.map((wt) => wt.themeKey);
   const quiz = await generateQuiz({
     word: word.word,
     translationRu: word.translationRu,
@@ -40,6 +43,7 @@ const buildBotCard = async (word: Word): Promise<BattleCard> => {
     wordType: word.type,
     rarity: word.rarity,
     language: word.language,
+    wordThemes: wordThemeKeys,
   });
   return {
     id: `bot:${randomUUID()}`,
@@ -72,14 +76,14 @@ const scaleCardToTargetPower = (card: BattleCard, targetPower: number): BattleCa
 };
 
 export const generateBotDeck = async (playerCards: BattleCard[]): Promise<BattleCard[]> => {
-  const pool = await prisma.word.findMany();
+  const pool = await prisma.word.findMany({ include: { wordThemes: true } });
   if (pool.length < 1) throw new Error("Not enough words in pool to generate bot deck.");
   if (playerCards.length < 1) throw new Error("Player deck must contain at least 1 card.");
   if (playerCards.length > BATTLE_DECK_SIZE) {
     throw new Error(`Player deck must not exceed ${BATTLE_DECK_SIZE} cards.`);
   }
 
-  const byRarity = new Map<Rarity, Word[]>();
+  const byRarity = new Map<Rarity, BotWord[]>();
   for (const r of RARITY_ORDER) byRarity.set(r, []);
   for (const w of pool) {
     const r = (w.rarity as Rarity) ?? "C";
@@ -106,7 +110,7 @@ export const generateBotDeck = async (playerCards: BattleCard[]): Promise<Battle
     return best.rarity;
   };
 
-  const pickWordForRarity = (rarity: Rarity): Word => {
+  const pickWordForRarity = (rarity: Rarity): BotWord => {
     const list = byRarity.get(rarity) ?? [];
     if (list.length === 0) {
       const fallback = pool[Math.floor(Math.random() * pool.length)];

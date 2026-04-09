@@ -18,4 +18,11 @@ export type PlayerDto = {
   avgWordLevelNeeded: number;
   totalCollectionXp: number;
   unlockedRarities: string[];
+  /**
+   * Theme keys available to the player based on CEFR max level.
+   * Phase 2.18: all themes with cefrTier <= player's cefrMax.
+   */
+  unlockedThemes: string[];
+  /** Effective CEFR max level for booster/content filtering. */
+  cefrMaxLevel: "A1" | "A2" | "B1" | "B2" | "C1" | "C2";
 };

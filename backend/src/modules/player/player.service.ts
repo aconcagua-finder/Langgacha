@@ -13,6 +13,33 @@ import type { PlayerCollectionLevelName, PlayerDto } from "./player.types.js";
 
 type CollectionLevel = (typeof COLLECTION_LEVELS)[number];
 
+/**
+ * Phase 2.18: map collection level name → CEFR max level for content filtering.
+ * Keeps theming decoupled from collection level itself — both "A2" and "A2+" → CEFR A2.
+ * B1/B1+ → B1. No B2/C1/C2 yet.
+ */
+const CEFR_MAX_BY_COLLECTION_LEVEL: Record<
+  PlayerCollectionLevelName,
+  "A1" | "A2" | "B1" | "B2" | "C1" | "C2"
+> = {
+  A1: "A1",
+  "A1+": "A1",
+  A2: "A2",
+  "A2+": "A2",
+  B1: "B1",
+  "B1+": "B1",
+};
+
+const CEFR_TIER_ORDER = ["A1", "A2", "B1", "B2", "C1", "C2"] as const;
+
+const cefrTiersUpTo = (
+  maxLevel: "A1" | "A2" | "B1" | "B2" | "C1" | "C2",
+): string[] => {
+  const maxIdx = CEFR_TIER_ORDER.indexOf(maxLevel);
+  if (maxIdx < 0) return ["A1"];
+  return CEFR_TIER_ORDER.slice(0, maxIdx + 1) as unknown as string[];
+};
+
 const getCollectionProgress = (progressRecords: Array<{ xp: number; level: number }>) => {
   const normalized = progressRecords.map((record) => ({
     xp: record.xp,
@@ -108,6 +135,16 @@ export const getPlayerDto = async (playerId: string): Promise<PlayerDto> => {
     ? currentLevelName(collectionProgress.next)
     : null;
 
+  // Phase 2.18: resolve CEFR max + unlocked themes from current collection level.
+  const cefrMaxLevel = CEFR_MAX_BY_COLLECTION_LEVEL[collectionLevel] ?? "A1";
+  const allowedTiers = cefrTiersUpTo(cefrMaxLevel);
+  const themes = await prisma.theme.findMany({
+    where: { cefrTier: { in: allowedTiers } },
+    select: { key: true },
+    orderBy: { orderIndex: "asc" },
+  });
+  const unlockedThemes = themes.map((t) => t.key);
+
   return {
     id: playerId,
     name: player.name,
@@ -126,6 +163,8 @@ export const getPlayerDto = async (playerId: string): Promise<PlayerDto> => {
     avgWordLevelNeeded: collectionProgress.avgWordLevelNeeded,
     totalCollectionXp: collectionProgress.totalCollectionXp,
     unlockedRarities: [...collectionProgress.current.rarities],
+    unlockedThemes,
+    cefrMaxLevel,
   };
 };
 

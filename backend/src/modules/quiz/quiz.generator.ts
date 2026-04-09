@@ -13,17 +13,30 @@ type GenerateQuizParams = {
   wordType?: string;
   rarity?: string;
   language?: string;
+  /** All theme keys of the word (primary + additional). Enables theme-semantic distractors. */
+  wordThemes?: string[];
 };
 
 type DistractorWord = {
+  id: string;
   word: string;
   type: string;
   rarity: string;
   language: string;
+  themes: string[]; // all theme keys (primary + additional)
 };
 
 let cachedWords: DistractorWord[] | null = null;
 let cachedWordsPromise: Promise<DistractorWord[]> | null = null;
+
+/**
+ * Bust the distractor cache. Call this whenever words or theme links change
+ * (e.g. after reseeding). For now the cache lives until process restart.
+ */
+export const clearDistractorCache = (): void => {
+  cachedWords = null;
+  cachedWordsPromise = null;
+};
 
 const shuffle = <T>(items: T[]): T[] => {
   const next = [...items];
@@ -72,29 +85,47 @@ const buildTypingQuiz = (params: GenerateQuizParams): Quiz => ({
 const getDistractorPool = async (): Promise<DistractorWord[]> => {
   if (cachedWords) return cachedWords;
   if (!cachedWordsPromise) {
-    cachedWordsPromise = prisma.word.findMany({
-      select: {
-        word: true,
-        type: true,
-        rarity: true,
-        language: true,
-      },
-    }).then((words) => {
-      cachedWords = words;
-      return words;
-    }).finally(() => {
-      cachedWordsPromise = null;
-    });
+    cachedWordsPromise = prisma.word
+      .findMany({
+        select: {
+          id: true,
+          word: true,
+          type: true,
+          rarity: true,
+          language: true,
+          wordThemes: { select: { themeKey: true } },
+        },
+      })
+      .then((rows) => {
+        const mapped: DistractorWord[] = rows.map((row) => ({
+          id: row.id,
+          word: row.word,
+          type: row.type,
+          rarity: row.rarity,
+          language: row.language,
+          themes: row.wordThemes.map((wt) => wt.themeKey),
+        }));
+        cachedWords = mapped;
+        return mapped;
+      })
+      .finally(() => {
+        cachedWordsPromise = null;
+      });
   }
   return cachedWordsPromise;
 };
 
-const pickDistractors = async (
-  correctWord: string,
-  wordType?: string,
-  rarity?: string,
-  language?: string,
-): Promise<string[]> => {
+type PickDistractorsOptions = {
+  correctWord: string;
+  wordType?: string;
+  rarity?: string;
+  language?: string;
+  /** Primary or all theme keys of the correct word — used to prioritize semantic distractors. */
+  wordThemes?: string[];
+};
+
+const pickDistractors = async (options: PickDistractorsOptions): Promise<string[]> => {
+  const { correctWord, wordType, rarity, language, wordThemes } = options;
   const normalizedCorrect = correctWord.trim().toLowerCase();
   const pool = await getDistractorPool();
   const nonMatching = pool.filter((item) => item.word.trim().toLowerCase() !== normalizedCorrect);
@@ -102,7 +133,20 @@ const pickDistractors = async (
     ? nonMatching.filter((item) => item.language === language)
     : nonMatching;
 
+  // Phase 2.18: prioritize theme-semantic distractors.
+  const themeSet = new Set(wordThemes ?? []);
+  const sameTheme = themeSet.size
+    ? sameLanguage.filter((item) => item.themes.some((k) => themeSet.has(k)))
+    : [];
+
+  // Same theme AND same type (tightest — e.g. both Object in "kitchen")
+  const sameThemeAndType = wordType
+    ? sameTheme.filter((item) => item.type === wordType)
+    : [];
+
   const buckets = [
+    sameThemeAndType,
+    sameTheme,
     wordType ? sameLanguage.filter((item) => item.type === wordType) : [],
     rarity ? sameLanguage.filter((item) => item.rarity === rarity) : [],
     sameLanguage,
@@ -126,12 +170,13 @@ const pickDistractors = async (
 };
 
 const buildReverseQuiz = async (params: GenerateQuizParams): Promise<Quiz | null> => {
-  const distractors = await pickDistractors(
-    params.word,
-    params.wordType,
-    params.rarity,
-    params.language,
-  );
+  const distractors = await pickDistractors({
+    correctWord: params.word,
+    wordType: params.wordType,
+    rarity: params.rarity,
+    language: params.language,
+    wordThemes: params.wordThemes,
+  });
 
   if (distractors.length < 3) return null;
 

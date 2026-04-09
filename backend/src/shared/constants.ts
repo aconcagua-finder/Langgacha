@@ -63,6 +63,12 @@ export const BOOSTER_RECHARGE_MS = 10 * 60 * 1000;
 export const BOOSTER_SIZE = 7;
 export const PITY_THRESHOLD = 10;
 
+// Phase 2.18: thematic boosters
+/** Per-slot probability that a booster slot becomes a Core word instead of a theme word. */
+export const BOOSTER_CORE_DROP_CHANCE = 0.15;
+/** Max number of core slots per booster (cap to keep theme feeling strong). */
+export const BOOSTER_MAX_CORE_SLOTS = 2;
+
 export const DEF_SCALING_FACTOR = 200;
 export const BATTLE_DECK_SIZE = 10;
 

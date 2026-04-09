@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 
-import type { Card, Word } from "@prisma/client";
+import type { Card, Word, WordTheme } from "@prisma/client";
 
 import { battleStore } from "../../db/redis.js";
 import { prisma } from "../../db/prisma.js";
@@ -66,13 +66,14 @@ const delState = async (battleId: string): Promise<void> => {
 };
 
 const buildPlayerBattleCard = async (
-  card: Card & { word: Word },
+  card: Card & { word: Word & { wordThemes?: WordTheme[] } },
   progressMap: Map<string, WordProgressState>,
 ): Promise<BattleCard> => {
   const progress = progressMap.get(card.wordId) ?? null;
   const condition = computeConditionFromReview(progress?.lastReviewedAt ?? null, progress?.level ?? 0);
   const atk = applyConditionModifier(card.atk, condition);
   const def = applyConditionModifier(card.def, condition);
+  const wordThemeKeys = (card.word.wordThemes ?? []).map((wt) => wt.themeKey);
   const quiz = await generateQuiz({
     word: card.word.word,
     translationRu: card.word.translationRu,
@@ -84,6 +85,7 @@ const buildPlayerBattleCard = async (
     wordType: card.word.type,
     rarity: card.word.rarity,
     language: card.word.language,
+    wordThemes: wordThemeKeys,
   });
   return {
     id: card.id,

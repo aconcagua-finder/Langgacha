@@ -19,6 +19,9 @@ export type PlayerDto = {
   avgWordLevelNeeded: number;
   totalCollectionXp: number;
   unlockedRarities: string[];
+  // Phase 2.18 Content Foundation fields
+  unlockedThemes: string[];
+  cefrMaxLevel: string;
 };
 
 export const getPlayer = async (): Promise<PlayerDto> => {

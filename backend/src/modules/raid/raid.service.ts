@@ -191,6 +191,9 @@ export const getNextCard = async (playerId: string): Promise<NextRaidCard | null
     playerId,
     progress: chosenProgress,
   });
+  const chosenThemeKeys = (
+    (chosen.word as unknown as { wordThemes?: Array<{ themeKey: string }> }).wordThemes ?? []
+  ).map((wt) => wt.themeKey);
   const quiz = await generateQuiz({
     word: chosen.word.word,
     translationRu: chosen.word.translationRu,
@@ -202,6 +205,7 @@ export const getNextCard = async (playerId: string): Promise<NextRaidCard | null
     wordType: chosen.word.type,
     rarity: chosen.word.rarity,
     language: chosen.word.language,
+    wordThemes: chosenThemeKeys,
   });
 
   await battleStore.set(

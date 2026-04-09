@@ -191,16 +191,20 @@
 - [x] Ревью Aleksei: диалект **Rioplatense** зафиксирован, раскладка 11 спорных слов утверждена, правила мнемоник/регистров зафиксированы
 - [x] `docs/content-plan.md` v1.1 (разделы 5.6, 5.7, § 12)
 
-### Этап 2.18.2 — Миграция схемы
-- [ ] TASK-050: Prisma модели Theme/WordTheme, поля cefrLevel/isCore/dialect
-- [ ] TASK-050: Сид 32 тем из taxonomy.md
-- [ ] TASK-050: Миграция 150 существующих слов (раскладка по темам, CEFR, isCore)
-- [ ] TASK-050: Core-дополнение — 12 базовых глаголов (ser, estar, tener, haber, poder, vivir, trabajar, saber, conocer, dar, decir, gustar)
-- [ ] TASK-050: Обновление boosters/cards generator/quiz дистракторов
+### Этап 2.18.2 — Миграция схемы ✅
+- [x] TASK-050: Prisma модели Theme/WordTheme, поля cefrLevel/isCore/dialect
+- [x] TASK-050: Сид 37 тем из taxonomy.md (13 A1 + 16 A2 + 8 B1)
+- [x] TASK-050: Миграция 150 существующих слов (раскладка по темам через taxonomy map)
+- [x] TASK-050: Core-дополнение — 12 базовых глаголов (ser, estar, tener, haber, poder, vivir, trabajar, saber, conocer, dar, decir, gustar)
+- [x] TASK-050: Обновление boosters/cards generator/quiz дистракторов
+- [x] Verification в Docker: 162 слова, 27 core, smoke tests через API прошли
 
-### Этап 2.18.3 — Эталонная тема вручную
-- [ ] TASK-051: Собрать тему Kitchen (~80 слов) итеративно в диалоге с калибровкой стиля
-- [ ] TASK-051: Извлечь AI-промпт → `docs/content-generation-prompt.md`
+### Этап 2.18.3 — Эталонная тема Kitchen ✅
+- [x] TASK-051: `seed-theme-kitchen.ts` — **88 слов** (48 C / 29 UC / 9 R / 2 SR), полностью в новом формате
+- [x] TASK-051: 13 legacy kitchen-слов убраны из common/uncommon/taxonomy
+- [x] TASK-051: Багфикс pickRandomWord — CEFR-bypass для R/SR/SSR, fallback chain
+- [x] TASK-051: Live-test в Docker — тематические бустеры и семантические reverse-quiz подтверждены
+- [x] TASK-051: `docs/content-generation-prompt.md` — AI-шаблон для следующих тем
 
 ### Этап 2.18.4 — Ревизия существующих 150 слов
 - [ ] TASK-053..057: Полировка 150 слов по аудиту и эталонному стилю

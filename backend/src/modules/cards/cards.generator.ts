@@ -138,6 +138,13 @@ type PickRandomWordParams = {
   coreOnly?: boolean;
 };
 
+/**
+ * Rarities for which CEFR filter is NOT applied. Rationale: R/SR/SSR are "gacha moments" —
+ * rare+interesting cards that should break through even for lower-level players ("you pulled
+ * something cool, now learn it"). CEFR gating is for the base C/UC pool which is read every day.
+ */
+const CEFR_BYPASS_RARITIES = new Set<Rarity>(["R", "SR", "SSR"]);
+
 const pickRandomWord = async (params?: PickRandomWordParams): Promise<Word> => {
   const db = params?.db ?? prisma;
 
@@ -154,7 +161,10 @@ const pickRandomWord = async (params?: PickRandomWordParams): Promise<Word> => {
     where.wordThemes = { some: { themeKey: params.themeKey } };
   }
 
-  if (params?.cefrMaxLevel) {
+  const applyCefrFilter =
+    params?.cefrMaxLevel &&
+    !(params.rarity && CEFR_BYPASS_RARITIES.has(params.rarity));
+  if (applyCefrFilter) {
     const allowed = cefrAllowedLevels(params.cefrMaxLevel);
     // Null cefrLevel = treated as A1 (most permissive legacy default)
     where.OR = [{ cefrLevel: { in: allowed as string[] } }, { cefrLevel: null }];
@@ -162,13 +172,22 @@ const pickRandomWord = async (params?: PickRandomWordParams): Promise<Word> => {
 
   const count = await db.word.count({ where });
   if (count === 0) {
-    // Graceful fallback: if a theme-scoped query returned 0, try without the theme filter
-    // (this can happen if a theme is empty in the current seed). Preserve other filters.
+    // Graceful fallback chain — relax filters one at a time, in order of importance.
+    // Priority: rarity > theme > cefr. If the pool is mis-balanced (e.g. all R-words in
+    // the chosen theme are CEFR A2 but the player is A1), we relax cefr first, then theme.
+    if (params?.cefrMaxLevel) {
+      const { cefrMaxLevel: _dropped, ...rest } = params;
+      // eslint-disable-next-line no-console
+      console.warn(
+        `[cards.generator] No words for theme "${params?.themeKey ?? "*"}" + cefr<=${params.cefrMaxLevel} (rarity=${params.rarity ?? "any"}). Relaxing cefr filter.`,
+      );
+      return pickRandomWord(rest);
+    }
     if (params?.themeKey) {
       const { themeKey: _dropped, ...rest } = params;
       // eslint-disable-next-line no-console
       console.warn(
-        `[cards.generator] No words for theme "${params.themeKey}" (rarity=${params.rarity ?? "any"}). Falling back to any theme.`,
+        `[cards.generator] No words for theme "${params.themeKey}" (rarity=${params.rarity ?? "any"}). Relaxing theme filter.`,
       );
       return pickRandomWord(rest);
     }

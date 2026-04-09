@@ -371,8 +371,18 @@ generateCardFromPool({
 
 | # | Задача | Статус | Файл |
 |---|--------|--------|------|
-| 3.1 | Собрать тему `Kitchen` (~80 слов) вручную в диалоге, с обоснованием каждого слова. Финальный вариант — эталон. Калибровка hint/flavor/quiz стиля. | ⚪ Pending | **TASK-051.md** (готов к запуску после TASK-050) |
-| 3.2 | Extract prompt template для AI на основе эталона темы — сохранить в `docs/content-generation-prompt.md`. | ⚪ Pending | TASK-051.md (Шаг 6) |
+| 3.1 | Собрать тему `Kitchen` (~80 слов) автономно. Финальный вариант — эталон. Калибровка hint/flavor/quiz стиля. | ✅ Done (2026-04-09) | TASK-051.md |
+| 3.2 | Extract prompt template для AI на основе эталона темы — сохранить в `docs/content-generation-prompt.md`. | ✅ Done (2026-04-09) | TASK-051.md |
+
+**Итоги TASK-051:**
+- `backend/scripts/seed-theme-kitchen.ts` — **88 слов** (48 C / 29 UC / 9 R / 2 SR)
+- Все написаны в Rioplatense стиле: voseo в flavor, rioplatense-вокабуляр (heladera/manteca/palta/papa/yerba/mate/asado/parrilla/milanesa/medialuna/dulce de leche/alfajor/chimichurri), мнемоники только по новому правилу (конкретные ассоциации)
+- 2 lunfardo жемчужины SR: `morfi` (жрачка) и `morfar` (жрать) — отрабатывают интеграцию с доменом Expression
+- 13 legacy kitchen-слов удалены из `seed-words-common.ts`, `seed-words-uncommon.ts` и `seed-words-taxonomy.ts` (замены в новом файле)
+- **Багфикс `pickRandomWord`**: CEFR-фильтр не применяется к R/SR/SSR рарностям (гача-моменты, cefr bypass), fallback chain при пустом результате (cefr → theme → rarity)
+- База в Docker: **236 слов** (27 core + 88 kitchen + 121 legacy), **317 WordTheme links**, 37 тем
+- Live test: 7 бустеров открыто, получены тематически связные паки (kitchen, greetings-courtesy, city-streets, shopping), reverse quiz возвращает только семантически близкие дистракторы (tenedor → milanesa/palta/azúcar; cuchillo → manteca/queso/asado)
+- `docs/content-generation-prompt.md` — **полный шаблон для AI-генерации следующих тем** (диалект, CEFR, мнемоники, дистракторы, размеры, anti-patterns, sanity checks)
 
 ### Этап 4: Ревизия 150 существующих слов
 
@@ -392,7 +402,7 @@ generateCardFromPool({
 | # | Theme | Domain | Статус | Таск |
 |---|-------|--------|--------|------|
 | 5.1 | home — Дом и комнаты | Everyday | ⚪ Pending | TBD |
-| 5.2 | kitchen — На кухне | Everyday | ⚪ Pending | **TASK-051** (эталонная) |
+| 5.2 | kitchen — На кухне | Everyday | ✅ **88 слов** (эталон) | **TASK-051** |
 | 5.3 | eating-out — За столом | Everyday | ⚪ Pending | TBD |
 | 5.4 | morning-routine — Утро и рутина | Everyday | ⚪ Pending | TBD |
 | 5.5 | clothing — Одежда и гардероб | Everyday | ⚪ Pending | TBD |
@@ -529,3 +539,5 @@ generateCardFromPool({
 | 2026-04-09 | TASK-049 завершён: `content-audit.md` (562 стр., ~32 критичных проблемы, 18 эталонных слов) и `taxonomy.md` (583 стр., 6 доменов, 32 темы). Этап 1 задачи 1.1 и 1.2 → ✅. Этап 5 раскрыт реальным списком из 32 тем с приоритетом A1/A2/B1. Раздел 12 (Открытые вопросы) обновлён реальными вопросами из аудита и таксономии. | Claude + субагенты |
 | 2026-04-09 | Ревью Aleksei пройдено (версия 1.1). Диалект зафиксирован как **Rioplatense** (раздел 5.6). Инструмент — только Claude Code, без внешних API (раздел 5.7). Core = флаг isCore. Раскладка 11 спорных слов утверждена. Правило мнемоник утверждено (только конкретные ассоциации, не описания). Правило регистров обновлено (voseo допустим в C). Критическая дыра A1 зафиксирована (12 базовых глаголов добавляются в TASK-050). Content-audit.md обновлён (отменена рекомендация "C без voseo"). TASK-050 и TASK-051 созданы как следующие шаги. | Claude + Aleksei |
 | 2026-04-09 | TASK-050 выполнен: Prisma schema с Theme/WordTheme/cefrLevel/isCore/dialect, seed-themes.ts (37 тем), seed-words-taxonomy.ts (150 legacy words mapped), seed-words-core.ts (12 core verbs: ser/estar/tener/haber/poder/vivir/trabajar/saber/conocer/dar/decir/gustar). Cards generator, boosters, quiz dispatchers и player service обновлены под таксономию. Backend и frontend собираются, taxonomy verify скрипт прошёл 0 ошибок. Docker seed — ждёт ручного запуска. | Claude |
+| 2026-04-09 | TASK-050 проверен в проде: POSTGRES_PORT → 55432 (избежание конфликта с соседним проектом), сеть пересоздана, db:setup пройден, smoke tests через API подтвердили unlockedThemes/cefrMaxLevel/тематические бустеры. Удалены 8 zombie-слов с null conceptKey из dev БД. | Claude |
+| 2026-04-09 | TASK-051 выполнен: 88 kitchen-слов в новом reference файле `seed-theme-kitchen.ts` (rioplatense voseo, семантичные мнемоники, семантичные дистракторы, аргентинские специалитеты, lunfardo morfi/morfar). 13 legacy kitchen-слов удалены из common/uncommon/taxonomy. Багфикс pickRandomWord: CEFR-bypass для R/SR/SSR (гача-моменты), fallback chain (cefr → theme → rarity). Live-тест reverse quiz подтвердил тематически связные дистракторы. `docs/content-generation-prompt.md` создан как шаблон для генерации следующих тем. | Claude |

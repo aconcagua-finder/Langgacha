@@ -100,3 +100,31 @@ TASK-050 verification:
 - `prisma validate` — OK
 - Taxonomy verify script (одноразовый): 162 words, 150 legacy (все с taxonomy), 12 new, 27 core total, 0 битых theme refs, 4 пустых темы (заполнятся в Этапе 5)
 - Docker seed — не запускался в этой задаче, ждёт ручного запуска (порт 5432 на машине был занят другим проектом). Для применения миграции локально: `npm run db:setup` (в backend)
+
+TASK-050 post-verification в Docker (2026-04-09):
+- `.env` POSTGRES_PORT сменён на 55432 (редкий, избегает конфликта с соседним проектом mediagenerator-postgres-1)
+- `docker compose down && docker compose up -d` — стек перезапущен, network пересоздана
+- `db:setup` прошёл через `db:push` (не migrate), seed загрузил 170 слов (162 ожидаемых + 8 zombie со старой БД)
+- 8 слов с `conceptKey IS NULL` найдены в БД (bajón/bondi/che/desvelarse/laburar/manejar/orgulloso/¿Qué tal? — осколки предыдущих версий seed). Удалены вручную через SQL вместе с их Card/WordProgress
+- Итог: 162 слова в БД (27 core, 135 в темах)
+- Smoke tests через API:
+  - `/api/player` возвращает `unlockedThemes: [15 A1 тем]` в правильном orderIndex и `cefrMaxLevel: "A1"`
+  - `/api/boosters/open` возвращает 7 карт из одной темы (kitchen-пак: cocina+pollo+comida+mesa+té+cocinar) с core-слотами (~15% шанс per slot, cap 2)
+  - Тематические бустеры тянут случайную unlocked тему для каждого открытия
+
+TASK-051 kitchen reference theme (2026-04-09):
+- `backend/scripts/seed-theme-kitchen.ts` — 88 слов (48 C / 29 UC / 9 R / 2 SR)
+- Rioplatense стиль: voseo во всех flavor, rioplatense-вокабуляр (heladera/manteca/palta/papa/yerba/mate/asado/parrilla/milanesa/medialuna/dulce de leche/alfajor/chimichurri/empanada), мнемоники через латинский корень/интернационализм/морфологию
+- Распределение: 48 Objects (посуда/продукты/специалитеты), 18 Actions (готовка), 10 Emotions (вкус/голод), 5 Places (cocina/heladera/horno/microondas/alacena), 3 Expressions (buen provecho/salud/sobremesa), 2 Persons (cocinero/panadero), 2 SR lunfardo (morfi/morfar)
+- 13 legacy kitchen-слов удалены из `seed-words-common.ts` (11) и `seed-words-uncommon.ts` (2), и из `seed-words-taxonomy.ts` (13 mappings)
+- `seed-words.ts` подключает `KITCHEN_WORDS` вторым после `CORE_WORDS`
+- Багфикс в `cards.generator.ts`:
+  - CEFR-фильтр не применяется к R/SR/SSR рарностям (набор `CEFR_BYPASS_RARITIES`), т.к. R/SR — это гача-моменты для игроков любого уровня
+  - Расширенный fallback chain в `pickRandomWord`: cefr → theme → rarity (вместо только theme)
+- Live-test в Docker:
+  - `db:setup` на свежем seed: 236 слов (27 core + 88 kitchen + 121 legacy), 37 тем, 317 WordTheme links
+  - 7 бустеров через API: получены тематически связные паки (kitchen чистый, kitchen + feelings, greetings-courtesy чистый, shopping + money-bank, city-streets + slang-rioplatense). Ни одной ошибки pickRandomWord
+  - Reverse quiz с wordLevel >= 2 (прокачал через SQL для теста):
+    - `tenedor` (вилка) → дистракторы `milanesa / palta / azúcar` (все kitchen) ✅
+    - `cuchillo` (нож) → дистракторы `manteca / queso / asado` (все kitchen) ✅
+- `docs/content-generation-prompt.md` — полный шаблон для AI-генерации следующих тем (~450 строк): диалект, CEFR, правила мнемоник/flavor/дистракторов, размеры, anti-patterns, sanity checks

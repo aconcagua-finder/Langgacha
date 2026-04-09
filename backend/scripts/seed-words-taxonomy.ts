@@ -36,7 +36,7 @@ export const WORD_TAXONOMY: Record<string, WordTaxonomy> = {
   market: { cefrLevel: "A1", themes: ["shopping", "city-streets"] },
   hospital: { cefrLevel: "A1", themes: ["body-health", "city-streets"] },
   bank: { cefrLevel: "A2", themes: ["money-bank", "city-streets"] },
-  kitchen: { cefrLevel: "A1", themes: ["kitchen", "home"] },
+  // kitchen → moved to seed-theme-kitchen.ts (TASK-051)
   bathroom: { cefrLevel: "A1", themes: ["home", "morning-routine"] },
   square: { cefrLevel: "A1", themes: ["city-streets"] },
 
@@ -56,8 +56,7 @@ export const WORD_TAXONOMY: Record<string, WordTaxonomy> = {
   girl: { cefrLevel: "A1", themes: ["family"] },
 
   // Actions (15)
-  eat: { cefrLevel: "A1", themes: ["kitchen", "eating-out"] },
-  drink: { cefrLevel: "A1", themes: ["kitchen", "eating-out"] },
+  // eat/drink → moved to seed-theme-kitchen.ts (TASK-051)
   sleep: { cefrLevel: "A1", themes: ["morning-routine", "home"] },
   speak: { cefrLevel: "A1", isCore: true, themes: [] }, // hablar → Core
   read: { cefrLevel: "A1", isCore: true, themes: [] }, // leer → Core
@@ -73,7 +72,7 @@ export const WORD_TAXONOMY: Record<string, WordTaxonomy> = {
   walk: { cefrLevel: "A1", themes: ["morning-routine", "city-streets"] },
 
   // Objects (20)
-  water: { cefrLevel: "A1", themes: ["kitchen", "restaurant-abroad", "morning-routine", "body-health"] },
+  // water → moved to seed-theme-kitchen.ts (TASK-051)
   book: { cefrLevel: "A1", themes: ["school-education", "home"] },
   table: { cefrLevel: "A1", themes: ["eating-out", "home", "kitchen"] }, // mesa → primary eating-out
   chair: { cefrLevel: "A1", themes: ["home"] },
@@ -83,13 +82,7 @@ export const WORD_TAXONOMY: Record<string, WordTaxonomy> = {
   phone: { cefrLevel: "A1", themes: ["tech-gadgets"] },
   key: { cefrLevel: "A1", themes: ["home"] },
   money: { cefrLevel: "A1", themes: ["money-bank", "shopping"] },
-  food: { cefrLevel: "A1", themes: ["kitchen", "eating-out"] },
-  bread: { cefrLevel: "A1", themes: ["kitchen", "eating-out"] },
-  milk: { cefrLevel: "A1", themes: ["kitchen", "morning-routine"] },
-  coffee: { cefrLevel: "A1", themes: ["kitchen", "morning-routine"] },
-  tea: { cefrLevel: "A1", themes: ["kitchen", "morning-routine"] },
-  apple: { cefrLevel: "A1", themes: ["kitchen"] },
-  chicken: { cefrLevel: "A1", themes: ["kitchen", "pets-animals"] },
+  // food/bread/milk/coffee/tea/apple/chicken → moved to seed-theme-kitchen.ts (TASK-051)
   clothes: { cefrLevel: "A1", themes: ["clothing"] }, // ropa → primary clothing only
   shoes: { cefrLevel: "A1", themes: ["clothing"] }, // zapatos → primary clothing
   watch: { cefrLevel: "A1", themes: ["clothing"] }, // reloj → primary clothing
@@ -131,7 +124,7 @@ export const WORD_TAXONOMY: Record<string, WordTaxonomy> = {
   coworker: { cefrLevel: "A2", themes: ["work-office", "friendship-relationships"] }, // compañero
   client: { cefrLevel: "A2", themes: ["work-office", "shopping"] },
   driver: { cefrLevel: "A2", themes: ["transport", "professions"] },
-  cook_person: { cefrLevel: "A2", themes: ["kitchen", "professions"] },
+  // cook_person → moved to seed-theme-kitchen.ts (TASK-051)
   nurse: { cefrLevel: "A2", themes: ["body-health", "professions"] },
   police_officer: { cefrLevel: "A2", themes: ["city-services", "professions"] },
   artist: { cefrLevel: "A2", themes: ["professions"] },
@@ -139,7 +132,7 @@ export const WORD_TAXONOMY: Record<string, WordTaxonomy> = {
   // Actions (10)
   run: { cefrLevel: "A2", isCore: true, themes: [] }, // correr → Core
   listen: { cefrLevel: "A1", isCore: true, themes: [] }, // escuchar → Core
-  cook_action: { cefrLevel: "A1", themes: ["kitchen"] }, // cocinar → primary kitchen (it's Action but thematic)
+  // cook_action → moved to seed-theme-kitchen.ts (TASK-051)
   drive: { cefrLevel: "A2", themes: ["transport"] },
   buy: { cefrLevel: "A1", themes: ["shopping"] },
   sell: { cefrLevel: "A2", themes: ["shopping"] },

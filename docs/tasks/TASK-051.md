@@ -1,10 +1,47 @@
-# TASK-051: Эталонная тема Kitchen — сборка вручную
+# TASK-051: Эталонная тема Kitchen — сборка
 
 **Путь к файлу задачи:** `docs/tasks/TASK-051.md`
 **Родительский план:** `docs/content-plan.md` (ЭТАП 3, задачи 3.1–3.2)
-**Статус:** ⚪ Pending (ожидает завершения TASK-050)
-**Тип:** ИНТЕРАКТИВНАЯ сборка контента + извлечение промпта
-**Блокеры:** TASK-050 должен быть завершён (нужна схема с Theme/WordTheme/CEFR/isCore)
+**Статус:** ✅ Done (2026-04-09, выполнено автономно)
+**Тип:** Сборка контента + извлечение промпта
+**Блокеры:** ~~TASK-050~~ выполнен
+
+## Итоги выполнения
+
+**Файл:** `backend/scripts/seed-theme-kitchen.ts` — **88 слов** в новом формате.
+
+**Распределение рарностей:** 48 C / 29 UC / 9 R / 2 SR
+- C (55%): базовая посуда, продукты, глаголы готовки, напитки
+- UC (33%): hervir/freír/asar/amasar/сыр/масло/специи/skulpture посуды
+- R (10%): аргентинские специалитеты (asado, parrilla, empanada, medialuna, dulce de leche, chimichurri, yerba, mate, sobremesa)
+- SR (2%): lunfardo (morfi, morfar)
+
+**Стилистический эталон:**
+- Весь flavor в voseo (`vení`, `comiste`, `metelo`, `tenés`, `vos`)
+- Мнемоники по новому правилу (конкретные ассоциации через латинский корень, интернационализм, или морфологию)
+- Все quiz-дистракторы семантически связаны с темой (нож → вилка/ложка/зубочистка, сковорода → кастрюля/противень/миска)
+- Rioplatense вокабуляр приоритетно: heladera, manteca, palta, papa, yerba, mate, pava, milanesa, medialuna, chimichurri
+- Культурный контекст: "Domingo comemos fideos con tuco, tradición familiar", "La carne es sagrada, el asado también", "Mi abuela amasa las pastas los domingos"
+
+**Удаление legacy:**
+- 11 kitchen-слов удалены из `seed-words-common.ts` (cocina, comer, beber, agua, comida, pan, leche, café, té, manzana, pollo)
+- 2 kitchen-слова удалены из `seed-words-uncommon.ts` (cocinero, cocinar)
+- 13 mappings удалены из `seed-words-taxonomy.ts`
+
+**Багфикс в процессе live-тестирования:**
+- `cards.generator.ts` — обнаружен баг: на A1 игроке с guaranteed UC+ fallback и темой без A1 R-слов, бустер падал с `No words found for rarity R`
+- Фикс 1: CEFR-фильтр не применяется к R/SR/SSR рарностям (гача-концепт: "редкий выпал — учись, даже если сложновато")
+- Фикс 2: расширенный fallback chain в pickRandomWord: cefr → theme → rarity (вместо только theme fallback)
+
+**Live-проверка (Docker):**
+- `db:setup` выполнен, 236 слов в базе (27 core + 88 kitchen + 121 legacy), 37 тем, 317 WordTheme links
+- 7 бустеров открыто через API — получены тематически связные паки (kitchen, greetings-courtesy, city-streets, shopping, feelings)
+- Reverse quiz для `tenedor (вилка)` → distractors: `milanesa/palta/azúcar` (всё kitchen) ✅
+- Reverse quiz для `cuchillo (нож)` → distractors: `manteca/queso/asado` (всё kitchen) ✅
+
+**AI-промпт для следующих тем:**
+- `docs/content-generation-prompt.md` — полный шаблон: диалект, CEFR, правила мнемоник/flavor/дистракторов, размеры, распределение рарностей по типам, anti-patterns, sanity checks перед мёрджем темы
+- Будет использован в Этапе 5 для генерации 14 оставшихся A1 тем и далее
 
 > **Старые TASK-файлы удалены, потому что проверены и закрыты. НЕ восстанавливай их.**
 

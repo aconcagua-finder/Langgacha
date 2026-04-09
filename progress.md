@@ -128,3 +128,38 @@ TASK-051 kitchen reference theme (2026-04-09):
     - `tenedor` (вилка) → дистракторы `milanesa / palta / azúcar` (все kitchen) ✅
     - `cuchillo` (нож) → дистракторы `manteca / queso / asado` (все kitchen) ✅
 - `docs/content-generation-prompt.md` — полный шаблон для AI-генерации следующих тем (~450 строк): диалект, CEFR, правила мнемоник/flavor/дистракторов, размеры, anti-patterns, sanity checks
+
+TASK-052 learning curve rebalance (2026-04-09):
+- Реальные CEFR thresholds (активный словарь): A1=500 / A2=1000 / B1=2000 / B2=4000 / C1=8000 / C2~16000 — источник правды для шкалы
+- `COLLECTION_LEVELS` полностью переделан: 6 → **100 уровней** в 3 тематических эпохах:
+  - **Metales** (1-30): Cobre → Bronce → Hierro → Plata → Oro → Platino
+  - **Piedras** (31-65): Ónix → Jade → Turquesa → Zafiro → Esmeralda → Rubí → Diamante
+  - **Cosmos** (66-100): Luna → Estrella → Constelación → Nébula → Galaxia → Cosmos → Eternidad
+  - Каждый ранг = 5 подступеней (I-V), т.е. ranks-up каждые 5 уровней
+- **6 CEFR crown milestones** точно попадают в real-world word counts:
+  - Level 25 (Oro V) → A1 @ 504 real words
+  - Level 40 (Jade V) → A2 @ 998 real words
+  - Level 55 (Esmeralda V) → B1 @ 1932 real words
+  - Level 75 (Estrella V) → B2 @ 4233 real words
+  - Level 92 (Cosmos II) → C1 @ 7597 real words
+  - Level 100 (Eternidad V) → C2 start @ 10003 real words
+- Кривая формула: tri-phase (linear 18+20L → exp 1.050 → exp 1.045 → exp 1.035)
+- Три уровня дофамина: sub-rank (каждые 3-14 дней) → rank-up (каждые 15-100 дней) → CEFR milestone (каждые ~3-18 месяцев)
+- Генератор шкалы: `backend/scripts/_generate-collection-levels.ts` (для re-tuning кривой)
+- **Word XP phase 1 ускорен**: lvl 1-5 XP с 25 до 15, lvl 6-10 с 40 до 30, lvl 11-15 с 60 до 50. Фазы 16+ без изменений
+- **NEW_WORD_BONUS** = 10 XP для первых 2-х уровней слова (initial exposure boost из SRS literature)
+- **Fresh rotation auto-select** (frontend/src/utils/autoSelectBattleCards.ts): tier 1 fresh (level<5) 35% / tier 2 overdue (Worn/Deteriorated) 35% / tier 3 power 30%. Fallback: если тир пуст, слоты переливаются в следующие
+- **Adaptive booster duplicate bias**: если у игрока >30 unreviewed слов (level<5), каждый не-core слот бустера имеет 50% шанс стать дубликатом существующего слова — throttles raw-new-words inflow
+- **ThemeProgress derived layer** в PlayerDto: per-theme {wordsLearned, wordsMastered, percentLearned, percentMastered, status} где status ∈ {Locked, InProgress, Learned, Mastered}. Mastered при percentMastered>=80%, Learned при percentLearned>=80%
+- **CEFR coverage honest**: `{lastAchievedCefr, nextAnchor, nextAnchorWidth, percentToNextAnchor}` — UI показывает "30% от real A1" или "👑 Real A2 achieved"
+- **PlayerDto полностью переписан**: старые `collectionGachaName/wordsWidthNeeded/avgWordLevelNeeded/nextCollectionLevel` удалены, на их место `collectionLevelName/nextLevelWidth/nextLevelMinAvg/nextLevelName` + `collectionLevelEpoch/collectionLevelCefrCertified/cefrCoverage/themeProgress`
+- **Frontend**: CollectionPage полностью переделан — hero с epoch gradient (amber/emerald/violet), CEFR crown badge, 2 прогресс-бара (ширина + глубина), theme progress grid (37 тиров с emoji, progress, status). GuidePage упрощён — показывает только 6 CEFR milestones + пояснение про 94 промежуточных. BoosterPage обновлён под новый формат PlayerDto
+
+TASK-052 verification:
+- `backend`: `npm run build` OK, `prisma:generate` OK
+- `frontend`: `npm run build` OK (306 kB, 87 kB gzipped, 85 modules)
+- Docker stack up (postgres on port 55432), backend watch подхватил все изменения
+- Live test свежего игрока `task052test`: `/api/player` вернул `collectionLevel: 1, Cobre I, Metales`, `nextLevel: Cobre II`, `cefrCoverage: {nextAnchor: A1, percent: 0, lastAchieved: null}`, 37 тем в themeProgress (15 InProgress для A1, 16 Locked для A2, 6 Locked для B1)
+- Live test progressed player: после insert 60 kitchen wordProgress (50 на level 8, 10 на level 12) игрок показал `Cobre III (Metales), wordsWidth=60, avgWordLevel=9.7, cefrCoverage: 12% real A1`. Темы: eating-out 72%, kitchen 67%, morning-routine 54%, body-health 33%, feelings 23% (из additional-themes legacy mapping)
+- Live test duplicate bias: игрок `dupbias` с 50 unreviewed words → 5 бустеров (35 карт), 19 новых уникальных слов + 16 дубликатов = **46% дубликатов** (целевое 50% при BOOSTER_DUPLICATE_BIAS_RATIO=0.5). Работает
+- `backend/scripts/_generate-collection-levels.ts` — генератор кривой оставлен как артефакт для re-tuning

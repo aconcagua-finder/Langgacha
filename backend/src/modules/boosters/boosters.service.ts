@@ -1,14 +1,20 @@
+import type { Word } from "@prisma/client";
+
 import { prisma } from "../../db/prisma.js";
 import {
   BOOSTER_CORE_DROP_CHANCE,
+  BOOSTER_DUPLICATE_BIAS_RATIO,
+  BOOSTER_DUPLICATE_BIAS_THRESHOLD,
   BOOSTER_MAX_CORE_SLOTS,
   BOOSTER_RECHARGE_MS,
   BOOSTER_SIZE,
   PITY_THRESHOLD,
+  WORD_COLLECTION_WIDTH_LEVEL_THRESHOLD,
   rollRarity,
   type Rarity,
 } from "../../shared/constants.js";
-import { generateCardFromPool } from "../cards/cards.generator.js";
+import { createCardFromWord, generateCardFromPool } from "../cards/cards.generator.js";
+import type { GeneratedCardDto } from "../cards/cards.types.js";
 import { getPlayerDto } from "../player/player.service.js";
 import { publicBoosterInfo, rechargeAndGet } from "./boosters.recharge.js";
 import type { OpenBoosterResponse } from "./boosters.types.js";
@@ -86,6 +92,82 @@ const planCoreSlots = (totalSlots: number): boolean[] => {
   return plan;
 };
 
+/**
+ * Phase 2.18 TASK-052: count unreviewed words (level < threshold) for
+ * the adaptive duplicate bias decision.
+ */
+const countUnreviewedWords = async (playerId: string): Promise<number> => {
+  return prisma.wordProgress.count({
+    where: {
+      playerId,
+      level: { lt: WORD_COLLECTION_WIDTH_LEVEL_THRESHOLD },
+    },
+  });
+};
+
+/**
+ * Phase 2.18 TASK-052: pick an existing word from the player's collection
+ * (optionally scoped to a theme and rarity) for the duplicate booster slot.
+ * Returns null if the player has no matching words yet — caller should
+ * fall back to a regular pick.
+ */
+/**
+ * Phase 2.18 TASK-052: pick an existing word from the player's collection
+ * (optionally scoped to a theme and rarity) for the duplicate booster slot.
+ * Returns null if the player has no matching words yet — caller should
+ * fall back to a regular pick.
+ */
+const pickDuplicateWord = async (
+  playerId: string,
+  rarity: Rarity,
+  themeKey: string | null,
+  tx: Pick<typeof prisma, "word">,
+): Promise<Word | null> => {
+  const where = {
+    cards: { some: { playerId } },
+    rarity,
+    isCore: false,
+    ...(themeKey ? { wordThemes: { some: { themeKey } } } : {}),
+  };
+
+  const count = await tx.word.count({ where });
+  if (count === 0) return null;
+
+  const skip = Math.floor(Math.random() * count);
+  const word = await tx.word.findFirst({
+    where,
+    skip,
+    orderBy: { id: "asc" },
+  });
+
+  return word;
+};
+
+/**
+ * Duplicate slot generator: reuses an existing word from the player's
+ * collection instead of rolling a new one. If the player has no matching
+ * existing words for this rarity/theme combo, falls back to a fresh pick.
+ */
+const generateDuplicateSlot = async (params: {
+  rarity: Rarity;
+  playerId: string;
+  themeKey: string | null;
+  tx: Pick<typeof prisma, "word" | "card" | "wordProgress" | "wordTheme">;
+  fallback: () => Promise<GeneratedCardDto>;
+}): Promise<GeneratedCardDto> => {
+  const word = await pickDuplicateWord(
+    params.playerId,
+    params.rarity,
+    params.themeKey,
+    params.tx,
+  );
+  if (!word) return params.fallback();
+  return createCardFromWord(word, {
+    playerId: params.playerId,
+    db: params.tx,
+  });
+};
+
 export const openBooster = async (
   playerId: string,
   options: { themeKey?: string } = {},
@@ -130,30 +212,17 @@ export const openBooster = async (
   const themeKey = options.themeKey ?? (await pickBoosterTheme(cefrMaxLevel));
   const coreSlotPlan = planCoreSlots(BOOSTER_SIZE);
 
-  const cards = await prisma.$transaction(async (tx) => {
-    const created = await Promise.all(
-      rolledRarities.map((rarity, idx) => {
-        const isCoreSlot = coreSlotPlan[idx] ?? false;
-        return generateCardFromPool({
-          rarity,
-          playerId,
-          db: tx,
-          cefrMaxLevel,
-          // A slot is either core-only, or theme-scoped (excluding core).
-          ...(isCoreSlot
-            ? { coreOnly: true }
-            : themeKey
-              ? { themeKey, excludeCore: true }
-              : {}),
-        });
-      }),
-    );
+  // Phase 2.18 TASK-052: adaptive duplicate bias.
+  // If the player is overloaded with unreviewed words, some booster slots
+  // return duplicates of existing words instead of fresh picks. This throttles
+  // raw-new-words inflow so the SRS can catch up.
+  const unreviewedCount = await countUnreviewedWords(playerId);
+  const shouldBiasDuplicates = unreviewedCount > BOOSTER_DUPLICATE_BIAS_THRESHOLD;
 
-    if (created.every((c) => c.rarity === "C") && availableUcPlus.length) {
-      const idx = randomIndex(created.length);
-      const isCoreSlot = coreSlotPlan[idx] ?? false;
-      created[idx] = await generateCardFromPool({
-        rarity: rollRarity(availableUcPlus),
+  const cards = await prisma.$transaction(async (tx) => {
+    const freshSlot = (rarity: Rarity, isCoreSlot: boolean) =>
+      generateCardFromPool({
+        rarity,
         playerId,
         db: tx,
         cefrMaxLevel,
@@ -163,6 +232,33 @@ export const openBooster = async (
             ? { themeKey, excludeCore: true }
             : {}),
       });
+
+    const generateSlot = (rarity: Rarity, slotIdx: number): Promise<GeneratedCardDto> => {
+      const isCoreSlot = coreSlotPlan[slotIdx] ?? false;
+      // Core slots are never duplicate-biased — they have their own purpose
+      // (dropping fundamental vocabulary into the mix).
+      if (isCoreSlot) return freshSlot(rarity, true);
+
+      const isDuplicateSlot =
+        shouldBiasDuplicates && Math.random() < BOOSTER_DUPLICATE_BIAS_RATIO;
+      if (!isDuplicateSlot) return freshSlot(rarity, false);
+
+      return generateDuplicateSlot({
+        rarity,
+        playerId,
+        themeKey,
+        tx,
+        fallback: () => freshSlot(rarity, false),
+      });
+    };
+
+    const created = await Promise.all(
+      rolledRarities.map((rarity, idx) => generateSlot(rarity, idx)),
+    );
+
+    if (created.every((c) => c.rarity === "C") && availableUcPlus.length) {
+      const idx = randomIndex(created.length);
+      created[idx] = await generateSlot(rollRarity(availableUcPlus), idx);
     }
 
     const hasSrPlus = created.some((c) => c.rarity === "SR" || c.rarity === "SSR");

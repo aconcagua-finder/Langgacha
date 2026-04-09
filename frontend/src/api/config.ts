@@ -25,11 +25,16 @@ export type GameConfig = {
   wordEvolutionLevel: number;
   wordCollectionWidthLevelThreshold: number;
   collectionLevels: Array<{
-    name: string;
-    gachaName: string;
-    minWords: number;
-    minAvgLevel: number;
-    rarities: string[];
+    level: number;            // 1..100
+    name: string;              // "Oro V"
+    shortName: string;         // "Oro"
+    roman: string;             // "V"
+    epoch: string;             // "Metales" | "Piedras" | "Cosmos"
+    widthRequired: number;
+    minAvgWordLevel: number;
+    realCefr: string | null;
+    cefrCertified: boolean;
+    unlockedRarities: readonly string[];
   }>;
 };
 

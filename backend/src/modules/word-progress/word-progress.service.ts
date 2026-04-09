@@ -1,6 +1,8 @@
 import { prisma } from "../../db/prisma.js";
 import {
   WORD_XP_BASE,
+  WORD_XP_NEW_WORD_BONUS,
+  WORD_XP_NEW_WORD_LEVEL_CAP,
   WORD_XP_OVERDUE_BONUS,
   WORD_XP_REVERSE_BONUS,
   WORD_XP_TYPING_BONUS,
@@ -22,6 +24,13 @@ export type WordProgressState = WordProgressDecayRecord & {
 export type AwardWordXpOptions = {
   quizType: "translate" | "reverse" | "typing";
   wasOverdue: boolean;
+  /**
+   * Phase 2.18 TASK-052: pass the current level to unlock new-word bonus.
+   * If word level is below WORD_XP_NEW_WORD_LEVEL_CAP, player gets an extra
+   * WORD_XP_NEW_WORD_BONUS on top of base XP. Accelerates the "0 → familiar"
+   * phase by leveraging the high-attention moment of a brand-new card.
+   */
+  currentLevel?: number;
 };
 
 export type WordXpAwardResult = {
@@ -67,6 +76,15 @@ export const calculateWordXpGain = (options: AwardWordXpOptions): number => {
 
   if (options.wasOverdue) {
     gainedXp += WORD_XP_OVERDUE_BONUS;
+  }
+
+  // New word bonus: applies only when the word is still in initial exposure
+  // phase (below level cap). Meant to accelerate 0 → familiar transition.
+  if (
+    options.currentLevel !== undefined &&
+    options.currentLevel < WORD_XP_NEW_WORD_LEVEL_CAP
+  ) {
+    gainedXp += WORD_XP_NEW_WORD_BONUS;
   }
 
   return Math.max(1, gainedXp + randomXpVariance());
@@ -145,7 +163,8 @@ export const awardWordXp = async (
     ? await applyDecayIfNeededToRecord(existing, db, reviewedAt)
     : null;
   const oldLevel = current ? calculateLevelFromXp(current.xp).level : 0;
-  const xpGained = calculateWordXpGain(options);
+  // Pass current level so new-word bonus is applied when appropriate.
+  const xpGained = calculateWordXpGain({ ...options, currentLevel: oldLevel });
   const totalXp = clampWordXp((current?.xp ?? 0) + xpGained);
   const nextLevel = calculateLevelFromXp(totalXp);
 

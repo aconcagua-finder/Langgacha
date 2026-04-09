@@ -384,11 +384,35 @@ generateCardFromPool({
 - Live test: 7 бустеров открыто, получены тематически связные паки (kitchen, greetings-courtesy, city-streets, shopping), reverse quiz возвращает только семантически близкие дистракторы (tenedor → milanesa/palta/azúcar; cuchillo → manteca/queso/asado)
 - `docs/content-generation-prompt.md` — **полный шаблон для AI-генерации следующих тем** (диалект, CEFR, мнемоники, дистракторы, размеры, anti-patterns, sanity checks)
 
-### Этап 4: Ревизия 150 существующих слов
+### Этап 4: Learning Curve Rebalance (TASK-052) ✅
+
+Исходная проблема: math-анализ кривой показал, что на 150 словах SRS "тепличный", но при масштабировании коллекция будет расти быстрее, чем успевать усваиваться; фаза 1 была слишком плоской (10-11 квизов до level 5 вместо 5-7); новые слова не попадали в приоритет автоподбора; collection levels были нереалистично маленькими по сравнению с реальным CEFR (B1+ = 200 слов vs real ~2000).
+
+Решение — полный баланс перед массовой генерацией тем.
 
 | # | Задача | Статус | Файл |
 |---|--------|--------|------|
-| 4.1 | Полировка 150 слов по отчёту из 1.1 + эталонному стилю из 3.1. Пачками по 20-30 слов, с ручным ревью. | ⚪ Pending | TASK-053.md..057.md (TBD) |
+| 4.1 | 100-level ladder в 3 эпохах (Metales/Piedras/Cosmos), CEFR anchors на L25/40/55/75/92/100 соответствуют реальному A1/A2/B1/B2/C1/C2 | ✅ Done (2026-04-09) | TASK-052.md |
+| 4.2 | Ускорение фазы 1 XP (25→15 per level) + NEW_WORD_BONUS | ✅ Done | TASK-052.md |
+| 4.3 | Fresh rotation автоподбор: 35% новые / 35% ветхие / 30% power | ✅ Done | TASK-052.md |
+| 4.4 | Adaptive duplicate bias в бустерах при overflow (>30 unreviewed → 50% слотов дубли существующих) | ✅ Done | TASK-052.md |
+| 4.5 | ThemeProgress как derived layer в PlayerDto (Locked/InProgress/Learned/Mastered) | ✅ Done | TASK-052.md |
+| 4.6 | Frontend: CollectionPage новый hero с эпохой и CEFR badge, theme progress grid | ✅ Done | TASK-052.md |
+
+**Итоги TASK-052:**
+- `COLLECTION_LEVELS` 100 записей, каждая 5 подступеней (I-V) внутри ранга, 3 эпохи (Metales → Piedras → Cosmos)
+- CEFR anchors точно попадают в real word counts: L25=504 (A1), L40=998 (A2), L55=1932 (B1), L75=4233 (B2), L92=7597 (C1), L100=10003 (C2 start)
+- Три уровня дофамина: sub-rank up (Cobre I→II, каждые 3-14 дней) → rank up (Cobre V→Bronce I, каждые 15-100 дней) → CEFR milestone (крон-анимация на circ тирах, каждые ~3-18 месяцев)
+- Честный UI: `"Principiante 150/500 real A1 words (30%)"` или `"👑 Real B1 achieved"` на сертифицированных тирах
+- Эпохи видны через gradient accent цвета (Metales amber, Piedras emerald, Cosmos violet)
+- Theme progress grid: 37 тем с progress bars, статусами, замкáми для locked уровней
+- Live verify: игрок с 60 progressed kitchen words получает "Cobre III (Metales), 12% от real A1", duplicate bias дал 46% дубликатов на 50-unreviewed-words-collection
+
+### Этап 4.5: Ревизия 150 существующих слов (TASK-053..057)
+
+| # | Задача | Статус | Файл |
+|---|--------|--------|------|
+| 4.5.1 | Полировка 150 слов по отчёту из 1.1 + эталонному стилю из 3.1. Пачками по 20-30 слов. Параллельно с Stage 5. | ⚪ Pending | TASK-053.md..057.md (TBD) |
 
 ### Этап 5: Генерация тем (итеративно)
 
@@ -541,3 +565,4 @@ generateCardFromPool({
 | 2026-04-09 | TASK-050 выполнен: Prisma schema с Theme/WordTheme/cefrLevel/isCore/dialect, seed-themes.ts (37 тем), seed-words-taxonomy.ts (150 legacy words mapped), seed-words-core.ts (12 core verbs: ser/estar/tener/haber/poder/vivir/trabajar/saber/conocer/dar/decir/gustar). Cards generator, boosters, quiz dispatchers и player service обновлены под таксономию. Backend и frontend собираются, taxonomy verify скрипт прошёл 0 ошибок. Docker seed — ждёт ручного запуска. | Claude |
 | 2026-04-09 | TASK-050 проверен в проде: POSTGRES_PORT → 55432 (избежание конфликта с соседним проектом), сеть пересоздана, db:setup пройден, smoke tests через API подтвердили unlockedThemes/cefrMaxLevel/тематические бустеры. Удалены 8 zombie-слов с null conceptKey из dev БД. | Claude |
 | 2026-04-09 | TASK-051 выполнен: 88 kitchen-слов в новом reference файле `seed-theme-kitchen.ts` (rioplatense voseo, семантичные мнемоники, семантичные дистракторы, аргентинские специалитеты, lunfardo morfi/morfar). 13 legacy kitchen-слов удалены из common/uncommon/taxonomy. Багфикс pickRandomWord: CEFR-bypass для R/SR/SSR (гача-моменты), fallback chain (cefr → theme → rarity). Live-тест reverse quiz подтвердил тематически связные дистракторы. `docs/content-generation-prompt.md` создан как шаблон для генерации следующих тем. | Claude |
+| 2026-04-09 | TASK-052 (Learning Curve Rebalance) выполнен: математический анализ кривой показал несколько проблем перед массовой генерацией тем. Решения: 1) COLLECTION_LEVELS переделан с 6 на **100 уровней** в 3 эпохах (Metales/Piedras/Cosmos), CEFR anchors точно попадают в real-world word counts (A1=500 на L25, A2=1000 на L40, B1=2000 на L55, B2=4000 на L75, C1=8000 на L92, C2 start=10000 на L100). 2) WORD_XP_PER_LEVEL phase 1 ускорен 25→15 XP, добавлен `WORD_XP_NEW_WORD_BONUS=10` для первых 2-х уровней. 3) Fresh rotation в autoSelectBattleCards: 35% свежие (level<5) / 35% ветхие / 30% power. 4) Adaptive duplicate bias в boosters: при >30 unreviewed words 50% слотов возвращают дубликаты существующих слов. 5) ThemeProgress как derived layer в PlayerDto (Locked/InProgress/Learned/Mastered per theme). 6) Frontend: CollectionPage новый hero с эпохой и CEFR 👑 badge + theme progress grid (37 тиров). Live verify: 162 слова in DB, progressed player=Cobre III + 12% real A1, duplicate bias 46% при overflow, все 100 уровней и 6 CEFR milestones в API. | Claude |

@@ -126,9 +126,17 @@ export function BoosterPage() {
           <div className="text-sm text-slate-200/70">
             Ранг:{" "}
             <span className="font-mono">
-              {player.collectionLevel} {player.collectionGachaName}
+              {player.collectionLevelName}
             </span>
-            {" "}· Слова: <span className="font-mono">{player.wordsWidth}/{player.wordsWidthNeeded}</span>
+            {player.collectionLevelCefrCertified && player.collectionLevelRealCefr ? (
+              <span className="ml-2 rounded-full border border-amber-400/60 bg-amber-400/10 px-2 py-0.5 text-xs font-bold text-amber-100">
+                👑 {player.collectionLevelRealCefr}
+              </span>
+            ) : null}
+            {" "}· Слова:{" "}
+            <span className="font-mono">
+              {player.wordsWidth}/{player.nextLevelWidth}
+            </span>
           </div>
         ) : null}
         {boosterInfo ? (
@@ -177,9 +185,9 @@ export function BoosterPage() {
           onOpen={onOpen}
           disabled={loading || boosterInfo?.count === 0}
           disabledLabel={loading ? "Открываю…" : "Нет бустеров"}
-          level={player?.collectionGachaName ?? "Bronze"}
+          level={player?.collectionLevelShort ?? "Cobre"}
           cardCount={config?.boosterSize}
-          packName={`${player?.collectionGachaName ?? "Bronze"} Pack`}
+          packName={`${player?.collectionLevelShort ?? "Cobre"} Pack`}
         />
       ) : null}
 

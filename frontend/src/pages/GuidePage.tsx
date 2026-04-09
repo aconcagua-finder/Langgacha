@@ -197,23 +197,41 @@ export function GuideContent() {
         </GuideSection>
 
         <GuideSection title="Прогрессия">
-          <div className="space-y-2">
-            <div>Коллекционный ранг зависит от ширины словаря и среднего уровня слов:</div>
+          <div className="space-y-3">
+            <div>
+              Коллекционный ранг идёт от <span className="font-mono">Cobre I (Lv 1)</span> до{" "}
+              <span className="font-mono">Eternidad V (Lv 100)</span> через три эпохи —{" "}
+              <span className="font-semibold text-amber-200">Metales</span>,{" "}
+              <span className="font-semibold text-emerald-200">Piedras</span>,{" "}
+              <span className="font-semibold text-violet-200">Cosmos</span>. Каждый ранг имеет
+              5 подступеней (I–V), между ними лежат быстрые маленькие апгрейды.
+            </div>
+            <div>
+              Шесть уровней отмечены как <span className="text-amber-200">реальные CEFR</span> —
+              когда вы достигаете их, ваша коллекция соответствует академическому словарю
+              уровня A1/A2/B1/B2/C1/C2:
+            </div>
             <ul className="list-disc space-y-1 pl-5">
-              {config.collectionLevels.map((level) => (
-                <li key={level.name}>
-                  <span className="font-mono">
-                    {level.name} {level.gachaName}
-                  </span>{" "}
-                  (
-                  <span className="font-mono">
-                    {level.minWords} слов / Avg Lv {level.minAvgLevel}
-                  </span>
-                  ) →{" "}
-                  <span className="font-mono">{level.rarities.join(", ")}</span>
-                </li>
-              ))}
+              {config.collectionLevels
+                .filter((level) => level.cefrCertified)
+                .map((level) => (
+                  <li key={level.name}>
+                    <span className="inline-flex items-center gap-1">
+                      <span>👑</span>
+                      <span className="font-mono">{level.name}</span>{" "}
+                      <span className="text-amber-200">= real {level.realCefr}</span>
+                    </span>{" "}
+                    <span className="text-slate-200/60">
+                      — {level.widthRequired} слов, Avg Lv {level.minAvgWordLevel}, рарности:{" "}
+                      <span className="font-mono">{level.unlockedRarities.join(", ")}</span>
+                    </span>
+                  </li>
+                ))}
             </ul>
+            <div className="text-xs text-slate-200/50">
+              Между этими 6 "кронами" лежат 94 промежуточных подуровня — маленькие ranks-up'ы
+              каждые несколько дней игры.
+            </div>
           </div>
         </GuideSection>
       </section>

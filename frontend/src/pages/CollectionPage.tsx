@@ -11,9 +11,9 @@ import { CollectionMiniGrid } from "../components/collection/CollectionMiniGrid"
 import { CollectionTable } from "../components/collection/CollectionTable";
 import { SegmentedTabs } from "../components/ui/SegmentedTabs";
 import { Tooltip } from "../components/ui/Tooltip";
-import { useConfig } from "../contexts/ConfigContext";
 import { usePlayer } from "../contexts/PlayerContext";
 import { TOOLTIPS } from "../shared/labels";
+import type { ThemeProgressDto } from "../api/player";
 import type { GeneratedCard } from "../types/card";
 import type { CardGroup } from "../utils/groupCards";
 import { groupCards } from "../utils/groupCards";
@@ -26,7 +26,6 @@ const VIEW_MODE_OPTIONS = [
 ] as const;
 
 function CollectionCardsTab() {
-  const { config } = useConfig();
   const { player, refresh: refreshPlayer } = usePlayer();
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
   const [selectedRarities, setSelectedRarities] = useState<string[]>([]);
@@ -110,17 +109,56 @@ function CollectionCardsTab() {
     }
   };
 
-  const widthPct =
-    player && player.wordsWidthNeeded > 0
-      ? Math.min(100, Math.round((player.wordsWidth / player.wordsWidthNeeded) * 100))
-      : 100;
-  const avgLevelPct =
-    player && player.avgWordLevelNeeded > 0
-      ? Math.min(100, Math.round((player.avgWordLevel / player.avgWordLevelNeeded) * 100))
-      : 100;
-  const nextCollection = player?.nextCollectionLevel
-    ? config?.collectionLevels.find((level) => level.name === player.nextCollectionLevel) ?? null
-    : null;
+  // Phase 2.18 TASK-052: progress is measured against the NEXT level's requirements.
+  // widthPct = how full the next-level width bar is (clamped to current level's floor).
+  const widthFloor = player?.widthRequired ?? 0;
+  const widthTarget = player?.nextLevelWidth ?? widthFloor;
+  const widthSpan = Math.max(1, widthTarget - widthFloor);
+  const widthIntoSpan = Math.max(0, (player?.wordsWidth ?? 0) - widthFloor);
+  const widthPct = Math.min(100, Math.round((widthIntoSpan / widthSpan) * 100));
+
+  const avgFloor = player?.minAvgLevel ?? 0;
+  const avgTarget = player?.nextLevelMinAvg ?? avgFloor;
+  const avgSpan = Math.max(0.1, avgTarget - avgFloor);
+  const avgIntoSpan = Math.max(0, (player?.avgWordLevel ?? 0) - avgFloor);
+  const avgLevelPct = Math.min(100, Math.round((avgIntoSpan / avgSpan) * 100));
+
+  // Epoch → accent color for the hero block. Keeps visual identity per era.
+  const epochAccent: Record<string, string> = {
+    Metales: "from-amber-300/30 via-orange-400/20 to-amber-600/10",
+    Piedras: "from-emerald-300/30 via-teal-400/20 to-sky-500/10",
+    Cosmos: "from-fuchsia-400/30 via-violet-500/20 to-indigo-600/10",
+  };
+  const heroGradient =
+    epochAccent[player?.collectionLevelEpoch ?? ""] ?? "from-slate-400/20 to-slate-700/10";
+
+  // Honest CEFR coverage text — shown under the hero block.
+  const cefrCoverageText = (() => {
+    if (!player) return null;
+    const { lastAchievedCefr, nextAnchor, percentToNextAnchor, nextAnchorWidth } =
+      player.cefrCoverage;
+    if (player.collectionLevelCefrCertified && player.collectionLevelRealCefr) {
+      return `${player.collectionLevelRealCefr} достигнут ✓ — ваша коллекция соответствует реальному CEFR ${player.collectionLevelRealCefr}`;
+    }
+    if (nextAnchor) {
+      const achievedTxt = lastAchievedCefr ? ` (последний ${lastAchievedCefr} ✓)` : "";
+      return `${percentToNextAnchor}% от реального ${nextAnchor} (${player.wordsWidth}/${nextAnchorWidth} слов)${achievedTxt}`;
+    }
+    return lastAchievedCefr ? `Все академические уровни достигнуты` : null;
+  })();
+
+  // Epoch CEFR label (A1/A2/B1/B2/C1/C2) for grouping theme progress tiles.
+  const themesByEpoch = useMemo(() => {
+    const map = new Map<string, ThemeProgressDto[]>();
+    if (!player) return map;
+    for (const t of player.themeProgress) {
+      const key = t.cefrTier;
+      const list = map.get(key) ?? [];
+      list.push(t);
+      map.set(key, list);
+    }
+    return map;
+  }, [player]);
 
   return (
     <>
@@ -162,44 +200,64 @@ function CollectionCardsTab() {
         ) : null}
 
         {player ? (
-          <div className="rounded-2xl border border-slate-800/60 bg-slate-900/20 p-4">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div>
-                <div className="text-lg font-extrabold tracking-tight text-slate-50">
-                  {player.collectionLevel} {player.collectionGachaName} Collector
+          <div
+            className={`relative overflow-hidden rounded-2xl border border-slate-800/60 bg-gradient-to-br ${heroGradient} p-5`}
+          >
+            {/* Phase 2.18 TASK-052: 100-level hero with epoch, CEFR cert, honest coverage */}
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <div className="flex flex-col gap-2">
+                <div className="flex flex-wrap items-center gap-3">
+                  <span className="text-xs uppercase tracking-widest text-slate-200/50">
+                    {player.collectionLevelEpoch} · Lv {player.collectionLevel}/100
+                  </span>
+                  {player.collectionLevelCefrCertified && player.collectionLevelRealCefr ? (
+                    <span className="inline-flex items-center gap-1 rounded-full border border-amber-400/60 bg-amber-400/20 px-2 py-0.5 text-xs font-bold text-amber-100">
+                      👑 Real {player.collectionLevelRealCefr}
+                    </span>
+                  ) : null}
                 </div>
-                <div className="mt-1 text-xs text-slate-200/60">
-                  Total XP: <span className="font-mono">{player.totalCollectionXp}</span>
+                <div className="text-3xl font-extrabold tracking-tight text-slate-50">
+                  {player.collectionLevelName}
+                </div>
+                <div className="text-xs text-slate-200/60">
+                  Total XP: <span className="font-mono">{player.totalCollectionXp}</span> · Rarities:{" "}
+                  <span className="font-mono">{player.unlockedRarities.join(", ")}</span>
                 </div>
               </div>
-              <div className="text-xs text-slate-200/60">
-                Доступные рарности:{" "}
-                <span className="font-mono">{player.unlockedRarities.join(", ")}</span>
-              </div>
+              {player.nextLevelName ? (
+                <div className="text-right text-xs text-slate-200/70">
+                  <div className="opacity-60">Следующий ранг</div>
+                  <div className="mt-1 font-semibold text-slate-50">{player.nextLevelName}</div>
+                </div>
+              ) : null}
             </div>
+
+            {cefrCoverageText ? (
+              <div className="mt-3 rounded-xl border border-slate-800/40 bg-slate-950/40 px-3 py-2 text-xs text-slate-200/80">
+                {cefrCoverageText}
+              </div>
+            ) : null}
+
             <div className="mt-4 grid gap-4 sm:grid-cols-2">
               <Tooltip text={TOOLTIPS.levelProgress}>
                 <div className="rounded-2xl border border-slate-800/60 bg-slate-950/35 p-4">
                   <div className="flex items-center justify-between gap-3 text-sm text-slate-200/80">
-                    <span>Слова</span>
+                    <span>Ширина (слова)</span>
                     <span className="font-mono">
-                      {player.wordsWidth}/{player.wordsWidthNeeded}
+                      {player.wordsWidth}/{player.nextLevelWidth}
                     </span>
                   </div>
                   <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-950/50">
-                    <div
-                      className="h-full bg-sky-400"
-                      style={{ width: `${widthPct}%` }}
-                    />
+                    <div className="h-full bg-sky-400" style={{ width: `${widthPct}%` }} />
                   </div>
                 </div>
               </Tooltip>
               <Tooltip text={TOOLTIPS.levelProgress}>
                 <div className="rounded-2xl border border-slate-800/60 bg-slate-950/35 p-4">
                   <div className="flex items-center justify-between gap-3 text-sm text-slate-200/80">
-                    <span>Глубина</span>
+                    <span>Глубина (avg)</span>
                     <span className="font-mono">
-                      Avg Lv {player.avgWordLevel}/{player.avgWordLevelNeeded}
+                      {player.avgWordLevel.toFixed(1)}/{player.nextLevelMinAvg.toFixed(1)}
                     </span>
                   </div>
                   <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-950/50">
@@ -211,10 +269,78 @@ function CollectionCardsTab() {
                 </div>
               </Tooltip>
             </div>
-            <div className="mt-3 text-sm text-slate-200/70">
-              {nextCollection
-                ? `→ Следующий: ${nextCollection.name} ${nextCollection.gachaName} Collector`
-                : "Достигнут максимальный коллекционный ранг"}
+          </div>
+        ) : null}
+
+        {/* Phase 2.18 TASK-052: Theme progress grid — per-theme learning layer */}
+        {player && player.themeProgress.length > 0 ? (
+          <div className="rounded-2xl border border-slate-800/60 bg-slate-900/20 p-4">
+            <div className="mb-3 flex items-center justify-between">
+              <div className="text-sm font-bold uppercase tracking-widest text-slate-200/70">
+                Прогресс по темам
+              </div>
+              <div className="text-xs text-slate-200/50">
+                Освоено тем:{" "}
+                <span className="font-mono">
+                  {player.themeProgress.filter((t) => t.status === "Learned" || t.status === "Mastered").length}
+                  /{player.themeProgress.length}
+                </span>
+              </div>
+            </div>
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+              {Array.from(themesByEpoch.entries()).flatMap(([cefr, themes]) =>
+                themes.map((theme) => {
+                  const statusColor =
+                    theme.status === "Mastered"
+                      ? "border-amber-400/60 bg-amber-400/10"
+                      : theme.status === "Learned"
+                        ? "border-emerald-400/60 bg-emerald-400/10"
+                        : theme.status === "InProgress"
+                          ? "border-sky-400/40 bg-sky-400/5"
+                          : "border-slate-700/50 bg-slate-950/40 opacity-50";
+                  const barColor =
+                    theme.status === "Mastered"
+                      ? "bg-amber-400"
+                      : theme.status === "Learned"
+                        ? "bg-emerald-400"
+                        : "bg-sky-400";
+                  return (
+                    <div
+                      key={theme.themeKey}
+                      className={`rounded-xl border ${statusColor} p-3`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <span className="text-xl">{theme.emoji ?? "•"}</span>
+                        <div className="min-w-0 flex-1">
+                          <div className="truncate text-sm font-semibold text-slate-50">
+                            {theme.themeName}
+                          </div>
+                          <div className="flex items-center gap-2 text-[10px] uppercase tracking-wider text-slate-200/50">
+                            <span>{cefr}</span>
+                            <span>·</span>
+                            <span>{theme.wordsLearned}/{theme.wordsTotal}</span>
+                          </div>
+                        </div>
+                        {theme.status === "Mastered" ? (
+                          <span className="text-xs">👑</span>
+                        ) : theme.status === "Learned" ? (
+                          <span className="text-xs">✓</span>
+                        ) : null}
+                      </div>
+                      {theme.status !== "Locked" ? (
+                        <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-slate-950/60">
+                          <div
+                            className={`h-full ${barColor}`}
+                            style={{ width: `${theme.percentLearned}%` }}
+                          />
+                        </div>
+                      ) : (
+                        <div className="mt-2 text-[10px] text-slate-500">🔒 Заблокировано</div>
+                      )}
+                    </div>
+                  );
+                }),
+              )}
             </div>
           </div>
         ) : null}
